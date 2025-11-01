@@ -14,7 +14,14 @@ Every 94 character path can be used to retrieve content that matches the length 
 If no content is available a 404 is returned instead.
 
 A SHA-512 hash is 512 bits or 64 bytes long.
-An 8 character base64 store 48 bits. 
+64 bytes can be stored in a 86 character base64 string.
+```
+(64 * 8) / 6 = 85.333... ~= 86
+```
+
+Content of 64 bytes or less can be stored directly in equal or lesser space. 
+
+An 8 character base64 string can store 48 bits. 
 ```
 2^48 = 2^40 * 2^8
   = 2^10 * 2^10 * 2^10 * 2^10 * 2^8
