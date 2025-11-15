@@ -75,3 +75,15 @@ jobs:
         run: javac implementations/java/*.java
       - name: Run Java CID check
         run: java -cp implementations/java Check
+
+  go:
+    name: Go CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run Go CID check
+        working-directory: implementations/go
+        run: go run .
