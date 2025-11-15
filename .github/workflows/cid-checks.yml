@@ -47,11 +47,9 @@ jobs:
         with:
           node-version: '20'
       - name: Install TypeScript runner
-        run: npm install --no-save --no-package-lock ts-node typescript
+        run: npm install --no-save --no-package-lock tsx typescript
       - name: Run TypeScript CID check
-        env:
-          TS_NODE_PROJECT: implementations/typescript/tsconfig.json
-        run: node --loader ts-node/esm implementations/typescript/check.ts
+        run: npx tsx implementations/typescript/check.ts
 
   deno:
     name: Deno CID check
