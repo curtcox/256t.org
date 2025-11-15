@@ -1,0 +1,1 @@
+Content identifiers pair a length prefix with either embedded data or a hash. This line is long enough to require hashing.

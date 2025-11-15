@@ -1,0 +1,2 @@
+Long-form descriptions help demonstrate deterministic identifiers across languages. Each implementation should compute the same CID when given identical content and encoding.
+Line breaks and punctuation need to be preserved to maintain fidelity.
