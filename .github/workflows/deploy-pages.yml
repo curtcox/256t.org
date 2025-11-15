@@ -30,6 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install markdown
           python - <<'PY'
+          import shutil
           import markdown
           from pathlib import Path
 
@@ -100,7 +101,7 @@ jobs:
           ''', encoding='utf-8')
 
           hash_src = root / 'hash.html'
-          (site_dir / 'hash.html').write_text(hash_src.read_text(encoding='utf-8'), encoding='utf-8')
+          shutil.copy2(hash_src, site_dir / 'hash.html')
           PY
 
       - name: Upload artifact
