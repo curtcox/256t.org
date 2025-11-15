@@ -1,4 +1,4 @@
-# 256t.org
+# [256t.org](https://curtcox.github.io/256t.org/)
 
 ## What?
 It is a domain dedicated to be a public specification for a specific type of content addressable storage.
