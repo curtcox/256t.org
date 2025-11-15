@@ -34,7 +34,14 @@ jobs:
           import markdown
           from pathlib import Path
 
-          root = Path(__file__).resolve().parents[2]
+          # The script is executed from the repository root, but when running
+          # code via ``python - <<'PY'`` the ``__file__`` attribute points to a
+          # temporary file under ``/home/runner/work``. That caused the build to
+          # look for README.md in ``/home/runner/work/README.md`` instead of the
+          # cloned repository. Use the current working directory as the repo
+          # root so the paths resolve correctly regardless of how the script is
+          # invoked.
+          root = Path.cwd()
           readme = root / 'README.md'
           site_dir = root / 'dist'
           site_dir.mkdir(exist_ok=True)
