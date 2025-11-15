@@ -53,6 +53,10 @@ The 94 character content tag consists of an 8 character length prefix followed b
 ### Base64
 More specifically, [filename and URL safe](https://datatracker.ietf.org/doc/html/rfc4648#section-5) [Base64](https://en.wikipedia.org/wiki/Base64) aka base64url.
 
+## CID
+
+This 94 character or less base64 string which identifies content will be referred to as a content identifier or CID.
+
 ## When
 
 ## Where
