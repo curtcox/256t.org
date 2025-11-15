@@ -1,5 +1,5 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { CIDS_DIR, EXAMPLES_DIR, computeCid } from "./cid";
+import { CIDS_DIR, EXAMPLES_DIR, computeCid } from "./cid.js";
 
 mkdirSync(CIDS_DIR, { recursive: true });
 

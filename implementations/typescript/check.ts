@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { CIDS_DIR, computeCid } from "./cid";
+import { CIDS_DIR, computeCid } from "./cid.js";
 
 let mismatches = 0;
 let count = 0;
