@@ -1,8 +1,10 @@
 # 256t.org
 
 ## What?
-It is a domain dedicated to be a public utility for content addressable storage.
-Each 94 character URL path defines the content at that URL.
+It is a domain dedicated to be a public specification for a specific type of content addressable storage.
+In this scheme each 94 character URL path defines the content at that URL.
+At some point in the future, it may evolve to also be a public utility for publishing content using the scheme.
+However, that is currently beyond the scope if this site.
 
 ## Why?
 Why [256t.org](https://256t.org)?
@@ -53,3 +55,13 @@ More specifically, [filename and URL safe](https://datatracker.ietf.org/doc/html
 ## When
 
 ## Where
+Any server could expose a base URL with contents that adhere to this spec.
+
+## Beyond the Scope of This Text
+
+- Some content could be restricted to certain people or requesting entities.
+- Some content could have disputed ownership, differing ownership in different jurisdictions, disputed distribution rights.
+- In order to serve or not serve content, these issues need to be decided.
+- How are such things decided?
+
+These things are beyond the scope of this text.
