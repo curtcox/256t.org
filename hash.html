@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>256t Hash Tool</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0 auto;
+      padding: 2rem;
+      max-width: 60rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    }
+    textarea {
+      width: 100%;
+      min-height: 12rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(125, 125, 125, 0.4);
+      resize: vertical;
+      background: rgba(0, 0, 0, 0.02);
+    }
+    textarea:focus {
+      outline: 2px solid rgba(0, 120, 255, 0.4);
+      border-color: transparent;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+      white-space: nowrap;
+    }
+    .output {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      word-break: break-all;
+    }
+    dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 1.5rem;
+      row-gap: 0.75rem;
+      align-items: start;
+    }
+    dt {
+      font-weight: 600;
+    }
+    .error {
+      color: #c62828;
+      font-weight: 600;
+      margin: 1rem 0 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>256t Text Hash</h1>
+    <p>Type or paste any text below to see its <abbr title="Secure Hash Algorithm 512-bit">SHA-512</abbr> hash rendered in Base64URL.</p>
+  </header>
+
+  <label for="inputText" class="sr-only">Text to hash</label>
+  <textarea id="inputText" placeholder="Start typing..."></textarea>
+
+  <section class="output" aria-live="polite" aria-atomic="true">
+    <dl>
+      <div>
+        <dt>Hash (Base64URL)</dt>
+        <dd id="hashValue">—</dd>
+      </div>
+      <div>
+        <dt>Content length</dt>
+        <dd><span id="byteLength">0</span> bytes</dd>
+      </div>
+    </dl>
+    <p id="error" class="error" hidden></p>
+  </section>
+
+  <script>
+    const input = document.getElementById('inputText');
+    const hashValue = document.getElementById('hashValue');
+    const byteLength = document.getElementById('byteLength');
+    const errorEl = document.getElementById('error');
+
+    if (!window.crypto || !window.crypto.subtle) {
+      errorEl.textContent = 'This browser does not support the Web Crypto API required to compute hashes.';
+      errorEl.hidden = false;
+      hashValue.textContent = '—';
+      input.disabled = true;
+    } else {
+      const encoder = new TextEncoder();
+
+      async function updateHash(text) {
+        try {
+          errorEl.hidden = true;
+          const data = encoder.encode(text);
+          byteLength.textContent = data.length;
+
+          if (!text) {
+            hashValue.textContent = '—';
+            return;
+          }
+
+          const buffer = await crypto.subtle.digest('SHA-512', data);
+          const hashBytes = new Uint8Array(buffer);
+          const binary = String.fromCharCode(...hashBytes);
+          const base64 = btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+          hashValue.textContent = base64;
+        } catch (error) {
+          hashValue.textContent = '—';
+          errorEl.textContent = `Unable to compute hash: ${error.message}`;
+          errorEl.hidden = false;
+        }
+      }
+
+      input.addEventListener('input', (event) => {
+        updateHash(event.target.value);
+      });
+
+      updateHash('');
+    }
+  </script>
+</body>
+</html>
