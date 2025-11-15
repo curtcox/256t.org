@@ -66,3 +66,7 @@ Any server could expose a base URL with contents that adhere to this spec.
 - How are such things decided?
 
 These things are beyond the scope of this text.
+
+## Tools
+
+- [Hash calculator](hash.html) — type text and instantly see its SHA-512 hash encoded in Base64URL.
