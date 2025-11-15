@@ -2,7 +2,7 @@
 
 ## What?
 It is a domain dedicated to be a public specification for a specific type of content addressable storage.
-In this scheme each 94 character URL path defines the content at that URL.
+In this scheme the last element of up to 94 characters in a URL path defines the content at that URL.
 At some point in the future, it may evolve to also be a public utility for publishing content using the scheme.
 However, that is currently beyond the scope if this site.
 
@@ -21,7 +21,8 @@ A SHA-512 hash is 512 bits or 64 bytes long.
 (64 * 8) / 6 = 85.333... ~= 86
 ```
 
-Content of 64 bytes or less can be stored directly in equal or lesser space. 
+Content of 64 bytes or less can be stored directly in equal or lesser space.
+In such cases, the content itself should be base64 encoded and used with a minimum of padding rather than using its hash.
 
 An 8 character base64 string can store 48 bits. 
 ```
