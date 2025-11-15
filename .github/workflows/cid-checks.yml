@@ -1,0 +1,77 @@
+name: CID Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    name: Python CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run Python CID check
+        run: python implementations/python/check.py
+
+  javascript:
+    name: JavaScript CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run JavaScript CID check
+        run: node implementations/javascript/check.js
+
+  node:
+    name: Node CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run Node CID check
+        run: node implementations/node/check.mjs
+
+  typescript:
+    name: TypeScript CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install TypeScript runner
+        run: npm install --no-save --no-package-lock tsx typescript
+      - name: Run TypeScript CID check
+        run: npx tsx implementations/typescript/check.ts
+
+  deno:
+    name: Deno CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Run Deno CID check
+        run: deno run --allow-read implementations/deno/check.ts
+
+  java:
+    name: Java CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile CID checker
+        run: javac implementations/java/*.java
+      - name: Run Java CID check
+        run: java -cp implementations/java Check
