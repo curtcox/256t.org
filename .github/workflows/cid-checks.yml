@@ -49,7 +49,7 @@ jobs:
       - name: Install TypeScript runner
         run: npm install --no-save --no-package-lock ts-node typescript
       - name: Run TypeScript CID check
-        run: npx ts-node --esm implementations/typescript/check.ts
+        run: npx ts-node implementations/typescript/check.ts
 
   deno:
     name: Deno CID check
