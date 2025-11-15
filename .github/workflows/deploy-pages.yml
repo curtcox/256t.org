@@ -111,9 +111,13 @@ PY
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    # Expose the deployment URL from the deploy-pages action as a job output
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # Use the job output rather than steps.* directly
+      url: ${{ needs.deploy.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
