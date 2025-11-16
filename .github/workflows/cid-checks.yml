@@ -76,6 +76,16 @@ jobs:
       - name: Run Java CID check
         run: java -cp implementations/java Check
 
+  groovy:
+    name: Groovy CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Groovy
+        run: sudo apt-get update && sudo apt-get install -y groovy
+      - name: Run Groovy CID check
+        run: groovy -cp implementations/groovy implementations/groovy/check.groovy
+
   kotlin:
     name: Kotlin CID check
     runs-on: ubuntu-latest
