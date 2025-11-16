@@ -88,6 +88,21 @@ jobs:
         working-directory: implementations/go
         run: go run .
 
+  dart:
+    name: Dart CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Install Dart dependencies
+        working-directory: implementations/dart
+        run: dart pub get
+      - name: Run Dart CID check
+        working-directory: implementations/dart
+        run: dart run check.dart
+
   julia:
     name: Julia CID check
     runs-on: ubuntu-latest
