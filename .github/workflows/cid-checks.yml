@@ -294,6 +294,17 @@ jobs:
       - name: Run Nim CID check
         run: nim compile --run implementations/nim/main.nim check
 
+  nim:
+    name: Nim CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: iffy/install-nim@v5
+      - name: Install dependencies
+        run: nimble install -d -y
+      - name: Run Nim CID check
+        run: nim compile --run implementations/nim/main.nim check
+
   c:
     name: C CID check
     runs-on: ubuntu-latest

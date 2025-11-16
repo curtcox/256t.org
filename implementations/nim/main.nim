@@ -4,9 +4,15 @@ import checksums/sha2
 import base64
 
 proc toBase64Url(data: string): string =
-  result = encode(data, safe = true)
+  var result = encode(data)
   while result.endsWith("="):
     result = result[0 .. ^2]
+  for i in 0 ..< result.len:
+    if result[i] == '+':
+      result[i] = '-'
+    elif result[i] == '/':
+      result[i] = '_'
+  return result
 
 proc encodeLength(length: int): string =
   var lenBytes = newString(6)
@@ -25,14 +31,19 @@ proc computeCid(content: string): string =
     suffix = toBase64Url(content)
   else:
     let hash = secureHash(Sha_512, content)
-    var hashStr = ""
+    var rawDigest = ""
     for b in hash:
-      hashStr.add(b.char)
-    suffix = toBase64Url(hashStr)
-  return (prefix & suffix).toLower
+      rawDigest.add(b)
+    suffix = toBase64Url(rawDigest)
+  return prefix & suffix
 
 proc generate() =
-  createDir("cids")
+  if dirExists("cids"):
+    for file in walkDir("cids"):
+      removeFile(file.path)
+  else:
+    createDir("cids")
+
   for file in walkDir("examples"):
     if file.kind == pcFile:
       let content = readFile(file.path)
