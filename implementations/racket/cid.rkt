@@ -1,6 +1,7 @@
 #lang racket
 
-(require net/base64)
+(require racket/runtime-path
+         net/base64)
 
 (define base-dir
   (simplify-path (build-path (this-expression-source-directory) ".." "..")))
