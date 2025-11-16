@@ -88,6 +88,17 @@ jobs:
         working-directory: implementations/go
         run: go run .
 
+  csharp:
+    name: C# CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run C# CID check
+        run: dotnet run --configuration Release --project implementations/csharp -- check
+
   rust:
     name: Rust CID check
     runs-on: ubuntu-latest
