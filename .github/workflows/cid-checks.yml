@@ -308,6 +308,23 @@ jobs:
       - name: Run Nim CID check
         run: nim compile --run implementations/nim/main.nim check
 
+  ocaml:
+    name: OCaml CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OCaml dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y opam m4 pkg-config
+          opam init -y --disable-sandboxing
+          opam switch create . ocaml-base-compiler.5.1.1 -y
+          opam install -y ocamlfind digestif base64
+      - name: Build OCaml CID checker
+        run: opam exec --switch=. -- ocamlfind ocamlopt -package digestif.c,base64 -linkpkg -I implementations/ocaml implementations/ocaml/cid.ml implementations/ocaml/check.ml -o implementations/ocaml/check
+      - name: Run OCaml CID check
+        run: opam exec --switch=. -- implementations/ocaml/check
+
   c:
     name: C CID check
     runs-on: ubuntu-latest
