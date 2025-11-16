@@ -201,6 +201,17 @@ jobs:
         working-directory: implementations/rust
         run: cargo run --release --quiet
 
+  swift:
+    name: Swift CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.10'
+      - name: Run Swift CID check
+        run: swiftc implementations/swift/cid.swift implementations/swift/check.swift -o implementations/swift/check && implementations/swift/check
+
   ruby:
     name: Ruby CID check
     runs-on: ubuntu-latest
