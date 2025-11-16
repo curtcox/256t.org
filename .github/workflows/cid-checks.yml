@@ -210,6 +210,17 @@ jobs:
       - name: Run C# CID check
         run: dotnet run --configuration Release --project implementations/csharp -- check
 
+  fsharp:
+    name: F# CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run F# CID check
+        run: dotnet fsi implementations/fsharp/check.fsx
+
   cpp:
     name: C++ CID check
     runs-on: ubuntu-latest
