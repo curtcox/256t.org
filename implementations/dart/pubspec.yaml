@@ -1,0 +1,7 @@
+name: cid_checker
+description: CID verification for 256t.org using Dart.
+version: 0.1.0
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+dependencies:
+  crypto: ^3.0.3
