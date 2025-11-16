@@ -88,6 +88,17 @@ jobs:
         working-directory: implementations/go
         run: go run .
 
+  julia:
+    name: Julia CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - name: Run Julia CID check
+        run: julia implementations/julia/check.jl
+
   csharp:
     name: C# CID check
     runs-on: ubuntu-latest
