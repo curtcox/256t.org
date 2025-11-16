@@ -17,7 +17,9 @@
     (loop [idx 5
            remaining length]
       (when (>= idx 0)
-        (aset bytes idx (byte (bit-and remaining 0xFF)))
+        ;; `unchecked-byte` allows storing unsigned byte values (0-255)
+        ;; without throwing an overflow exception when the high bit is set.
+        (aset bytes idx (unchecked-byte (bit-and remaining 0xFF)))
         (recur (dec idx) (unsigned-bit-shift-right remaining 8))))
     (to-base64url bytes)))
 
