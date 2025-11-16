@@ -42,8 +42,11 @@ Dir.children(CIDS_DIR).sort.each do |entry|
 
   count += 1
   actual = entry
-  # Read file contents as raw bytes to avoid any encoding transformations.
-  expected = compute_cid(File.read(path, encoding: "ASCII-8BIT").to_slice)
+  # Read file contents as raw bytes to avoid any encoding transformations. Using
+  # an explicit `nil` encoding prevents Crystal from attempting to transcode
+  # the data (which can raise on unsupported encodings) while still returning
+  # a String whose underlying bytes can be sliced directly.
+  expected = compute_cid(File.read(path, encoding: nil).to_slice)
   mismatches << {actual, expected} if actual != expected
 end
 
