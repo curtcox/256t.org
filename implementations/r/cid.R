@@ -26,8 +26,15 @@ to_base64url <- function(raw_bytes) {
 }
 
 encode_length <- function(length) {
-  bytes <- writeBin(as.numeric(length), raw(), size = 8, endian = "big")
-  to_base64url(bytes[3:8])
+  value <- as.integer(length)
+  bytes <- raw(6)
+
+  for (i in 6:1) {
+    bytes[i] <- as.raw(bitwAnd(value, 0xFF))
+    value <- bitwShiftR(value, 8)
+  }
+
+  to_base64url(bytes)
 }
 
 compute_cid <- function(content) {
