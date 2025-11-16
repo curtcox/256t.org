@@ -20,9 +20,11 @@ internal static class Cid
     private static string EncodeLength(int length)
     {
         var buffer = new byte[6];
+        var remaining = (ulong)length;
+
         for (var i = 0; i < buffer.Length; i++)
         {
-            buffer[buffer.Length - 1 - i] = (byte)(length >> (8 * i));
+            buffer[buffer.Length - 1 - i] = (byte)(remaining >> (8 * i));
         }
         return ToBase64Url(buffer);
     }
