@@ -334,3 +334,15 @@ jobs:
         run: gcc -std=c11 implementations/c/check.c implementations/c/cid.c -o implementations/c/check -lcrypto
       - name: Run C CID check
         run: ./implementations/c/check
+
+  zig:
+    name: Zig CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
+      - name: Build and run Zig CID check
+        working-directory: implementations/zig
+        run: zig build run
