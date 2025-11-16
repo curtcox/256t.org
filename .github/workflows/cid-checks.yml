@@ -306,6 +306,16 @@ jobs:
       - name: Run Bash CID check
         run: bash implementations/bash/check.sh
 
+  tcl:
+    name: Tcl CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Tcl
+        run: sudo apt-get update && sudo apt-get install -y tcl
+      - name: Run Tcl CID check
+        run: tclsh implementations/tcl/check.tcl
+
   clojure:
     name: Clojure CID check
     runs-on: ubuntu-latest
