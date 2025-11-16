@@ -139,6 +139,14 @@ jobs:
       - name: Run Perl CID check
         run: perl implementations/perl/check.pl
 
+  powershell:
+    name: PowerShell CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run PowerShell CID check
+        run: pwsh implementations/powershell/check.ps1
+
   bash:
     name: Bash CID check
     runs-on: ubuntu-latest
