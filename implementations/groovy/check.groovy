@@ -2,6 +2,7 @@
 
 import java.nio.file.Files
 import java.nio.file.Path
+import CidUtil
 
 List<Map.Entry<Path, String>> mismatches = []
 int count = 0

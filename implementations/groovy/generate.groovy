@@ -2,6 +2,7 @@
 
 import java.nio.file.Files
 import java.nio.file.Path
+import CidUtil
 
 Files.createDirectories(CidUtil.CIDS_DIR)
 
