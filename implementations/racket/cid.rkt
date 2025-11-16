@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/runtime-path
+         racket/string
          net/base64)
 
 (define-runtime-path here ".")
@@ -12,11 +13,13 @@
 (define cids-dir (build-path base-dir "cids"))
 
 (define (to-base64url bytes)
-  (bytes->string/utf-8
-   (base64-encode bytes
-                  #:mode 'url
-                  #:line-length #f
-                  #:padding? #f)))
+  (define base64-str
+    (bytes->string/utf-8 (base64-encode bytes)))
+  (define cleaned
+    (regexp-replace* #px"[\r\n]+" base64-str ""))
+  (define urlized
+    (string-replace (string-replace cleaned "+" "-") "/" "_"))
+  (regexp-replace #px"=+$" urlized ""))
 
 (define (encode-length length)
   (define (byte-at shift)
