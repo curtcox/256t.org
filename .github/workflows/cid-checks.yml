@@ -97,3 +97,14 @@ jobs:
       - name: Run Rust CID check
         working-directory: implementations/rust
         run: cargo run --release --quiet
+
+  ruby:
+    name: Ruby CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Run Ruby CID check
+        run: ruby implementations/ruby/check.rb
