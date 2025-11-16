@@ -106,7 +106,7 @@ jobs:
       - name: Install Scala
         run: sudo apt-get update && sudo apt-get install -y scala
       - name: Compile Scala CID checker
-        run: scalac implementations/scala/*.scala
+        run: scalac -d implementations/scala implementations/scala/*.scala
       - name: Run Scala CID check
         run: scala -cp implementations/scala Check
 
