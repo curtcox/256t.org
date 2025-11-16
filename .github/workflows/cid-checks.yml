@@ -394,3 +394,17 @@ jobs:
       - name: Build and run Zig CID check
         working-directory: implementations/zig
         run: zig build run
+
+  d:
+    name: D CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ldc-latest
+      - name: Build D CID checker
+        run: ldc2 implementations/d/check.d implementations/d/cid.d -of=implementations/d/check
+      - name: Run D CID check
+        run: implementations/d/check
