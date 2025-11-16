@@ -166,6 +166,18 @@ jobs:
       - name: Run Elixir CID check
         run: elixir implementations/elixir/check.exs
 
+  erlang:
+    name: Erlang CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Erlang
+        run: sudo apt-get update && sudo apt-get install -y erlang
+      - name: Compile Erlang CID checker
+        run: erlc -o implementations/erlang implementations/erlang/*.erl
+      - name: Run Erlang CID check
+        run: erl -noshell -pa implementations/erlang -s check run -s init stop
+
   julia:
     name: Julia CID check
     runs-on: ubuntu-latest
