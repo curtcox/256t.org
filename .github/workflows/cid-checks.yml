@@ -86,6 +86,23 @@ jobs:
       - name: Run Groovy CID check
         run: groovy -cp implementations/groovy implementations/groovy/check.groovy
 
+  haskell:
+    name: Haskell CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Haskell toolchain
+        run: sudo apt-get update && sudo apt-get install -y ghc cabal-install libghc-cryptonite-dev libghc-memory-dev
+      - name: Install Haskell dependencies
+        run: |
+          cabal update
+          cabal install --lib cryptonite memory
+      - name: Run Haskell CID check
+        working-directory: implementations/haskell
+        run: |
+          ghc -i. -outputdir dist -package bytestring -package cryptonite -package memory -package filepath -package directory check.hs -o cid-check
+          ./cid-check
+
   kotlin:
     name: Kotlin CID check
     runs-on: ubuntu-latest
