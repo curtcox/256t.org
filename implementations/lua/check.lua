@@ -59,7 +59,7 @@ local function sha512(data)
   out:write(data)
   out:close()
 
-  local handle = assert(io.popen("openssl dgst -binary -sha512 " .. tmp, "rb"))
+  local handle = assert(io.popen("openssl dgst -binary -sha512 " .. tmp, "r"))
   local digest = handle:read("*a")
   handle:close()
   os.remove(tmp)
