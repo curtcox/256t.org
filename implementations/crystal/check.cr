@@ -42,7 +42,8 @@ Dir.children(CIDS_DIR).sort.each do |entry|
 
   count += 1
   actual = entry
-  expected = compute_cid(File.read_bytes(path))
+  # Read file contents as raw bytes to avoid any encoding transformations.
+  expected = compute_cid(File.read(path, mode: "rb").to_slice)
   mismatches << {actual, expected} if actual != expected
 end
 
