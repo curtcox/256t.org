@@ -87,3 +87,13 @@ jobs:
       - name: Run Go CID check
         working-directory: implementations/go
         run: go run .
+
+  rust:
+    name: Rust CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run Rust CID check
+        working-directory: implementations/rust
+        run: cargo run --release --quiet
