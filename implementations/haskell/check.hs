@@ -1,5 +1,3 @@
-module Main where
-
 import CID (cidsDir, computeCID)
 import Control.Monad (filterM, forM, unless)
 import Data.List (sort)
