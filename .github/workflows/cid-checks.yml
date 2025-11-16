@@ -137,6 +137,18 @@ jobs:
         working-directory: implementations/dart
         run: dart run check.dart
 
+  elixir:
+    name: Elixir CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.18'
+          otp-version: '27.0'
+      - name: Run Elixir CID check
+        run: elixir implementations/elixir/check.exs
+
   julia:
     name: Julia CID check
     runs-on: ubuntu-latest
