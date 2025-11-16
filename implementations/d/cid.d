@@ -29,7 +29,6 @@ string computeCID(const(ubyte)[] content) {
 }
 
 version (unittest) {
-    import std.exception : assert;
     import std.encoding : Base64Exception;
 
     unittest {
