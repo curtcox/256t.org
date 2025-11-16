@@ -199,6 +199,16 @@ jobs:
       - name: Run Lua CID check
         run: lua implementations/lua/check.lua
 
+  crystal:
+    name: Crystal CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Crystal
+        run: sudo apt-get update && sudo apt-get install -y crystal
+      - name: Run Crystal CID check
+        run: crystal run implementations/crystal/check.cr
+
   csharp:
     name: C# CID check
     runs-on: ubuntu-latest
