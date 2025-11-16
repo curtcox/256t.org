@@ -1,7 +1,3 @@
-{-# OPTIONS_GHC -main-is Main.main #-}
-
-module Main (main) where
-
 import CID (cidsDir, computeCID)
 import Control.Monad (filterM, forM, unless)
 import Data.List (sort)

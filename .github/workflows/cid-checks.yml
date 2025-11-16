@@ -99,7 +99,7 @@ jobs:
           cabal install --lib cryptonite memory
       - name: Run Haskell CID check
         working-directory: implementations/haskell
-        run: runhaskell -main-is Main.main -package bytestring -package cryptonite -package memory check.hs
+        run: runhaskell -package bytestring -package cryptonite -package memory check.hs
 
   kotlin:
     name: Kotlin CID check
