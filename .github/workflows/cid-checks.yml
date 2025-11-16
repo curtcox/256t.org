@@ -223,3 +223,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Bash CID check
         run: bash implementations/bash/check.sh
+
+  c:
+    name: C CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C CID checker
+        run: gcc -std=c11 implementations/c/check.c implementations/c/cid.c -o implementations/c/check -lcrypto
+      - name: Run C CID check
+        run: ./implementations/c/check
