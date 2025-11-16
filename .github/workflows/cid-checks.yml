@@ -201,6 +201,14 @@ jobs:
         working-directory: implementations/rust
         run: cargo run --release --quiet
 
+  swift:
+    name: Swift CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Swift CID check
+        run: docker run --rm -v "$PWD":/workspace -w /workspace swift:5.10 bash -lc "swiftc implementations/swift/cid.swift implementations/swift/check.swift -o implementations/swift/check && implementations/swift/check"
+
   ruby:
     name: Ruby CID check
     runs-on: ubuntu-latest
