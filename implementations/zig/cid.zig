@@ -7,7 +7,8 @@ pub fn toBase64url(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
     const encoder = std.base64.url_safe_no_pad;
     const encoded_len = encoder.Encoder.calcSize(data.len);
     const buffer = try allocator.alloc(u8, encoded_len);
-    return encoder.Encoder.encode(buffer, data);
+    _ = encoder.Encoder.encode(buffer, data);
+    return buffer;
 }
 
 /// Encode length as an 8-character base64url string
