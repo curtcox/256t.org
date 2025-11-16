@@ -108,3 +108,14 @@ jobs:
           ruby-version: '3.3'
       - name: Run Ruby CID check
         run: ruby implementations/ruby/check.rb
+
+  php:
+    name: PHP CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Run PHP CID check
+        run: php implementations/php/check.php
