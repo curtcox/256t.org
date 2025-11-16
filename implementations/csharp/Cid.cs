@@ -22,7 +22,7 @@ internal static class Cid
         var buffer = new byte[6];
         for (var i = 0; i < buffer.Length; i++)
         {
-            buffer[^1 - i] = (byte)(length >> (8 * i));
+            buffer[buffer.Length - 1 - i] = (byte)(length >> (8 * i));
         }
         return ToBase64Url(buffer);
     }
