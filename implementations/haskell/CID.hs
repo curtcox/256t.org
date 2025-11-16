@@ -11,12 +11,16 @@ import Data.Bits ((.&.), shiftR)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import Data.Word (Word8)
+import System.FilePath ((</>))
+
+baseDir :: FilePath
+baseDir = ".." </> ".."
 
 cidsDir :: FilePath
-cidsDir = "cids"
+cidsDir = baseDir </> "cids"
 
 examplesDir :: FilePath
-examplesDir = "examples"
+examplesDir = baseDir </> "examples"
 
 toBase64Url :: BS.ByteString -> String
 toBase64Url bytes = BC.unpack (BAE.convertToBase BAE.Base64URLUnpadded bytes)
