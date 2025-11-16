@@ -3,8 +3,10 @@
 (require racket/runtime-path
          net/base64)
 
+(define-runtime-path here ".")
+
 (define base-dir
-  (simplify-path (build-path (this-expression-source-directory) ".." "..")))
+  (simplify-path (build-path here ".." "..")))
 
 (define examples-dir (build-path base-dir "examples"))
 (define cids-dir (build-path base-dir "cids"))
