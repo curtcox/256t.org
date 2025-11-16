@@ -138,3 +138,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Perl CID check
         run: perl implementations/perl/check.pl
+
+  bash:
+    name: Bash CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Bash CID check
+        run: bash implementations/bash/check.sh
