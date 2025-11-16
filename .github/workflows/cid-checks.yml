@@ -94,7 +94,8 @@ jobs:
       - name: Install Haskell toolchain
         run: sudo apt-get update && sudo apt-get install -y ghc libghc-cryptonite-dev libghc-memory-dev
       - name: Run Haskell CID check
-        run: runhaskell implementations/haskell/check.hs
+        working-directory: implementations/haskell
+        run: runhaskell check.hs
 
   kotlin:
     name: Kotlin CID check
