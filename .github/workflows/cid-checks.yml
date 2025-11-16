@@ -321,7 +321,7 @@ jobs:
           opam switch create . ocaml-base-compiler.5.1.1 -y
           opam install -y ocamlfind digestif base64
       - name: Build OCaml CID checker
-        run: opam exec --switch=. -- ocamlfind ocamlopt -package digestif,base64 -linkpkg -I implementations/ocaml implementations/ocaml/cid.ml implementations/ocaml/check.ml -o implementations/ocaml/check
+        run: opam exec --switch=. -- ocamlfind ocamlopt -package digestif.c,base64 -linkpkg -I implementations/ocaml implementations/ocaml/cid.ml implementations/ocaml/check.ml -o implementations/ocaml/check
       - name: Run OCaml CID check
         run: opam exec --switch=. -- implementations/ocaml/check
 
