@@ -76,6 +76,18 @@ jobs:
       - name: Run Java CID check
         run: java -cp implementations/java Check
 
+  kotlin:
+    name: Kotlin CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Kotlin
+        run: sudo apt-get update && sudo apt-get install -y kotlin
+      - name: Compile Kotlin CID checker
+        run: kotlinc implementations/kotlin/Check.kt -include-runtime -d implementations/kotlin/check.jar
+      - name: Run Kotlin CID check
+        run: java -jar implementations/kotlin/check.jar
+
   go:
     name: Go CID check
     runs-on: ubuntu-latest
