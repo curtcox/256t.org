@@ -288,9 +288,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jmerle/setup-nim@v2
+      - uses: iffy/install-nim@v5
         with:
-          nim-version: 'stable'
+          version: 'stable'
       - name: Install Nim dependencies
         run: nimble install nimcrypto -y
       - name: Run Nim CID check
