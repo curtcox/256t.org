@@ -283,6 +283,19 @@ jobs:
       - name: Run Bash CID check
         run: bash implementations/bash/check.sh
 
+  nim:
+    name: Nim CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: iffy/install-nim@v5
+        with:
+          version: 'stable'
+      - name: Install Nim dependencies
+        run: nimble install nimcrypto -y
+      - name: Run Nim CID check
+        run: nim compile --run implementations/nim/main.nim check
+
   c:
     name: C CID check
     runs-on: ubuntu-latest
