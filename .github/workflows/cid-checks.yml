@@ -310,7 +310,7 @@ jobs:
           chmod +x linux-install.sh
           sudo ./linux-install.sh
       - name: Run Clojure CID check
-        run: clojure -M implementations/clojure/check.clj
+        run: clojure -M -m implementations.clojure.check
 
   nim:
     name: Nim CID check

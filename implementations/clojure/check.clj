@@ -31,5 +31,3 @@
 
 (defn -main [& _]
   (System/exit (main)))
-
-(-main)
