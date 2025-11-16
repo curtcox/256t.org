@@ -100,7 +100,7 @@ jobs:
       - name: Run Haskell CID check
         working-directory: implementations/haskell
         run: |
-          ghc -i. -outputdir dist -package bytestring -package cryptonite -package memory -package filepath check.hs -o cid-check
+          ghc -i. -outputdir dist -package bytestring -package cryptonite -package memory -package filepath -package directory check.hs -o cid-check
           ./cid-check
 
   kotlin:
