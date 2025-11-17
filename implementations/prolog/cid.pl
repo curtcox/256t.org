@@ -65,11 +65,7 @@ hex_value(Value) -->
 base64url_bytes(Bytes, UrlSafe) :-
     % Produce standard Base64, then translate to the URL-safe alphabet and
     % strip padding/newlines.
-    base64_encoded(Bytes, Base64, [
-        encoding(octet),
-        padding(true),
-        line_width(0)
-    ]),
+    base64(Bytes, Base64, [encoding(octet)]),
     atom_codes(Base64, Codes),
     maplist(base64url_char, Codes, UrlCodes0),
     exclude(is_padding, UrlCodes0, UrlCodes),
