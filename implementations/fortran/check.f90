@@ -113,12 +113,12 @@ contains
   function encode_length(len64) result(prefix)
     integer(int64), intent(in) :: len64
     character(len=:), allocatable :: prefix
-    integer(int8) :: bytes(8)
+    integer(int8) :: bytes(6)
     integer(int64) :: temp
     integer :: i
 
     temp = len64
-    do i = 8, 1, -1
+    do i = 6, 1, -1
       bytes(i) = int(iand(temp, int(z'FF', int64)), int8)
       temp = ishft(temp, -8)
     end do
