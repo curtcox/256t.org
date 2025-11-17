@@ -39,13 +39,13 @@ encode_length(Length, Encoded) :-
     base64url_bytes(Bytes, Encoded).
 
 length_bytes_48(Length, Bytes) :-
-    Int is Length /\\ 0xFFFFFFFFFFFF,
+    Int is Length /\ 0xFFFFFFFFFFFF,
     bytes_from_int(6, Int, Bytes).
 
 bytes_from_int(0, _, []) :- !.
 bytes_from_int(N, Int, [Byte|Rest]) :-
     Shift is (N - 1) * 8,
-    Byte is (Int >> Shift) /\\ 0xFF,
+    Byte is (Int >> Shift) /\ 0xFF,
     NextN is N - 1,
     bytes_from_int(NextN, Int, Rest).
 
