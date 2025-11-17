@@ -310,6 +310,16 @@ jobs:
       - name: Run Perl CID check
         run: perl implementations/perl/check.pl
 
+  prolog:
+    name: Prolog CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SWI-Prolog
+        run: sudo apt-get update && sudo apt-get install -y swi-prolog
+      - name: Run Prolog CID check
+        run: swipl -q -f implementations/prolog/check.pl
+
   powershell:
     name: PowerShell CID check
     runs-on: ubuntu-latest
