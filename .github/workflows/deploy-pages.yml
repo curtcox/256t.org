@@ -109,6 +109,12 @@ jobs:
 
           hash_src = root / 'hash.html'
           shutil.copy2(hash_src, site_dir / 'hash.html')
+          
+          # Copy implementations directory for README links
+          impl_src = root / 'implementations'
+          impl_dest = site_dir / 'implementations'
+          if impl_src.exists():
+              shutil.copytree(impl_src, impl_dest, dirs_exist_ok=True)
           PY
 
       - name: Upload artifact
