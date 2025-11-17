@@ -46,11 +46,9 @@
          cids-dir
          compute-cid)
 (define (sha512-bytes content)
-  (define proc (subprocess #f #f #f
-                            "openssl" "dgst" "-sha512" "-binary"))
-  (define in-port (subprocess-input-port proc))
-  (define out-port (subprocess-output-port proc))
-  (define err-port (subprocess-error-port proc))
+  (define-values (out-port in-port err-port proc)
+    (subprocess #f #f #f
+                "openssl" "dgst" "-sha512" "-binary"))
   (write-bytes content in-port)
   (close-output-port in-port)
   (subprocess-wait proc)
