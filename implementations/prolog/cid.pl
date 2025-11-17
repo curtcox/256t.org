@@ -63,9 +63,10 @@ hex_value(Value) -->
     { code_type(Code, xdigit(Value)) }.
 
 base64url_bytes(Bytes, UrlSafe) :-
-    % Produce standard Base64 using a broadly supported predicate, then
-    % translate to the URL-safe alphabet and strip padding/newlines.
-    base64_encoded(Bytes, Base64, [encoding(octet)]),
+    % Encode using the most widely available base64/2 predicate to avoid
+    % compatibility issues on older SWI-Prolog releases, then translate to
+    % the URL-safe alphabet and strip padding/newlines.
+    base64(Bytes, Base64),
     atom_codes(Base64, Codes),
     maplist(base64url_char, Codes, UrlCodes0),
     exclude(is_padding, UrlCodes0, UrlCodes),

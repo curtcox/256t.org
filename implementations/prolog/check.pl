@@ -4,8 +4,12 @@
 :- use_module(library(apply)).
 :- use_module(library(filesex)).
 :- use_module(library(lists)).
+:- use_module(library(error)).
 
 main :-
+    catch(check_cids, Error, handle_error(Error)).
+
+check_cids :-
     cids_dir(CidsDir),
     directory_files(CidsDir, Entries),
     exclude(is_special, Entries, Files0),
@@ -18,6 +22,12 @@ main :-
     ), Mismatches),
     length(Files, Count),
     report(Mismatches, Count).
+
+handle_error(Error) :-
+    message_to_string(Error, Message),
+    format(user_error, 'CID check failed: ~w~n', [Message]),
+    print_message(error, Error),
+    halt(1).
 
 report([], Count) :-
     format('All ~d CID files match their contents.~n', [Count]),
