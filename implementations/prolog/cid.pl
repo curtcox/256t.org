@@ -7,8 +7,21 @@
 :- use_module(library(lists)).
 :- use_module(library(readutil)).
 
+:- dynamic cached_cids_dir/1.
+
 cids_dir(CidsDir) :-
-    prolog_load_context(directory, Dir),
+    cached_cids_dir(CidsDir),
+    !.
+cids_dir(CidsDir) :-
+    locate_cids_dir(CidsDir0),
+    asserta(cached_cids_dir(CidsDir0)),
+    CidsDir = CidsDir0.
+
+locate_cids_dir(CidsDir) :-
+    (   source_file(cids_dir(_), Source)
+    ->  file_directory_name(Source, Dir)
+    ;   prolog_load_context(directory, Dir)
+    ),
     directory_file_path(Dir, '..', ImplDir),
     directory_file_path(ImplDir, '..', Base0),
     absolute_file_name(Base0, Base, [file_type(directory)]),
