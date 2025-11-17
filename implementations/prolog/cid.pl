@@ -63,20 +63,11 @@ hex_value(Value) -->
     { code_type(Code, xdigit(Value)) }.
 
 base64url_bytes(Bytes, UrlSafe) :-
-    base64(Bytes, Base64),
-    atom_codes(Base64, Codes),
-    maplist(urlsafe_char, Codes, UrlCodes0),
-    exclude(should_skip, UrlCodes0, UrlCodes),
-    atom_codes(UrlSafe, UrlCodes).
-
-should_skip(61).    % '=' padding
-should_skip(10).    % '\n' line break (when default base64 wrapping is enabled)
-should_skip(13).    % '\r' carriage return
-
-urlsafe_char(Code, 0'-) :-
-    Code =:= 0'+,
-    !.
-urlsafe_char(Code, 0'_) :-
-    Code =:= 0'/,
-    !.
-urlsafe_char(Code, Code).
+    % Use built-in URL-safe encoding without padding or line wrapping to
+    % avoid post-processing and potential syntax pitfalls.
+    base64_encoded(Bytes, UrlSafe, [
+        encoding(octet),
+        padding(false),
+        line_width(0),
+        charset(url)
+    ]).
