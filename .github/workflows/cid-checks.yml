@@ -320,6 +320,16 @@ jobs:
       - name: Run Prolog CID check
         run: swipl -q -f implementations/prolog/check.pl
 
+  emacs-lisp:
+    name: Emacs Lisp CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Emacs
+        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+      - name: Run Emacs Lisp CID check
+        run: emacs --batch -l implementations/emacs-lisp/check.el
+
   powershell:
     name: PowerShell CID check
     runs-on: ubuntu-latest
@@ -402,6 +412,14 @@ jobs:
         run: gcc -std=c11 implementations/c/check.c implementations/c/cid.c -o implementations/c/check -lcrypto
       - name: Run C CID check
         run: ./implementations/c/check
+
+  cmake:
+    name: CMake CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CMake CID check
+        run: cmake -P implementations/cmake/check.cmake
 
   zig:
     name: Zig CID check
