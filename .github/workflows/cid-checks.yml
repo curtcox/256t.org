@@ -310,6 +310,16 @@ jobs:
       - name: Run Perl CID check
         run: perl implementations/perl/check.pl
 
+  emacs-lisp:
+    name: Emacs Lisp CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Emacs
+        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+      - name: Run Emacs Lisp CID check
+        run: emacs --batch -l implementations/emacs-lisp/check.el
+
   powershell:
     name: PowerShell CID check
     runs-on: ubuntu-latest
