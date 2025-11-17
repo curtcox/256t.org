@@ -1,12 +1,14 @@
 # [256t.org](https://curtcox.github.io/256t.org/)
 
 ## What?
-It is a domain dedicated to be a public specification for a specific type of content addressable storage.
+
+256t.org is a domain dedicated to be a public specification for a specific type of content addressable storage.
 In this scheme the last element of up to 94 characters in a URL path defines the content at that URL.
 At some point in the future, it may evolve to also be a public utility for publishing content using the scheme.
 However, that is currently beyond the scope if this site.
 
 ## Why?
+
 Why [256t.org](https://256t.org)?
 A simple standard for a generic content addressable store seems generally useful to me.
 
@@ -51,6 +53,7 @@ The 94 character content tag consists of an 8 character length prefix followed b
 | info    | length(content)       | sha-512(content)     | content               |
 
 ### Base64
+
 More specifically, [filename and URL safe](https://datatracker.ietf.org/doc/html/rfc4648#section-5) [Base64](https://en.wikipedia.org/wiki/Base64) aka base64url.
 
 ## CID
@@ -60,7 +63,10 @@ This 94 character or less base64 string which identifies content will be referre
 ## When
 
 ## Where
+
 Any server could expose a base URL with contents that adhere to this spec.
+Alas, what servers host what content and how to find them is beyond the scope of this text.
+This server hosts a small set of CIDs [here](cids/).
 
 ## Beyond the Scope of This Text
 
@@ -74,3 +80,19 @@ These things are beyond the scope of this text.
 ## Tools
 
 - [Hash calculator](hash.html) — type text and instantly see its SHA-512 hash encoded in Base64URL.
+
+## What about Collisions?
+
+There are a few different types of collisions that are important to distinquish between:
+- accidental -- purely by chance
+- adversarial -- someone tried to cause it 
+- existing -- a CID has been produced from different content
+- problem -- usage of the CID to get content returned the wrong content
+
+The odds of a problem collision are quite low. There are two ways to minimize them:
+- Always verify CID content. There are many implementations to do so. It is easier to just lie than engineer a collision.
+- Reduce adversaries. If nobody is putting problem content where you might accept it, you are left with just accidents.
+
+I'm comfortable just ignoring accidental problem collisions.
+
+## Supported Languages
