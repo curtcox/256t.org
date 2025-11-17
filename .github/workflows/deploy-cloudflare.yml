@@ -1,0 +1,115 @@
+name: Deploy site to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: "cloudflare-pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build static site
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install markdown
+          python - <<'PY'
+          import shutil
+          import markdown
+          from pathlib import Path
+
+          # The script is executed from the repository root, but when running
+          # code via ``python - <<'PY'`` the ``__file__`` attribute points to a
+          # temporary file under ``/home/runner/work``. That caused the build to
+          # look for README.md in ``/home/runner/work/README.md`` instead of the
+          # cloned repository. Use the current working directory as the repo
+          # root so the paths resolve correctly regardless of how the script is
+          # invoked.
+          root = Path.cwd()
+          readme = root / 'README.md'
+          site_dir = root / 'dist'
+          site_dir.mkdir(exist_ok=True)
+          html_body = markdown.markdown(
+              readme.read_text(encoding='utf-8'),
+              extensions=[
+                  'fenced_code',
+                  'tables',
+                  'toc',
+                  'sane_lists',
+              ],
+          )
+          (site_dir / 'index.html').write_text(f'''<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>256t.org</title>
+            <style>
+              :root {{
+                color-scheme: light dark;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                line-height: 1.6;
+              }}
+              body {{
+                margin: 0 auto;
+                padding: 2rem 1.5rem 4rem;
+                max-width: 70ch;
+              }}
+              pre {{
+                padding: 1rem;
+                overflow-x: auto;
+                border-radius: 0.5rem;
+                background: rgba(0, 0, 0, 0.05);
+              }}
+              code {{
+                font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+              }}
+              table {{
+                border-collapse: collapse;
+                width: 100%;
+                overflow: hidden;
+              }}
+              th, td {{
+                border: 1px solid rgba(125, 125, 125, 0.4);
+                padding: 0.5rem;
+                text-align: left;
+              }}
+              thead {{
+                background: rgba(0, 0, 0, 0.08);
+              }}
+              a {{
+                color: inherit;
+              }}
+              a:hover, a:focus {{
+                text-decoration: underline;
+              }}
+            </style>
+          </head>
+          <body>
+          {html_body}
+          </body>
+          </html>
+          ''', encoding='utf-8')
+
+          hash_src = root / 'hash.html'
+          shutil.copy2(hash_src, site_dir / 'hash.html')
+          PY
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 256t-org
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
