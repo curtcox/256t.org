@@ -69,6 +69,10 @@ base64url_bytes(Bytes, UrlSafe) :-
     exclude(=(0'='), UrlCodes0, UrlCodes),
     atom_codes(UrlSafe, UrlCodes).
 
-urlsafe_char(0'+, 0'-) :- !.
-urlsafe_char(0'/, 0'_) :- !.
+urlsafe_char(Code, 0'-) :-
+    Code =:= 0'+,
+    !.
+urlsafe_char(Code, 0'_) :-
+    Code =:= 0'/,
+    !.
 urlsafe_char(Code, Code).
