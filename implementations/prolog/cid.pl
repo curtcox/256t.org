@@ -66,8 +66,10 @@ base64url_bytes(Bytes, UrlSafe) :-
     base64(Bytes, Base64),
     atom_codes(Base64, Codes),
     maplist(urlsafe_char, Codes, UrlCodes0),
-    exclude(=(61), UrlCodes0, UrlCodes),
+    exclude(is_padding, UrlCodes0, UrlCodes),
     atom_codes(UrlSafe, UrlCodes).
+
+is_padding(61).
 
 urlsafe_char(Code, 0'-) :-
     Code =:= 0'+,
