@@ -446,3 +446,15 @@ jobs:
         run: ldc2 implementations/d/check.d implementations/d/cid.d -of=implementations/d/check
       - name: Run D CID check
         run: implementations/d/check
+
+  fortran:
+    name: Fortran CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Fortran compiler
+        run: sudo apt-get update && sudo apt-get install -y gfortran
+      - name: Build Fortran CID checker
+        run: gfortran implementations/fortran/check.f90 -o implementations/fortran/check
+      - name: Run Fortran CID check
+        run: implementations/fortran/check
