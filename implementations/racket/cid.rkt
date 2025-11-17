@@ -45,23 +45,24 @@
          cids-dir
          compute-cid)
 (define (sha512-bytes content)
-  (define in-port (open-input-bytes content))
-  (define out-port (open-output-bytes))
-  (define err-port (open-output-bytes))
-  (define proc (subprocess out-port in-port err-port
+  (define proc (subprocess #f #f #f
                             "openssl" "dgst" "-sha512" "-binary"))
+  (define in-port (subprocess-input-port proc))
+  (define out-port (subprocess-output-port proc))
+  (define err-port (subprocess-error-port proc))
+  (write-bytes content in-port)
+  (close-output-port in-port)
   (subprocess-wait proc)
   (define exit-code (subprocess-status proc))
-  (define stderr-bytes (get-output-bytes err-port))
-  (close-input-port in-port)
-  (close-output-port err-port)
+  (define stderr-bytes (port->bytes err-port))
+  (close-input-port err-port)
   (cond
     [(zero? exit-code)
-     (define digest (get-output-bytes out-port))
-     (close-output-port out-port)
+     (define digest (port->bytes out-port))
+     (close-input-port out-port)
      digest]
     [else
-     (close-output-port out-port)
+     (close-input-port out-port)
      (error 'sha512-bytes
             (string-append "openssl sha512 failed: "
                            (bytes->string/utf-8 stderr-bytes)))]))
