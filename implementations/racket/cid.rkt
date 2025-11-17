@@ -45,24 +45,62 @@
          examples-dir
          cids-dir
          compute-cid)
+(define (hex->bytes hex)
+  (define cleaned (string-downcase (string-trim hex)))
+  (define len (string-length cleaned))
+  (unless (even? len)
+    (error 'hex->bytes "expected even-length hex string"))
+  (define out (make-bytes (/ len 2)))
+  (for ([i (in-range 0 len 2)]
+        [idx (in-naturals)])
+    (define byte-val (string->number (substring cleaned i (+ i 2)) 16))
+    (unless byte-val
+      (error 'hex->bytes "invalid hex digits"))
+    (bytes-set! out idx byte-val))
+  out)
+
+(define (sha512sum-digest sha512sum-path data-file)
+  (define exit-code 0)
+  (define output
+    (with-output-to-string
+      (lambda ()
+        (set! exit-code (system*/exit-code sha512sum-path data-file)))))
+  (define digest-hex (car (string-split (string-trim output))))
+  (values (hex->bytes digest-hex) exit-code))
+
 (define (sha512-bytes content)
-  ;; Use temporary files to avoid dependence on specific subprocess port orderings
+  ;; Prefer openssl when available, otherwise fall back to sha512sum.
+  (define openssl-path (find-executable-path "openssl"))
+  (define sha512sum-path (find-executable-path "sha512sum"))
   (define data-file (make-temporary-file "cid-data-~a"))
-  (define digest-file (make-temporary-file "cid-digest-~a"))
+  (define digest-file #f)
   (dynamic-wind
     void
     (lambda ()
       (call-with-output-file data-file #:exists 'truncate #:mode 'binary
         (lambda (out) (write-bytes content out)))
-      (define exit-code
-        (system*/exit-code "openssl" "dgst" "-sha512" "-binary"
-                           "-out" digest-file data-file))
       (cond
-        [(zero? exit-code) (file->bytes digest-file)]
+        [openssl-path
+         (set! digest-file (make-temporary-file "cid-digest-~a"))
+         (define exit-code
+           (system*/exit-code openssl-path "dgst" "-sha512" "-binary"
+                              "-out" digest-file data-file))
+         (cond
+           [(zero? exit-code) (file->bytes digest-file)]
+           [else
+            (error 'sha512-bytes
+                   (format "openssl sha512 failed with exit code ~a" exit-code))])]
+        [sha512sum-path
+         (define-values (digest exit-code)
+           (sha512sum-digest sha512sum-path data-file))
+         (cond
+           [(zero? exit-code) digest]
+           [else
+            (error 'sha512-bytes
+                   (format "sha512sum failed with exit code ~a" exit-code))])]
         [else
-         (error 'sha512-bytes
-                (format "openssl sha512 failed with exit code ~a" exit-code))]))
+         (error 'sha512-bytes "no available sha512 executable (openssl or sha512sum)" )]))
     (lambda ()
       (when (file-exists? data-file) (delete-file data-file))
-      (when (file-exists? digest-file) (delete-file digest-file)))))
+      (when (and digest-file (file-exists? digest-file)) (delete-file digest-file)))))
 
