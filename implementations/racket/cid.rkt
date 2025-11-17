@@ -46,24 +46,23 @@
          cids-dir
          compute-cid)
 (define (sha512-bytes content)
-  ;; subprocess returns ports in order: stdout (input), stdin (output), stderr (input)
-  (define-values (stdout-port stdin-port stderr-port proc)
-    (subprocess #f #f #f
-                "openssl" "dgst" "-sha512" "-binary"))
-  (write-bytes content stdin-port)
-  (close-output-port stdin-port)
-  (subprocess-wait proc)
-  (define exit-code (subprocess-status proc))
-  (define stderr-bytes (port->bytes stderr-port))
-  (close-input-port stderr-port)
-  (cond
-    [(zero? exit-code)
-     (define digest (port->bytes stdout-port))
-     (close-input-port stdout-port)
-     digest]
-    [else
-     (close-input-port stdout-port)
-     (error 'sha512-bytes
-            (string-append "openssl sha512 failed: "
-                           (bytes->string/utf-8 stderr-bytes)))]))
+  ;; Use temporary files to avoid dependence on specific subprocess port orderings
+  (define data-file (make-temporary-file "cid-data-~a"))
+  (define digest-file (make-temporary-file "cid-digest-~a"))
+  (dynamic-wind
+    void
+    (lambda ()
+      (call-with-output-file data-file #:exists 'truncate #:mode 'binary
+        (lambda (out) (write-bytes content out)))
+      (define exit-code
+        (system*/exit-code "openssl" "dgst" "-sha512" "-binary"
+                           "-out" digest-file data-file))
+      (cond
+        [(zero? exit-code) (file->bytes digest-file)]
+        [else
+         (error 'sha512-bytes
+                (format "openssl sha512 failed with exit code ~a" exit-code))]))
+    (lambda ()
+      (when (file-exists? data-file) (delete-file data-file))
+      (when (file-exists? digest-file) (delete-file digest-file)))))
 
