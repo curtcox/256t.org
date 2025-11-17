@@ -35,14 +35,19 @@ compute_cid(File, CID) :-
     atomic_list_concat([Prefix, Suffix], CID).
 
 encode_length(Length, Encoded) :-
-    format(atom(Hex), '~16r', [Length]),
-    atom_codes(Hex, HexCodes),
-    length(HexCodes, HexLen),
-    Pad is 12 - HexLen,
-    pad_codes(Pad, 0'0, PadCodes),
-    append(PadCodes, HexCodes, Padded),
-    hex_codes_bytes(Padded, Bytes),
+    length_bytes_48(Length, Bytes),
     base64url_bytes(Bytes, Encoded).
+
+length_bytes_48(Length, Bytes) :-
+    Int is Length /\\ 0xFFFFFFFFFFFF,
+    bytes_from_int(6, Int, Bytes).
+
+bytes_from_int(0, _, []) :- !.
+bytes_from_int(N, Int, [Byte|Rest]) :-
+    Shift is (N - 1) * 8,
+    Byte is (Int >> Shift) /\\ 0xFF,
+    NextN is N - 1,
+    bytes_from_int(NextN, Int, Rest).
 
 content_suffix(Length, Bytes, Suffix) :-
     (   Length =< 64
@@ -50,28 +55,6 @@ content_suffix(Length, Bytes, Suffix) :-
     ;   crypto_data_hash(Bytes, HashBytes, [algorithm(sha512), encoding(octet)]),
         base64url_bytes(HashBytes, Suffix)
     ).
-
-pad_codes(Pad, _, []) :-
-    Pad =< 0,
-    !.
-pad_codes(Pad, Code, [Code|Rest]) :-
-    Next is Pad - 1,
-    pad_codes(Next, Code, Rest).
-
-hex_codes_bytes(Codes, Bytes) :-
-    phrase(hex_bytes(Bytes), Codes).
-
-hex_bytes([]) -->
-    [].
-hex_bytes([Byte|Rest]) -->
-    hex_value(High),
-    hex_value(Low),
-    {Byte is (High << 4) + Low},
-    hex_bytes(Rest).
-
-hex_value(Value) -->
-    [Code],
-    { code_type(Code, xdigit(Value)) }.
 
 base64url_bytes(Bytes, UrlSafe) :-
     % Encode octets, translate to the URL-safe alphabet, and strip
