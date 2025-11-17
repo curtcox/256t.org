@@ -34,9 +34,7 @@ encode_length(Length, Encoded) :-
 content_suffix(Length, Bytes, Suffix) :-
     (   Length =< 64
     ->  base64url_bytes(Bytes, Suffix)
-    ;   crypto_data_hash(Bytes, Hex, [algorithm(sha512), encoding(octet)]),
-        atom_codes(Hex, HexCodes),
-        hex_codes_bytes(HexCodes, HashBytes),
+    ;   crypto_data_hash(Bytes, HashBytes, [algorithm(sha512), encoding(octet)]),
         base64url_bytes(HashBytes, Suffix)
     ).
 
