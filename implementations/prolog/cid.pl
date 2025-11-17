@@ -52,9 +52,55 @@ bytes_from_int(N, Int, [Byte|Rest]) :-
 content_suffix(Length, Bytes, Suffix) :-
     (   Length =< 64
     ->  base64url_bytes(Bytes, Suffix)
-    ;   crypto_data_hash(Bytes, HashBytes, [algorithm(sha512), encoding(octet)]),
+    ;   hash_octets(Bytes, HashBytes),
         base64url_bytes(HashBytes, Suffix)
     ).
+
+hash_octets(Bytes, Octets) :-
+    crypto_data_hash(Bytes, Hash, [algorithm(sha512)]),
+    normalize_hash(Hash, Octets).
+
+normalize_hash(Hash, Octets) :-
+    (   is_list(Hash)
+    ->  normalize_hash_list(Hash, Octets)
+    ;   atom(Hash)
+    ->  atom_codes(Hash, Codes),
+        normalize_hash_list(Codes, Octets)
+    ;   string(Hash)
+    ->  string_codes(Hash, Codes),
+        normalize_hash_list(Codes, Octets)
+    ).
+
+normalize_hash_list([First,Second|Rest], Octets) :-
+    is_hex_digit(First),
+    is_hex_digit(Second),
+    length(Rest, TailLen),
+    TailLen mod 2 =:= 0,
+    hex_pairs_to_bytes([First,Second|Rest], Octets),
+    !.
+normalize_hash_list(List, List).
+
+hex_pairs_to_bytes([], []).
+hex_pairs_to_bytes([Hi,Lo|RestCodes], [Byte|RestBytes]) :-
+    hex_value(Hi, HighVal),
+    hex_value(Lo, LowVal),
+    Byte is (HighVal << 4) + LowVal,
+    hex_pairs_to_bytes(RestCodes, RestBytes).
+
+hex_value(Code, Value) :-
+    Code >= 0'0, Code =< 0'9,
+    Value is Code - 0'0.
+hex_value(Code, Value) :-
+    Code >= 0'a, Code =< 0'f,
+    Value is 10 + Code - 0'a.
+hex_value(Code, Value) :-
+    Code >= 0'A, Code =< 0'F,
+    Value is 10 + Code - 0'A.
+
+is_hex_digit(Code) :-
+    (Code >= 0'0, Code =< 0'9
+    ; Code >= 0'a, Code =< 0'f
+    ; Code >= 0'A, Code =< 0'F).
 
 base64url_bytes(Bytes, UrlSafe) :-
     % Encode octets, translate to the URL-safe alphabet, and strip
