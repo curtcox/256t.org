@@ -57,7 +57,7 @@ content_suffix(Length, Bytes, Suffix) :-
     ).
 
 hash_octets(Bytes, Octets) :-
-    crypto_data_hash(Bytes, Hash, [algorithm(sha512)]),
+    crypto_data_hash(Bytes, Hash, [algorithm(sha512), encoding(octet)]),
     normalize_hash(Hash, Octets).
 
 normalize_hash(Hash, Octets) :-
