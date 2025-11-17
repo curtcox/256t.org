@@ -61,13 +61,24 @@ hex_value(Value) -->
     { code_type(Code, xdigit(Value)) }.
 
 base64url_bytes(Bytes, UrlSafe) :-
-    % Encode octets with the portable base64_encoded/3 predicate, then
-    % translate to the URL-safe alphabet and strip padding/newlines.
-    base64_encoded(Bytes, Base64, [encoding(octet)]),
+    % Encode octets, translate to the URL-safe alphabet, and strip
+    % padding/newlines. Newer SWI releases ship base64_encoded/3, while
+    % older ones only provide base64/2, so we select the available
+    % predicate at runtime for compatibility.
+    base64_octets(Bytes, Base64),
     atom_codes(Base64, Codes),
     maplist(base64url_char, Codes, UrlCodes0),
     exclude(is_padding, UrlCodes0, UrlCodes),
     atom_codes(UrlSafe, UrlCodes).
+
+:- if(current_predicate(base64_encoded/3)).
+base64_octets(Bytes, Base64) :-
+    base64_encoded(Bytes, Base64, [encoding(octet)]).
+:- else.
+base64_octets(Bytes, Base64) :-
+    string_codes(String, Bytes),
+    base64(String, Base64).
+:- endif.
 
 base64url_char(0'+, 0'-) :- !.
 base64url_char(0'/, 0'_) :- !.
