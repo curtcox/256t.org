@@ -120,32 +120,18 @@ jobs:
           </html>
           ''', encoding='utf-8')
 
-          hash_src = root / 'hash.html'
-          shutil.copy2(hash_src, site_dir / 'hash.html')
-          
-          examples_html_src = root / 'examples.html'
-          shutil.copy2(examples_html_src, site_dir / 'examples.html')
-          
-          cids_json_src = root / 'cids.json'
-          shutil.copy2(cids_json_src, site_dir / 'cids.json')
-          
-          # Copy implementations directory for README links
-          impl_src = root / 'implementations'
-          impl_dest = site_dir / 'implementations'
-          if impl_src.exists():
-              shutil.copytree(impl_src, impl_dest, dirs_exist_ok=True)
-          
-          # Copy examples directory
-          examples_src = root / 'examples'
-          examples_dest = site_dir / 'examples'
-          if examples_src.exists():
-              shutil.copytree(examples_src, examples_dest, dirs_exist_ok=True)
-          
-          # Copy cids directory
-          cids_src = root / 'cids'
-          cids_dest = site_dir / 'cids'
-          if cids_src.exists():
-              shutil.copytree(cids_src, cids_dest, dirs_exist_ok=True)
+          # Copy everything from repository to dist
+          import os
+          for item in root.iterdir():
+              if item.name in ['.git', '.github', 'dist']:
+                  continue
+              dest = site_dir / item.name
+              if item.is_file():
+                  shutil.copy2(item, dest)
+              elif item.is_dir():
+                  if dest.exists():
+                      shutil.rmtree(dest)
+                  shutil.copytree(item, dest)
           PY
 
       - name: Deploy to Cloudflare Pages
