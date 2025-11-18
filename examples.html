@@ -42,17 +42,88 @@
       background: rgba(0, 102, 204, 0.1);
       text-decoration: underline;
     }
-    select {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      border-radius: 0.5rem;
-      border: 1px solid rgba(125, 125, 125, 0.4);
-      background: rgba(0, 0, 0, 0.02);
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
     }
-    select:focus {
-      outline: 2px solid rgba(0, 120, 255, 0.4);
-      border-color: transparent;
+    .cid-button {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid rgba(125, 125, 125, 0.4);
+      border-radius: 0.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .cid-button:hover {
+      background: rgba(0, 102, 204, 0.1);
+      border-color: rgba(0, 102, 204, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .cid-button:active {
+      transform: translateY(0);
+    }
+    .cid-button.selected {
+      border-color: #0066cc;
+      background: rgba(0, 102, 204, 0.15);
+      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    }
+    .cid-preview {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.6);
+      word-break: break-all;
+    }
+    .cid-content {
+      font-size: 0.85rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+    }
+    .cid-thumbnail {
+      width: 100%;
+      height: 100px;
+      object-fit: contain;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.25rem;
+      background: white;
+    }
+    .full-content {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 0.75rem;
+      min-height: 200px;
+    }
+    .full-content.hidden {
+      display: none;
+    }
+    .full-content h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+    }
+    .full-content-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+    }
+    .full-content-image {
+      max-width: 100%;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.5rem;
+      background: white;
     }
     .result {
       background: rgba(0, 0, 0, 0.05);
@@ -153,12 +224,15 @@
   </header>
 
   <div>
-    <label for="cidSelect" style="font-weight: 600; display: block; margin-bottom: 0.5rem;">
-      Select a CID file:
-    </label>
-    <select id="cidSelect">
-      <option value="">-- Select a file --</option>
-    </select>
+    <h2 style="font-weight: 600; margin-bottom: 0.5rem;">Select a CID file:</h2>
+    <div id="buttonGrid" class="button-grid">
+      <!-- Buttons will be populated here -->
+    </div>
+  </div>
+
+  <div id="fullContent" class="full-content hidden">
+    <h3>Selected Content</h3>
+    <div id="fullContentDisplay"></div>
   </div>
 
   <div id="result" class="result hidden">
@@ -192,7 +266,7 @@
 
   <script src="implementations/ecmascript/cid.js"></script>
   <script>
-    const cidSelect = document.getElementById('cidSelect');
+    const buttonGrid = document.getElementById('buttonGrid');
     const resultDiv = document.getElementById('result');
     const statusDiv = document.getElementById('status');
     const referenceCidEl = document.getElementById('referenceCid');
@@ -200,6 +274,10 @@
     const contentPreviewEl = document.getElementById('contentPreview');
     const contentLengthEl = document.getElementById('contentLength');
     const codeSnippetEl = document.getElementById('codeSnippet');
+    const fullContentDiv = document.getElementById('fullContent');
+    const fullContentDisplay = document.getElementById('fullContentDisplay');
+
+    let selectedButton = null;
 
     // Code snippet to display
     const codeSnippet = `async function computeCid(content) {
@@ -223,19 +301,68 @@
 
     codeSnippetEl.textContent = codeSnippet;
 
+    // Check if content is SVG
+    function isSvgContent(content) {
+      return content.trim().startsWith('<svg');
+    }
+
+    // Create a button element for a CID
+    async function createCidButton(item) {
+      const button = document.createElement('button');
+      button.className = 'cid-button';
+      button.dataset.cid = item.cid;
+
+      const cidPreview = document.createElement('div');
+      cidPreview.className = 'cid-preview';
+      cidPreview.textContent = item.cidPreview + '...';
+      button.appendChild(cidPreview);
+
+      // Check if it's an SVG by fetching a small portion or checking text preview
+      const isSvg = item.textPreview.trim().startsWith('<svg');
+      
+      if (isSvg) {
+        try {
+          const response = await fetch(`cids/${item.cid}`);
+          const content = await response.text();
+          
+          const thumbnail = document.createElement('div');
+          thumbnail.innerHTML = content;
+          const svgEl = thumbnail.querySelector('svg');
+          if (svgEl) {
+            svgEl.classList.add('cid-thumbnail');
+            svgEl.removeAttribute('width');
+            svgEl.removeAttribute('height');
+            button.appendChild(svgEl);
+          }
+        } catch (error) {
+          console.error('Error loading SVG:', error);
+          // Fallback to text preview
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'cid-content';
+          contentDiv.textContent = item.textPreview;
+          button.appendChild(contentDiv);
+        }
+      } else {
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'cid-content';
+        contentDiv.textContent = item.textPreview;
+        button.appendChild(contentDiv);
+      }
+
+      button.addEventListener('click', () => handleCidSelection(item.cid, button));
+      return button;
+    }
+
     // Fetch list of CID files from JSON
     async function loadCidList() {
       try {
         const response = await fetch('cids.json');
         const cidData = await response.json();
         
-        // Populate dropdown
+        // Create buttons for all CID files
         for (const item of cidData) {
-          const option = document.createElement('option');
-          option.value = item.cid;
-          // Show first 20 chars of CID and first 100 chars of text
-          option.textContent = `${item.cidPreview}... | ${item.textPreview.substring(0, 50)}${item.textPreview.length > 50 ? '...' : ''}`;
-          cidSelect.appendChild(option);
+          const button = await createCidButton(item);
+          buttonGrid.appendChild(button);
         }
       } catch (error) {
         console.error('Error loading CID list:', error);
@@ -244,12 +371,13 @@
     }
 
     // Handle CID selection
-    cidSelect.addEventListener('change', async (event) => {
-      const selectedCid = event.target.value;
-      if (!selectedCid) {
-        resultDiv.classList.add('hidden');
-        return;
+    async function handleCidSelection(selectedCid, button) {
+      // Update selected button styling
+      if (selectedButton) {
+        selectedButton.classList.remove('selected');
       }
+      button.classList.add('selected');
+      selectedButton = button;
 
       try {
         // Fetch the content
@@ -262,7 +390,7 @@
         // Calculate CID
         const calculatedCid = await computeCid(content);
         
-        // Display results
+        // Display results in the validation section
         referenceCidEl.textContent = selectedCid;
         calculatedCidEl.textContent = calculatedCid;
         contentPreviewEl.textContent = content.substring(0, 100);
@@ -275,12 +403,31 @@
           : '<span class="status-icon failure"></span> CID does not match';
         
         resultDiv.classList.remove('hidden');
+
+        // Display full content in the dedicated area
+        fullContentDisplay.innerHTML = '';
+        if (isSvgContent(content)) {
+          const svgContainer = document.createElement('div');
+          svgContainer.innerHTML = content;
+          const svgEl = svgContainer.querySelector('svg');
+          if (svgEl) {
+            svgEl.classList.add('full-content-image');
+            fullContentDisplay.appendChild(svgEl);
+          }
+        } else {
+          const textDiv = document.createElement('div');
+          textDiv.className = 'full-content-text';
+          textDiv.textContent = content;
+          fullContentDisplay.appendChild(textDiv);
+        }
+        fullContentDiv.classList.remove('hidden');
+
       } catch (error) {
         console.error('Error processing CID:', error);
         statusDiv.innerHTML = '<span class="status-icon failure"></span> Error loading or calculating CID';
         resultDiv.classList.remove('hidden');
       }
-    });
+    }
 
     // Load CID list on page load
     loadCidList();
