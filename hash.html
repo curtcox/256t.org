@@ -99,6 +99,20 @@
   <label for="inputText" class="sr-only">Text to hash</label>
   <textarea id="inputText" placeholder="Start typing..."></textarea>
 
+  <fieldset style="border: 1px solid rgba(125, 125, 125, 0.3); border-radius: 0.5rem; padding: 1rem; margin: 0;">
+    <legend style="font-weight: 600; padding: 0 0.5rem;">Text Normalization Options</legend>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="checkbox" id="normalizeCRLF" checked>
+        <span>Normalize line endings (CRLF → LF)</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="checkbox" id="ensureTrailingNewline">
+        <span>Add trailing newline if missing</span>
+      </label>
+    </div>
+  </fieldset>
+
   <section class="output" aria-live="polite" aria-atomic="true">
     <dl>
       <div>
@@ -134,8 +148,26 @@
     const prefixValue = document.getElementById('prefixValue');
     const fragmentValue = document.getElementById('fragmentValue');
     const errorEl = document.getElementById('error');
+    const normalizeCRLF = document.getElementById('normalizeCRLF');
+    const ensureTrailingNewline = document.getElementById('ensureTrailingNewline');
 
     const formatByteLabel = (length) => `${length} byte${length === 1 ? '' : 's'}`;
+
+    function normalizeText(text) {
+      let normalized = text;
+      
+      // Normalize CRLF to LF if enabled
+      if (normalizeCRLF.checked) {
+        normalized = normalized.replace(/\r\n/g, '\n');
+      }
+      
+      // Ensure trailing newline if enabled
+      if (ensureTrailingNewline.checked && normalized.length > 0 && !normalized.endsWith('\n')) {
+        normalized = normalized + '\n';
+      }
+      
+      return normalized;
+    }
 
     if (!window.crypto || !window.crypto.subtle) {
       errorEl.textContent = 'This browser does not support the Web Crypto API required to compute hashes.';
@@ -150,13 +182,14 @@
         const requestId = ++latestRequest;
         try {
           errorEl.hidden = true;
-          const data = encoder.encode(text);
+          const normalizedText = normalizeText(text);
+          const data = encoder.encode(normalizedText);
           byteLength.textContent = formatByteLabel(data.length);
 
           const lengthBase64 = encodeLength(data.length);
           base64LengthEl.textContent = lengthBase64;
 
-          const firstSixtyFour = text.slice(0, 64);
+          const firstSixtyFour = normalizedText.slice(0, 64);
           const prefixBytes = encoder.encode(firstSixtyFour);
           const prefixBase64 = prefixBytes.length ? toBase64Url(prefixBytes) : '—';
           prefixValue.textContent = prefixBase64;
@@ -188,6 +221,14 @@
 
       input.addEventListener('input', (event) => {
         updateHash(event.target.value);
+      });
+
+      normalizeCRLF.addEventListener('change', () => {
+        updateHash(input.value);
+      });
+
+      ensureTrailingNewline.addEventListener('change', () => {
+        updateHash(input.value);
       });
 
       updateHash('');
