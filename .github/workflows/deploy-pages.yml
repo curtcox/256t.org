@@ -87,8 +87,8 @@ jobs:
               }}
               body {{
                 margin: 0 auto;
-                padding: 2rem 1.5rem 4rem;
-                max-width: 70ch;
+                padding: 2rem clamp(2rem, 5vw, 8rem) 4rem;
+                max-width: 140ch;
               }}
               pre {{
                 padding: 1rem;
