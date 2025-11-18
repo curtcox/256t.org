@@ -42,8 +42,12 @@ Both deployments use the same build process:
 1. Install Python dependencies (pip, markdown)
 2. Convert `README.md` to HTML using Python's markdown library
 3. Copy `hash.html` to the output directory
-4. Output is generated in the `dist/` directory
+4. Copy resource directories to the output directory
+5. Output is generated in the `dist/` directory
 
 The generated site consists of:
 - `index.html` - The main page (converted from README.md)
 - `hash.html` - The hash calculator tool
+- `implementations/` - All implementation code in various languages
+- `examples/` - Example text files for testing
+- `cids/` - Content Identifier files
