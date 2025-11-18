@@ -109,6 +109,18 @@ jobs:
           impl_dest = site_dir / 'implementations'
           if impl_src.exists():
               shutil.copytree(impl_src, impl_dest, dirs_exist_ok=True)
+          
+          # Copy examples directory
+          examples_src = root / 'examples'
+          examples_dest = site_dir / 'examples'
+          if examples_src.exists():
+              shutil.copytree(examples_src, examples_dest, dirs_exist_ok=True)
+          
+          # Copy cids directory
+          cids_src = root / 'cids'
+          cids_dest = site_dir / 'cids'
+          if cids_src.exists():
+              shutil.copytree(cids_src, cids_dest, dirs_exist_ok=True)
           PY
 
       - name: Deploy to Cloudflare Pages
