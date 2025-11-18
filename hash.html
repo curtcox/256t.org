@@ -121,6 +121,7 @@
     <p id="error" class="error" hidden></p>
   </section>
 
+  <script src="implementations/ecmascript/cid.js"></script>
   <script>
     const input = document.getElementById('inputText');
     const hashValue = document.getElementById('hashValue');
@@ -129,33 +130,6 @@
     const prefixValue = document.getElementById('prefixValue');
     const fragmentValue = document.getElementById('fragmentValue');
     const errorEl = document.getElementById('error');
-
-    const CHUNK_SIZE = 0x8000;
-
-    const toBase64Url = (bytes) => {
-      if (!bytes.length) {
-        return '';
-      }
-      let binary = '';
-      for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-        const chunk = bytes.subarray(i, i + CHUNK_SIZE);
-        binary += String.fromCharCode(...chunk);
-      }
-      return btoa(binary)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-    };
-
-    const encodeLength = (length) => {
-      let remaining = Math.max(0, Math.floor(length));
-      const bytes = new Uint8Array(6);
-      for (let i = 5; i >= 0; i -= 1) {
-        bytes[i] = remaining % 256;
-        remaining = Math.floor(remaining / 256);
-      }
-      return toBase64Url(bytes);
-    };
 
     const formatByteLabel = (length) => `${length} byte${length === 1 ? '' : 's'}`;
 

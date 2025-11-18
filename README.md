@@ -111,6 +111,7 @@ The 256t.org specification has been implemented in multiple programming language
 | D | ![D](https://img.shields.io/badge/D-B03931?style=flat&logo=d&logoColor=white) | [d](https://github.com/curtcox/256t.org/tree/main/implementations/d) |
 | Dart | ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat&logo=dart&logoColor=white) | [dart](https://github.com/curtcox/256t.org/tree/main/implementations/dart) |
 | Deno | ![Deno](https://img.shields.io/badge/Deno-000000?style=flat&logo=deno&logoColor=white) | [deno](https://github.com/curtcox/256t.org/tree/main/implementations/deno) |
+| ECMAScript | ![ECMAScript](https://img.shields.io/badge/ECMAScript-F7DF1E?style=flat&logo=javascript&logoColor=black) | [ecmascript](https://github.com/curtcox/256t.org/tree/main/implementations/ecmascript) |
 | Elixir | ![Elixir](https://img.shields.io/badge/Elixir-4B275F?style=flat&logo=elixir&logoColor=white) | [elixir](https://github.com/curtcox/256t.org/tree/main/implementations/elixir) |
 | Emacs Lisp | ![Emacs Lisp](https://img.shields.io/badge/Emacs%20Lisp-7F5AB6?style=flat&logo=gnuemacs&logoColor=white) | [emacs-lisp](https://github.com/curtcox/256t.org/tree/main/implementations/emacs-lisp) |
 | Erlang | ![Erlang](https://img.shields.io/badge/Erlang-A90533?style=flat&logo=erlang&logoColor=white) | [erlang](https://github.com/curtcox/256t.org/tree/main/implementations/erlang) |

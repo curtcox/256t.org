@@ -62,6 +62,17 @@ jobs:
       - name: Run Deno CID check
         run: deno run --allow-read implementations/deno/check.ts
 
+  ecmascript:
+    name: ECMAScript CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run ECMAScript CID check
+        run: node implementations/ecmascript/check.js
+
   java:
     name: Java CID check
     runs-on: ubuntu-latest
