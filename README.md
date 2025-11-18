@@ -80,6 +80,7 @@ These things are beyond the scope of this text.
 ## Tools
 
 - [Hash calculator](hash.html) — type text and instantly see its SHA-512 hash encoded in Base64URL.
+- [CID Examples](examples.html) — select example files and verify their CIDs using the ECMAScript implementation.
 
 ## What about Collisions?
 

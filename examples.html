@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>256t CID Examples</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0 auto;
+      padding: 2rem;
+      max-width: 60rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+    nav a:hover {
+      background: rgba(0, 102, 204, 0.1);
+      text-decoration: underline;
+    }
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(125, 125, 125, 0.4);
+      background: rgba(0, 0, 0, 0.02);
+    }
+    select:focus {
+      outline: 2px solid rgba(0, 120, 255, 0.4);
+      border-color: transparent;
+    }
+    .result {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .result.hidden {
+      display: none;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .status-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-icon.success {
+      background: #4caf50;
+      color: white;
+    }
+    .status-icon.failure {
+      background: #f44336;
+      color: white;
+    }
+    .status-icon.success::before {
+      content: "✓";
+    }
+    .status-icon.failure::before {
+      content: "✗";
+    }
+    .info-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .info-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .info-value {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      word-break: break-all;
+    }
+    .code-section {
+      margin-top: 1rem;
+    }
+    .code-section h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+    }
+    pre {
+      margin: 0;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-size: 0.9rem;
+    }
+    code {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    .code-link {
+      font-size: 0.9rem;
+      color: #0066cc;
+    }
+    @media (prefers-color-scheme: dark) {
+      .info-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CID Examples</h1>
+    <p>Select a text file to calculate and verify its Content Identifier (CID) using the ECMAScript implementation.</p>
+    <nav>
+      <a href="index.html">← Readme</a>
+      <a href="hash.html">Hash Calculator</a>
+    </nav>
+  </header>
+
+  <div>
+    <label for="cidSelect" style="font-weight: 600; display: block; margin-bottom: 0.5rem;">
+      Select a CID file:
+    </label>
+    <select id="cidSelect">
+      <option value="">-- Select a file --</option>
+    </select>
+  </div>
+
+  <div id="result" class="result hidden">
+    <div id="status" class="status"></div>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Reference CID (from filename)</div>
+        <div class="info-value" id="referenceCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Calculated CID</div>
+        <div class="info-value" id="calculatedCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Preview (first 100 characters)</div>
+        <div class="info-value" id="contentPreview"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Length</div>
+        <div class="info-value" id="contentLength"></div>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3>ECMAScript Implementation</h3>
+      <pre><code id="codeSnippet"></code></pre>
+      <a href="implementations/ecmascript/cid.js" class="code-link" target="_blank">View full source code →</a>
+    </div>
+  </div>
+
+  <script src="implementations/ecmascript/cid.js"></script>
+  <script>
+    const cidSelect = document.getElementById('cidSelect');
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('status');
+    const referenceCidEl = document.getElementById('referenceCid');
+    const calculatedCidEl = document.getElementById('calculatedCid');
+    const contentPreviewEl = document.getElementById('contentPreview');
+    const contentLengthEl = document.getElementById('contentLength');
+    const codeSnippetEl = document.getElementById('codeSnippet');
+
+    // Code snippet to display
+    const codeSnippet = `async function computeCid(content) {
+  const data = typeof content === 'string' 
+    ? new TextEncoder().encode(content)
+    : content;
+  
+  const prefix = encodeLength(data.length);
+  
+  let suffix;
+  if (data.length <= 64) {
+    suffix = toBase64Url(data);
+  } else {
+    const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+    const hashBytes = new Uint8Array(hashBuffer);
+    suffix = toBase64Url(hashBytes);
+  }
+  
+  return \`\${prefix}\${suffix}\`;
+}`;
+
+    codeSnippetEl.textContent = codeSnippet;
+
+    // Fetch list of CID files from JSON
+    async function loadCidList() {
+      try {
+        const response = await fetch('cids.json');
+        const cidData = await response.json();
+        
+        // Populate dropdown
+        for (const item of cidData) {
+          const option = document.createElement('option');
+          option.value = item.cid;
+          // Show first 20 chars of CID and first 100 chars of text
+          option.textContent = `${item.cidPreview}... | ${item.textPreview.substring(0, 50)}${item.textPreview.length > 50 ? '...' : ''}`;
+          cidSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error('Error loading CID list:', error);
+        alert('Failed to load CID list. Please refresh the page.');
+      }
+    }
+
+    // Handle CID selection
+    cidSelect.addEventListener('change', async (event) => {
+      const selectedCid = event.target.value;
+      if (!selectedCid) {
+        resultDiv.classList.add('hidden');
+        return;
+      }
+
+      try {
+        // Fetch the content
+        const response = await fetch(`cids/${selectedCid}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+        const content = await response.text();
+        
+        // Calculate CID
+        const calculatedCid = await computeCid(content);
+        
+        // Display results
+        referenceCidEl.textContent = selectedCid;
+        calculatedCidEl.textContent = calculatedCid;
+        contentPreviewEl.textContent = content.substring(0, 100);
+        contentLengthEl.textContent = `${content.length} bytes`;
+        
+        // Check if CIDs match
+        const matches = calculatedCid === selectedCid;
+        statusDiv.innerHTML = matches
+          ? '<span class="status-icon success"></span> CID matches!'
+          : '<span class="status-icon failure"></span> CID does not match';
+        
+        resultDiv.classList.remove('hidden');
+      } catch (error) {
+        console.error('Error processing CID:', error);
+        statusDiv.innerHTML = '<span class="status-icon failure"></span> Error loading or calculating CID';
+        resultDiv.classList.remove('hidden');
+      }
+    });
+
+    // Load CID list on page load
+    loadCidList();
+  </script>
+</body>
+</html>
