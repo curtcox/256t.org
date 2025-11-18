@@ -1,11 +1,5 @@
 [
   {
-    "cid": "AAAAAA2w3KW03VQNF0LHqgKq-Nts47FKkoGqgK1iIqcZlN1BIkMTLXxukzfjs8Va5LIq2pmj5trKo5pkyj3hewnpTkkMiA",
-    "cidPreview": "AAAAAA2w3KW03VQNF0LH",
-    "textPreview": "I am GPT-5.1-Codex, a conversational coding partner trained by OpenAI and currently embodied as a co",
-    "length": 3504
-  },
-  {
     "cid": "AAAAAAABQQ",
     "cidPreview": "AAAAAAABQQ",
     "textPreview": "A",
@@ -44,14 +38,26 @@
   {
     "cid": "AAAAAAAiSGVsbG8sIGNvbnRlbnQtYWRkcmVzc2FibGUgd29ybGQhCg",
     "cidPreview": "AAAAAAAiSGVsbG8sIGNv",
-    "textPreview": "Hello, content-addressable world!\n",
+    "textPreview": "Hello, content-addressable world! ",
     "length": 34
+  },
+  {
+    "cid": "AAAAAABAVGhpcyBpcyBzYW1wbGUgY29udGVudCBmb3IgZGVtb25zdHJhdGluZyBjb250ZW50IGlkZW50aWZpZXJzIGF0IA",
+    "cidPreview": "AAAAAABAVGhpcyBpcyBz",
+    "textPreview": "This is sample content for demonstrating content identifiers at ",
+    "length": 64
   },
   {
     "cid": "AAAAAAB2tpDkFEpd7jDWYy8Agup4XUVkvGH3UDZV7CpKa5HIiUAQD5RVbLFwsmOLream1RPkezXI-EL0aoYt1siWdhaqQw",
     "cidPreview": "AAAAAAB2tpDkFEpd7jDW",
     "textPreview": "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be i",
     "length": 118
+  },
+  {
+    "cid": "AAAAAAB4z4W4-cFlp3_KhXM5Vn208YJ1ddjzKOnU6OCQ64IlfEb_9WDs2lwd_Fe0l4f_LOBZHwtnh2KGdrkZzNrq3vf31w",
+    "cidPreview": "AAAAAAB4z4W4-cFlp3_K",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <circle cx=\"50\" cy=\"50\" r=\"40\" fill",
+    "length": 120
   },
   {
     "cid": "AAAAAAB6dkBjH39EZRkwuq1p71_ZRguZB3HOgdsnK_0TXIPfq2h13UXoC5Qnb7kPbbncyXO1EHR_QjqfG1APXKjhWxQMPQ",
@@ -66,10 +72,10 @@
     "length": 123
   },
   {
-    "cid": "AAAAAABAVGhpcyBpcyBzYW1wbGUgY29udGVudCBmb3IgZGVtb25zdHJhdGluZyBjb250ZW50IGlkZW50aWZpZXJzIGF0IA",
-    "cidPreview": "AAAAAABAVGhpcyBpcyBz",
-    "textPreview": "This is sample content for demonstrating content identifiers at ",
-    "length": 64
+    "cid": "AAAAAAB9a2JpOxipCV6Z38iZQae9jGoEEnzVdIgmZWpgWH6ZTnY-7b1JxTER_Wm6ym7FOU1vXFMV_bXUaxlYUAfBG2pfnw",
+    "cidPreview": "AAAAAAB9a2JpOxipCV6Z",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <polygon points=\"50,10 90,90 10,90\"",
+    "length": 125
   },
   {
     "cid": "AAAAAACA6UXupKNe-TnUAnfMQkRw_E-8C0kwvk1qNx2OB6O-CFh3LaSx59nqKcwqNLWcTrNKh3QxHdaaWnWnnHFMdEC7Lg",
@@ -80,8 +86,26 @@
   {
     "cid": "AAAAAACAmGbMBbFTIBqDWsG4RQr-nh1eTwNZRXZiHz74yQvyo-XVx65GkQMzA3ucEuPE0hJU0qI0LPx2j_z055LEVfXNXQ",
     "cidPreview": "AAAAAACAmGbMBbFTIBqD",
-    "textPreview": "'Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nA",
+    "textPreview": "'Twas brillig, and the slithy toves Did gyre and gimble in the wabe: All mimsy were the borogoves, A",
     "length": 128
+  },
+  {
+    "cid": "AAAAAACEk3UNq8Va5E2ux-c-3TnkDdhhzKAtNKJDr7q9vs3pbBVo0JwREfFzmjMEM8N-WIeuL-um7kwaVSyiZYVzBKe9Tg",
+    "cidPreview": "AAAAAACEk3UNq8Va5E2u",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <rect x=\"10\" y=\"10\" width=\"80\" heig",
+    "length": 132
+  },
+  {
+    "cid": "AAAAAAClV5nSHfHS14hZHtsj3UdIB3SS4g6267TqXQUHMbBs9I59PZ4wwCM9MUpDnrASMmxAdoweXnj9MvV444wTV8KklQ",
+    "cidPreview": "AAAAAAClV5nSHfHS14hZ",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <polygon points=\"50,5 61,38 95,38 6",
+    "length": 165
+  },
+  {
+    "cid": "AAAAAACnSr57XzkhIvz67_h0hrCDH_I4CJzLZllqGFlanWHeKPSKLq7Eex4bwmQ-nLDv-KivkeoikTTLxkmTdMKOfIbeBA",
+    "cidPreview": "AAAAAACnSr57XzkhIvz6",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <circle cx=\"50\" cy=\"50\" r=\"35\" fill",
+    "length": 167
   },
   {
     "cid": "AAAAAACss98oaZryes0sHWSmCpIBFYm1AnRYNjdw0ySZEAOfypKtkUtmQfTOMTEYtN7klj5yox8CRmhcuyuJUiJWld99BQ",
@@ -96,9 +120,39 @@
     "length": 177
   },
   {
+    "cid": "AAAAAACy3Ex42AstxGSbEo83gjfVZc9CReahDTPOpsnhw6IhWhyUO8iAEtuKo_ecNkIal3U0wRsvCcwzb0-zQ7gi4YR7DA",
+    "cidPreview": "AAAAAACy3Ex42AstxGSb",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <path d=\"M 20 50 L 40 70 L 80 20\" f",
+    "length": 178
+  },
+  {
+    "cid": "AAAAAAC2JQgaACaHWQBByGQTnGfdgqrhfx2UPWvwfsEiF04NQApb0uM1__9qNMyF_maDLu7qJzmMYUDON4IGcrFh-2kvLw",
+    "cidPreview": "AAAAAAC2JQgaACaHWQBB",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <rect x=\"45\" y=\"60\" width=\"10\" heig",
+    "length": 182
+  },
+  {
+    "cid": "AAAAAADGpgLihYjFYshb0UPLXDfnkIfAOkGx9CqhlBRRk01RXTYLHCRmttHB3duSGUbksVBf6zIdyownOUNRWBZQtXbuDA",
+    "cidPreview": "AAAAAADGpgLihYjFYshb",
+    "textPreview": "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and ",
+    "length": 198
+  },
+  {
+    "cid": "AAAAAADUui5iAt_mWGUCxCI_jBlyyPG5z0vmpvxnIb_MITToZqUopH_5Hy1ydMZ5X04eFchG7OBY43q1-Uo88tI5I6nqsw",
+    "cidPreview": "AAAAAADUui5iAt_mWGUC",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <path d=\"M50,85 Q30,65 20,50 Q10,35",
+    "length": 212
+  },
+  {
+    "cid": "AAAAAADlClWycIO9xIbApsl3dQ1hNlVnCUuwMK-Om1HMX_gCuxNwUdjD4GZxo_zkncFwGPu_Ml1o0aM1YErJRa8-oE_7_A",
+    "cidPreview": "AAAAAADlClWycIO9xIbA",
+    "textPreview": "[Binary content]",
+    "length": 229
+  },
+  {
     "cid": "AAAAAAD0p9ZICzdecdmBhSuGtYDdFsF0XrRpNGhnGaoDmcnNbAVY0jdgNVVLj1ReCgoFUMc3juAAJX3orpVRJojsEfoqjg",
     "cidPreview": "AAAAAAD0p9ZICzdecdmB",
-    "textPreview": "Once upon a midnight dreary, while I pondered, weak and weary,\nOver many a quaint and curious volume",
+    "textPreview": "[Binary content]",
     "length": 244
   },
   {
@@ -108,16 +162,10 @@
     "length": 246
   },
   {
-    "cid": "AAAAAADGpgLihYjFYshb0UPLXDfnkIfAOkGx9CqhlBRRk01RXTYLHCRmttHB3duSGUbksVBf6zIdyownOUNRWBZQtXbuDA",
-    "cidPreview": "AAAAAADGpgLihYjFYshb",
-    "textPreview": "To be, or not to be, that is the question:\nWhether 'tis nobler in the mind to suffer\nThe slings and ",
-    "length": 198
-  },
-  {
-    "cid": "AAAAAADlClWycIO9xIbApsl3dQ1hNlVnCUuwMK-Om1HMX_gCuxNwUdjD4GZxo_zkncFwGPu_Ml1o0aM1YErJRa8-oE_7_A",
-    "cidPreview": "AAAAAADlClWycIO9xIbA",
-    "textPreview": "Call me Ishmael. Some years ago\u2014never mind how long precisely\u2014having little or no money in my pu",
-    "length": 229
+    "cid": "AAAAAAD-omuFQnHGVeV8ajNnQtPqYVL74Rp6O8A49BgemC1ArXq5VJcTkD3epi4IGlVcdBLi3zOzjbfc2e1ROaJfc6h5UA",
+    "cidPreview": "AAAAAAD-omuFQnHGVeV8",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <polygon points=\"50,10 90,40 90,90 ",
+    "length": 254
   },
   {
     "cid": "AAAAAAEAvsTBZYH9BvUYb11XpfGEJm3GJeRpCrc7D92mUYRPSyJWeFNYWM2oUNWAKdC8p8gpc9vFsx-vjn2gc8Va1TKWLQ",
@@ -128,7 +176,7 @@
   {
     "cid": "AAAAAAEIRButO80QlCaJEcqFoYHMGcKxJb5hSmsK_z8wyAMXlEwLnP7wIYwV0URcGI6lEOgl5wb339p5FqERD04crxAzuA",
     "cidPreview": "AAAAAAEIRButO80QlCaJ",
-    "textPreview": "'Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe;\nAll mimsy were the borogoves,\nA",
+    "textPreview": "'Twas brillig, and the slithy toves Did gyre and gimble in the wabe; All mimsy were the borogoves, A",
     "length": 264
   },
   {
@@ -152,8 +200,32 @@
   {
     "cid": "AAAAAAEy6HesRRevK61ZbpUmsTlwVov6qvf6IuBjBl9RYnb-WDAjU_KTs-x5J6L3vN_R0rY0ThZgABtuxJzsIfRODC8JQw",
     "cidPreview": "AAAAAAEy6HesRRevK61Z",
-    "textPreview": "Call me Ishmael. Some years ago\u2014never mind how long precisely\u2014having little or no money in my pu",
+    "textPreview": "[Binary content]",
     "length": 306
+  },
+  {
+    "cid": "AAAAAAFCr8WmDf3wBpbO0o_VIuSSrj7eqRKYRh5rYqYzxlMEiTk2ubGvhjktgsXPoJ0S8LMIrl7mwTOHWjr7PXzcOV3LtA",
+    "cidPreview": "AAAAAAFCr8WmDf3wBpbO",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <circle cx=\"50\" cy=\"50\" r=\"45\" fill",
+    "length": 322
+  },
+  {
+    "cid": "AAAAAAFIU7wG5tNX8R-yJGqL7GAYYAIxcbctVCQ0AB-fTHD9BMO9_i8suq_iSq_lOaI91V1i9shEXPGyocAmUvKWFmLsVA",
+    "cidPreview": "AAAAAAFIU7wG5tNX8R-y",
+    "textPreview": "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure",
+    "length": 328
+  },
+  {
+    "cid": "AAAAAAFRO9CMCYZHFgulERJO-bOTne7wdhtpdRu8bEnGjpgyvaOdyMLXkQVrOsmAuBESxbdZn-P0jGlNCFLsq-aBnMtBiw",
+    "cidPreview": "AAAAAAFRO9CMCYZHFgul",
+    "textPreview": "[Binary content]",
+    "length": 337
+  },
+  {
+    "cid": "AAAAAAFps-q4Y0-FWIiqKoYkmb3l1Qp8k9B0Gs9OBh9H2lo7bXttRd4MQzrELIq_eSfaTE0g-13L5m2oRKW5qUHuFqzpZQ",
+    "cidPreview": "AAAAAAFps-q4Y0-FWIiq",
+    "textPreview": "Some writers have so confounded society with government, as to leave little or no distinction betwee",
+    "length": 361
   },
   {
     "cid": "AAAAAAF7dkh0eYoU8u7suWOp_KNztjdJLQkdMSUf1u5zA9p4AjLCgQQWsv3DlgaOqNW9Aq1pFSO4bgHvRnoqq9KdnA1qvQ",
@@ -174,28 +246,10 @@
     "length": 381
   },
   {
-    "cid": "AAAAAAFIU7wG5tNX8R-yJGqL7GAYYAIxcbctVCQ0AB-fTHD9BMO9_i8suq_iSq_lOaI91V1i9shEXPGyocAmUvKWFmLsVA",
-    "cidPreview": "AAAAAAFIU7wG5tNX8R-y",
-    "textPreview": "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure",
-    "length": 328
-  },
-  {
-    "cid": "AAAAAAFRO9CMCYZHFgulERJO-bOTne7wdhtpdRu8bEnGjpgyvaOdyMLXkQVrOsmAuBESxbdZn-P0jGlNCFLsq-aBnMtBiw",
-    "cidPreview": "AAAAAAFRO9CMCYZHFgul",
-    "textPreview": "Once upon a midnight dreary, while I pondered, weak and weary,\nOver many a quaint and curious volume",
-    "length": 337
-  },
-  {
-    "cid": "AAAAAAFps-q4Y0-FWIiqKoYkmb3l1Qp8k9B0Gs9OBh9H2lo7bXttRd4MQzrELIq_eSfaTE0g-13L5m2oRKW5qUHuFqzpZQ",
-    "cidPreview": "AAAAAAFps-q4Y0-FWIiq",
-    "textPreview": "Some writers have so confounded society with government, as to leave little or no distinction betwee",
-    "length": 361
-  },
-  {
-    "cid": "AAAAAAG-C3soyivyjiU5KciindsKwqOSJvhnAq0bHlFwPV3OvUKv93SWm7fiO_bEObq06uN838hpeKF2wn6DXN75yKr33g",
-    "cidPreview": "AAAAAAG-C3soyivyjiU5",
-    "textPreview": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore ",
-    "length": 446
+    "cid": "AAAAAAGXlh2npCbUZLoiKbPUb7L2Cezu4PDYE7gXuPZ2ySkBJQnB50DyMzQKIrvOfoBDWQB1iiGp-O8WCY1s57pJulaYSA",
+    "cidPreview": "AAAAAAGXlh2npCbUZLoi",
+    "textPreview": "When in the Course of human events, it becomes necessary for one people to dissolve the political ba",
+    "length": 407
   },
   {
     "cid": "AAAAAAG0b2jzcpdRRMxr90XYXWV9yhOqOf0j8OWy058DfFjjMpgHE3diAV_oNO7q01qnWRoQeUL8aOBxVMaaN7I7TsHTaQ",
@@ -204,10 +258,16 @@
     "length": 436
   },
   {
-    "cid": "AAAAAAGXlh2npCbUZLoiKbPUb7L2Cezu4PDYE7gXuPZ2ySkBJQnB50DyMzQKIrvOfoBDWQB1iiGp-O8WCY1s57pJulaYSA",
-    "cidPreview": "AAAAAAGXlh2npCbUZLoi",
-    "textPreview": "When in the Course of human events, it becomes necessary for one people to dissolve the political ba",
-    "length": 407
+    "cid": "AAAAAAG-C3soyivyjiU5KciindsKwqOSJvhnAq0bHlFwPV3OvUKv93SWm7fiO_bEObq06uN838hpeKF2wn6DXN75yKr33g",
+    "cidPreview": "AAAAAAG-C3soyivyjiU5",
+    "textPreview": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore ",
+    "length": 446
+  },
+  {
+    "cid": "AAAAAAHwU8AWNQ7o9Wu7YVr-BscjJ85dH3fyI0VqgPMCcJvi_821CUi_Blv61mfUx2XUt4zGGyLmmCbbv2uXfO-jQ7G8rg",
+    "cidPreview": "AAAAAAHwU8AWNQ7o9Wu7",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <circle cx=\"50\" cy=\"30\" r=\"12\" fill",
+    "length": 496
   },
   {
     "cid": "AAAAAAIAxNZhAEBVrGWQWa7RZPpNOdMlULWfLDTrbIj5vTwm5r6cuoY18ZMAqR6sHPDX2TcXcP5c4ez0KYcsRxsL98V3Gw",
@@ -218,19 +278,19 @@
   {
     "cid": "AAAAAAJ1GSnH1X37nHKCPajc0dm1K65dq5GjXlbPI-37jGfzTNP8gbxhNbi9aF0s8RF-toLzsMIIbkAUNxCaIPfoXZwd8w",
     "cidPreview": "AAAAAAJ1GSnH1X37nHKC",
-    "textPreview": "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shak",
+    "textPreview": "Shall I compare thee to a summer's day? Thou art more lovely and more temperate: Rough winds do shak",
     "length": 629
   },
   {
     "cid": "AAAAAAJ5nx_hL1qIq0StdZ-aoYvOmmOPwOdd2Rw5W6wsxG2fNmEONoPLpElehOmTMTlAf246Hx4g52oXr6XAcAlTP4MTLw",
     "cidPreview": "AAAAAAJ5nx_hL1qIq0St",
-    "textPreview": "I met a traveller from an antique land,\nWho said\u2014\"Two vast and trunkless legs of stone\nStand in th",
+    "textPreview": "[Binary content]",
     "length": 633
   },
   {
     "cid": "AAAAAAKANHMwYmK5mI_ETeoPTNoF1bBOz1WKhtv5Zj_bwq0GniQR5YUYWcJDIysktNM0zdEPD5EZpEwhEfmkNsHDzBMCvQ",
     "cidPreview": "AAAAAAKANHMwYmK5mI_E",
-    "textPreview": "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shak",
+    "textPreview": "Shall I compare thee to a summer's day? Thou art more lovely and more temperate: Rough winds do shak",
     "length": 640
   },
   {
@@ -240,28 +300,28 @@
     "length": 708
   },
   {
+    "cid": "AAAAAALYTOgO1cgJWQwdgzfU0pNefGEZPcfaBFO9aAQuilZdmD8yF7njDXi1FWFB9pJVzy9hoBh8hL2EaRv9mn_8x3DmYA",
+    "cidPreview": "AAAAAALYTOgO1cgJWQwd",
+    "textPreview": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"> <circle cx=\"50\" cy=\"50\" r=\"20\" fill",
+    "length": 728
+  },
+  {
     "cid": "AAAAAALcKtg1bjGbwS1Os-OtcylmsaMYNEFdQuqCSz34F417ycyVdO6N97omxyUFO9Vup5h_7vDlzUBAO8KbibeFR3N4Lg",
     "cidPreview": "AAAAAALcKtg1bjGbwS1O",
-    "textPreview": "Once upon a midnight dreary, while I pondered, weak and weary,\nOver many a quaint and curious volume",
+    "textPreview": "[Binary content]",
     "length": 732
   },
   {
     "cid": "AAAAAALcmyInpRfeYISI8jKk4gm2a6GeTuiBCw9h77GRxyxM1eIqsunukQL88qtbAyHxKTdIEoqJg1weZN_7rKPiQZAJVg",
     "cidPreview": "AAAAAALcmyInpRfeYISI",
-    "textPreview": "Two roads diverged in a yellow wood,\nAnd sorry I could not travel both\nAnd be one traveler, long I s",
+    "textPreview": "Two roads diverged in a yellow wood, And sorry I could not travel both And be one traveler, long I s",
     "length": 732
   },
   {
     "cid": "AAAAAALqSdcn8TKiOs4B1fQcDm58Se-iCyRexw7KC88brxme7yOnQGDbg_TcZCLFOh5H-WhD00L94Y3D3QIK5TJZ_IMJDw",
     "cidPreview": "AAAAAALqSdcn8TKiOs4B",
-    "textPreview": "Two roads diverged in a yellow wood,\nAnd sorry I could not travel both\nAnd be one traveler, long I s",
+    "textPreview": "Two roads diverged in a yellow wood, And sorry I could not travel both And be one traveler, long I s",
     "length": 746
-  },
-  {
-    "cid": "AAAAAAM2ZaWeaqBQ5amAbvTR3JP-jV5rtzkMtQSmiwWifTHaAcIOzgZDaxaPCoAJs3_kO-yJgImKn3Jgi1dh9pNvF21wqA",
-    "cidPreview": "AAAAAAM2ZaWeaqBQ5amA",
-    "textPreview": "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be i",
-    "length": 822
   },
   {
     "cid": "AAAAAAMaoqFqHhllkadyUzjI7gFd9wyuQMOYi0qwbokdWPK6RpfJ6YsBPBcQ79e6PfCxV7xSgd3jYo8k6Yxat-8nMb9pZw",
@@ -272,8 +332,14 @@
   {
     "cid": "AAAAAAMzJkl78i5Yh2fU7MfU6aC0E8DmatAqH8S9kAByvOiZURLBfWUa8HheK22omVMULzAmstjYrOnokyx6_fsH9WLdRQ",
     "cidPreview": "AAAAAAMzJkl78i5Yh2fU",
-    "textPreview": "Call me Ishmael. Some years ago\u2014never mind how long precisely\u2014having little or no money in my pu",
+    "textPreview": "[Binary content]",
     "length": 819
+  },
+  {
+    "cid": "AAAAAAM2ZaWeaqBQ5amAbvTR3JP-jV5rtzkMtQSmiwWifTHaAcIOzgZDaxaPCoAJs3_kO-yJgImKn3Jgi1dh9pNvF21wqA",
+    "cidPreview": "AAAAAAM2ZaWeaqBQ5amA",
+    "textPreview": "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be i",
+    "length": 822
   },
   {
     "cid": "AAAAAAQAJvGlaFKm72-uOD-PpMbYo-Xq_f1Iu3NgxLwRbFWgL5eOKghdosr3wvzww6QdGr4OpgGRr6ruxJy9nmoTtfIDfw",
@@ -318,6 +384,12 @@
     "length": 2048
   },
   {
+    "cid": "AAAAAA2w3KW03VQNF0LHqgKq-Nts47FKkoGqgK1iIqcZlN1BIkMTLXxukzfjs8Va5LIq2pmj5trKo5pkyj3hewnpTkkMiA",
+    "cidPreview": "AAAAAA2w3KW03VQNF0LH",
+    "textPreview": "I am GPT-5.1-Codex, a conversational coding partner trained by OpenAI and currently embodied as a co",
+    "length": 3504
+  },
+  {
     "cid": "AAAAABAAjzFZcFzqNc3uNn46_zYll0llPF4ZlfsWFE3CzgFVj4qfyaHyXvjNBRdmyadOSVoC1MovMnZ69mdHYYEtYBxc_g",
     "cidPreview": "AAAAABAAjzFZcFzqNc3u",
     "textPreview": "This is sample content for demonstrating content identifiers at varying sizes. It repeats to reach t",
@@ -326,7 +398,7 @@
   {
     "cid": "AAAAABGGgtsmaKT_9RZpa6A8iiAjUkw-jyt7x1J8DN6gWkzMduFou4o2A7-3fgUx-N4pphq4in6Oo0LT6PdPzBr7gIcU7g",
     "cidPreview": "AAAAABGGgtsmaKT_9RZp",
-    "textPreview": "Chapter 1\n\nIt is a truth universally acknowledged, that a single man in possession of a good fortune",
+    "textPreview": "Chapter 1 It is a truth universally acknowledged, that a single man in possession of a good fortune",
     "length": 4486
   },
   {
@@ -338,25 +410,25 @@
   {
     "cid": "AAAAACFK8NHOJx42TJuKVUXzzQL8euNCxzaUJcYV0owmt_nd9d--3E5zFmNIpo3JtHvAf11aCvPpiEZzb3uQYhOYfrP3rA",
     "cidPreview": "AAAAACFK8NHOJx42TJuK",
-    "textPreview": "CHAPTER I. Down the Rabbit-Hole\n\nAlice was beginning to get very tired of sitting by her sister on t",
+    "textPreview": "CHAPTER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on t",
     "length": 8522
   },
   {
     "cid": "AAAAAC_mNXqDjloQXLwao2b4bXg1TJiXUmv7M2NS2dnJV5rFexUUl_rKAEdplemXqWPWAXCmRCJHacCihexsEvCadF4UWA",
     "cidPreview": "AAAAAC_mNXqDjloQXLwa",
-    "textPreview": "CHAPTER 1. Loomings.\n\nCall me Ishmael. Some years ago\u2014never mind how long precisely\u2014having littl",
+    "textPreview": "[Binary content]",
     "length": 12262
   },
   {
     "cid": "AAAAADQxLFBrsVaEEyUE6KRpDfB1dXJCrQ2MKiC1CDeEU6MX4WXiwnLl2qsy8iHhS6PmE2QOYchsm9QUZeHkdMc4tnpteA",
     "cidPreview": "AAAAADQxLFBrsVaEEyUE",
-    "textPreview": "WHO I AM \u2014 A Self-Portrait in Text\n\nI am Claude, specifically the instantiation running as model c",
+    "textPreview": "[Binary content]",
     "length": 13361
   },
   {
     "cid": "AAAAADW54XMuvFXPYOq-y6GuixVDTueAKuHVOOD5X-lTwxet_LlzVBym-t2HdwjOcMmAckJkhXndvvTpuvHB0O5v7fNQOw",
     "cidPreview": "AAAAADW54XMuvFXPYOq-",
-    "textPreview": "A Reflection on Example Selection and Self\n==========================================\n\nWHO I AM\n----",
+    "textPreview": "A Reflection on Example Selection and Self ========================================== WHO I AM ----",
     "length": 13753
   },
   {
