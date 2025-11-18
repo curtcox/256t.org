@@ -114,7 +114,7 @@
         <dd id="prefixValue">—</dd>
       </div>
       <div>
-        <dt>Full fragment</dt>
+        <dt>CID</dt>
         <dd id="fragmentValue">AAAAAAAA</dd>
       </div>
     </dl>
@@ -194,7 +194,8 @@
           hashValue.textContent = hashBase64;
 
           const fragmentSuffix = data.length <= 64 ? contentBase64 : hashBase64;
-          fragmentValue.textContent = `${lengthBase64}${fragmentSuffix}`;
+          const cid = `${lengthBase64}${fragmentSuffix}`;
+          fragmentValue.innerHTML = `<a href="cids/${cid}">${cid}</a>`;
         } catch (error) {
           if (requestId !== latestRequest) {
             return;
