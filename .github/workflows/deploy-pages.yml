@@ -45,6 +45,25 @@ jobs:
           readme = root / 'README.md'
           site_dir = root / 'dist'
           site_dir.mkdir(exist_ok=True)
+          
+          # Generate cids.json
+          import json
+          cids_dir = root / 'cids'
+          cids = sorted([f.name for f in cids_dir.iterdir() if f.is_file()])
+          cid_data = []
+          for cid_name in cids:
+              filepath = cids_dir / cid_name
+              content = filepath.read_bytes()
+              cid_preview = cid_name[:20]
+              text_preview = content[:100].decode('utf-8', errors='replace')
+              cid_data.append({
+                  'cid': cid_name,
+                  'cidPreview': cid_preview,
+                  'textPreview': text_preview,
+                  'length': len(content)
+              })
+          (root / 'cids.json').write_text(json.dumps(cid_data, indent=2), encoding='utf-8')
+          
           html_body = markdown.markdown(
               readme.read_text(encoding='utf-8'),
               extensions=[
@@ -109,6 +128,12 @@ jobs:
 
           hash_src = root / 'hash.html'
           shutil.copy2(hash_src, site_dir / 'hash.html')
+          
+          examples_html_src = root / 'examples.html'
+          shutil.copy2(examples_html_src, site_dir / 'examples.html')
+          
+          cids_json_src = root / 'cids.json'
+          shutil.copy2(cids_json_src, site_dir / 'cids.json')
           
           # Copy implementations directory for README links
           impl_src = root / 'implementations'
