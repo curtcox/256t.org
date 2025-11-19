@@ -51,3 +51,45 @@ The generated site consists of:
 - `implementations/` - All implementation code in various languages
 - `examples/` - Example text files for testing
 - `cids/` - Content Identifier files
+
+## CloudFlare R2 Storage
+
+CID files are also uploaded to CloudFlare R2 for content-addressable storage. The workflow is defined in `.github/workflows/r2-upload.yml`.
+
+### Schedule
+
+The R2 upload workflow runs:
+- **Daily** at 2:00 AM UTC
+- **On-demand** via manual workflow dispatch
+
+### Required Secrets
+
+To enable R2 uploads, configure these GitHub repository secrets:
+
+1. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID (same as above)
+
+2. **`R2_ACCESS_KEY_ID`**: R2 API access key ID
+   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → R2 → Manage R2 API Tokens
+   - Create a new API token with read/write permissions for your bucket
+
+3. **`R2_SECRET_ACCESS_KEY`**: R2 API secret access key
+   - Obtained when creating the R2 API token (only shown once)
+
+4. **`R2_BUCKET_NAME`**: (Optional) R2 bucket name
+   - Defaults to `256t-cids` if not specified
+
+### How It Works
+
+The R2 upload script (`.github/scripts/r2_upload.py`):
+1. Checks all files in the `/cids` directory
+2. For each CID file:
+   - Verifies the CID matches the content
+   - Checks if it exists on R2
+   - If exists: verifies content and cache headers match
+   - If missing: uploads with immutable cache settings and verifies
+3. Fails the job if any discrepancies are found
+
+All CIDs are stored with cache headers indicating they are immutable:
+- `Cache-Control: public, max-age=31536000, immutable`
+
+See [.github/scripts/README.md](.github/scripts/README.md) for more details.
