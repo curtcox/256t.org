@@ -83,6 +83,21 @@ These things are beyond the scope of this text.
 - [CID Examples](examples.html) — select example files and verify their CIDs using the ECMAScript implementation.
 - [File CID Check](check.html) — drag and drop files to analyze their content and calculate their CID.
 
+## Storage and Deployment
+
+For deploying content-addressed storage using CIDs, this repository includes tools for uploading to Cloudflare R2 (S3-compatible storage).
+
+### R2 Upload Script
+
+The [`.github/scripts/r2_upload.py`](.github/scripts/r2_upload.py) script uploads files to R2 with metadata-based CID verification:
+
+- Stores the CID in object metadata (`Metadata={'cid': cid}`)
+- Verifies objects using `head_object()` to check metadata (fast, no download)
+- Falls back to downloading and computing CID if metadata is missing
+- Does not rely on ETag (which cannot be set and is unreliable for multipart uploads)
+
+See [`.github/scripts/README.md`](.github/scripts/README.md) for detailed usage, examples, and a Cloudflare Worker snippet showing how to override the ETag header for clients.
+
 ## What about Collisions?
 
 There are a few different types of collisions that are important to distinquish between:
