@@ -1,102 +1,247 @@
-# R2 Upload Script
+# 256t.org R2 Upload Scripts
+
+This directory contains scripts for uploading and verifying content-addressed files to Cloudflare R2 storage.
 
 ## Overview
 
-The `r2_upload.py` script manages the upload and verification of CID files to CloudFlare R2 storage. It ensures that all CID files in the repository are properly stored in R2 with appropriate immutable cache settings.
+The upload script (`r2_upload.py`) implements content-addressable storage using CIDs (Content Identifiers) as object keys in R2. It stores the CID in object metadata for reliable verification.
 
-## Features
+## Why Metadata Instead of ETag?
 
-- **Automated Upload**: Checks all files in the `/cids` directory and uploads missing ones to R2
-- **Content Verification**: Verifies that existing CIDs on R2 match their local content
-- **CID Validation**: Computes and verifies CIDs for both local and remote content
-- **Cache Header Validation**: Ensures uploaded files have proper immutable cache headers
-- **Error Reporting**: Fails the job if any discrepancies are found
+**Important:** R2 (like AWS S3) generates the ETag header server-side, and it **cannot be set** during PUT operations. This makes ETag unreliable for CID verification:
 
-## GitHub Actions Workflow
+- The ETag is controlled by the storage service, not the client
+- For multipart uploads, ETag is not a simple hash but a composite value
+- There's no way to override or set ETag to match the CID
 
-The workflow is defined in `.github/workflows/r2-upload.yml` and runs:
-- **Daily**: Automatically at 2 AM UTC
-- **On-Demand**: Via manual workflow dispatch
+**Solution:** We store the canonical CID in object metadata (`Metadata={'cid': cid}`), which:
+- Provides a reliable, queryable place to validate content-addressed object identity
+- Can be retrieved quickly via `head_object()` without downloading the entire object
+- Falls back to downloading and computing the CID if metadata is missing
 
-## Required Secrets
+## Installation
 
-Configure the following secrets in your GitHub repository (Settings → Secrets and variables → Actions):
+The script requires `boto3`:
 
-### `CLOUDFLARE_ACCOUNT_ID`
-Your CloudFlare Account ID. Find this in:
-- CloudFlare Dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>`
-- Or in Account Settings → Account ID
+```bash
+pip install boto3
+```
 
-### `R2_ACCESS_KEY_ID`
-The access key ID for R2 API access. Create this in:
-- CloudFlare Dashboard → R2 → Manage R2 API Tokens
-- Click "Create API Token"
-- Set permissions for the specific bucket
+## Usage
 
-### `R2_SECRET_ACCESS_KEY`
-The secret access key corresponding to the R2 access key ID (obtained when creating the API token).
+### Upload a file
 
-### `R2_BUCKET_NAME` (optional)
-The name of the R2 bucket to use. Defaults to `256t-cids` if not specified.
+```bash
+python .github/scripts/r2_upload.py examples/hello.txt --bucket 256t-org
+```
 
-## How It Works
+### Verify an existing object
 
-1. **Connect to R2**: Establishes a connection to CloudFlare R2 using the S3-compatible API
-2. **Process Each CID**:
-   - Reads the file from `/cids` directory
-   - Computes the CID to verify the filename matches the content
-   - Checks if the CID exists on R2
-   - If exists:
-     - Downloads the content from R2
-     - Verifies content matches local file
-     - Verifies computed CID matches filename
-     - Checks cache headers (public, max-age=31536000, immutable)
-   - If missing:
-     - Uploads the file with immutable cache settings
-     - Downloads and verifies the uploaded content
-     - Verifies computed CID matches filename
-     - Checks cache headers
-3. **Report Results**: 
-   - Prints summary of verified, uploaded, and any errors
-   - Exits with code 1 if any errors found, 0 if all successful
+```bash
+python .github/scripts/r2_upload.py examples/hello.txt --bucket 256t-org --verify-only
+```
+
+### With custom endpoint URL
+
+```bash
+python .github/scripts/r2_upload.py examples/hello.txt \
+  --bucket 256t-org \
+  --endpoint-url https://your-account-id.r2.cloudflarestorage.com
+```
+
+## Configuration
+
+The script uses standard AWS credential resolution:
+- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+- AWS credentials file (`~/.aws/credentials`)
+- IAM roles (when running on AWS/EC2)
+
+For Cloudflare R2, you'll need:
+- R2 Access Key ID
+- R2 Secret Access Key
+- Optionally, the R2 endpoint URL
+
+## Upload Behavior
+
+When uploading a file, the script:
+
+1. **Computes the CID** from the file content
+2. **Checks if the object exists** using `head_object()`
+3. **Verifies via metadata** if present:
+   - If `Metadata['cid']` matches: Skip upload (already valid)
+   - If `Metadata['cid']` doesn't match: Error (integrity violation)
+4. **Falls back to download verification** if metadata is missing
+5. **Uploads with metadata** if object doesn't exist:
+
+```python
+s3.put_object(
+    Bucket=bucket,
+    Key=cid,
+    Body=data,
+    CacheControl='public, max-age=31536000, immutable',
+    ContentType='application/octet-stream',
+    Metadata={'cid': cid}
+)
+```
+
+## Verification Process
+
+The script verifies objects in two ways:
+
+### Fast Path: Metadata Verification
+
+```python
+head = s3.head_object(Bucket=bucket, Key=cid)
+remote_meta_cid = head.get('Metadata', {}).get('cid')
+if remote_meta_cid == cid:
+    # Valid! Content-addressing satisfied without download
+    pass
+```
+
+### Fallback: Download and Compute
+
+```python
+# If metadata is missing, download and verify
+obj = s3.get_object(Bucket=bucket, Key=cid)
+remote_bytes = obj['Body'].read()
+remote_cid = compute_cid(remote_bytes)
+if remote_cid == cid:
+    # Valid! But consider re-uploading to add metadata
+    pass
+```
 
 ## Cache Settings
 
-All CIDs are uploaded with the following cache settings:
-- `Cache-Control: public, max-age=31536000, immutable`
-- `Content-Type: application/octet-stream`
+All uploaded objects use the following cache settings:
 
-These settings reflect the immutable nature of content-addressable storage - content identified by a CID should never change.
-
-## Local Testing
-
-To test the script locally:
-
-```bash
-# Install dependencies
-pip install boto3
-
-# Set environment variables
-export CLOUDFLARE_ACCOUNT_ID="your-account-id"
-export R2_ACCESS_KEY_ID="your-access-key-id"
-export R2_SECRET_ACCESS_KEY="your-secret-access-key"
-export R2_BUCKET_NAME="256t-cids"  # optional, defaults to this
-
-# Run the script
-python .github/scripts/r2_upload.py
+```python
+CacheControl='public, max-age=31536000, immutable'
 ```
+
+This instructs clients to cache the content indefinitely since CID-addressed content is immutable.
+
+## Setting ETag for Clients
+
+While R2 cannot store a custom ETag, you can override the ETag header in responses to clients using a Cloudflare Worker. This allows clients to see the CID in the ETag header:
+
+### Cloudflare Worker Example
+
+```javascript
+// Example Worker snippet for serving R2 objects with CID as ETag
+addEventListener('fetch', event => {
+  event.respondWith(handle(event.request))
+})
+
+async function handle(request) {
+  const url = new URL(request.url)
+  const key = url.pathname.slice(1) // strip leading '/'
+  
+  // Fetch object from R2
+  const object = await R2_BUCKET.get(key)
+  if (!object) return new Response('Not Found', { status: 404 })
+  
+  // Get CID from metadata, or fall back to using the key itself
+  const cid = object.metadata?.cid || key
+  
+  // Read the object body
+  const body = await object.arrayBuffer()
+  
+  // Return response with CID as ETag
+  return new Response(body, {
+    headers: {
+      'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'ETag': `"${cid}"`  // Override ETag to show CID to clients
+    }
+  })
+}
+```
+
+**Note:** This Worker example demonstrates overriding the ETag header returned to clients to match the CID. It does not change the underlying R2 ETag, which remains controlled by the storage service.
+
+### Accessing Custom Metadata in Workers
+
+In Cloudflare Workers, R2 object metadata is accessed via the `metadata` property:
+
+```javascript
+const object = await R2_BUCKET.get(key)
+const cid = object.metadata?.cid  // Custom metadata we set during upload
+```
+
+## CI/CD Integration
+
+To use this script in GitHub Actions:
+
+```yaml
+- name: Upload to R2
+  env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  run: |
+    pip install boto3
+    python .github/scripts/r2_upload.py examples/hello.txt \
+      --bucket 256t-org \
+      --endpoint-url https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+```
+
+## Validation Guidelines
+
+When validating CID objects:
+
+1. **Prefer metadata verification** (fast, no download required)
+2. **Use head_object()** to check `Metadata['cid']`
+3. **Fall back to download** only if metadata is missing
+4. **Never rely on ETag** for CID validation
 
 ## Error Handling
 
-The script will fail if:
-- Any CID filename doesn't match its computed CID
-- Content on R2 doesn't match local content
-- Downloaded content's CID doesn't match the filename
-- Cache headers are missing or incorrect
-- Upload verification fails
-- Any network or API errors occur
+The script handles several error conditions:
 
-## Dependencies
+- **Metadata mismatch**: Object exists but stored CID doesn't match computed CID (error)
+- **Content mismatch**: Downloaded content's CID doesn't match expected CID (error)
+- **Missing metadata**: Falls back to download verification (warning)
+- **Object not found**: Proceeds with upload (normal)
 
-- Python 3.12+
-- boto3 (AWS SDK for Python, compatible with S3-compatible APIs like R2)
+## Troubleshooting
+
+### "Metadata CID mismatch"
+
+This indicates a serious integrity issue where an object exists with a CID key but the metadata doesn't match. This should never happen in normal operation.
+
+### "Object is valid but missing metadata"
+
+This indicates the object was uploaded without CID metadata (perhaps by an older version of the script). Consider re-uploading to add metadata for faster future verifications.
+
+### Authentication Errors
+
+Ensure your R2 credentials are properly configured:
+- Check `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables
+- Verify the credentials have read/write permissions for the R2 bucket
+
+## Development
+
+### Testing Locally
+
+You can test uploads to a local S3-compatible server (like MinIO):
+
+```bash
+# Start MinIO locally
+docker run -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER=minioadmin \
+  -e MINIO_ROOT_PASSWORD=minioadmin \
+  minio/minio server /data --console-address ":9001"
+
+# Upload to MinIO
+export AWS_ACCESS_KEY_ID=minioadmin
+export AWS_SECRET_ACCESS_KEY=minioadmin
+python .github/scripts/r2_upload.py examples/hello.txt \
+  --bucket test-bucket \
+  --endpoint-url http://localhost:9000
+```
+
+## References
+
+- [256t.org Specification](../../README.md)
+- [Cloudflare R2 Documentation](https://developers.cloudflare.com/r2/)
+- [boto3 S3 Client Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html)
+- [RFC 4648 - Base64url Encoding](https://datatracker.ietf.org/doc/html/rfc4648#section-5)

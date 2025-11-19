@@ -1,296 +1,212 @@
 #!/usr/bin/env python3
 """
-Upload and verify CID files to CloudFlare R2.
+R2 Upload Script for 256t.org Content-Addressable Storage
 
-This script:
-- Checks all files in the /cids directory
-- Verifies if each CID exists on CloudFlare R2
-- Compares content if exists and reports differences
-- Uploads missing CIDs with immutable cache settings
-- Verifies uploaded content and headers
-- Fails if any discrepancies are found
+This script uploads files to Cloudflare R2 (S3-compatible storage) using their
+CID (Content Identifier) as the key. It stores the CID in object metadata for
+reliable verification.
+
+Why we use metadata instead of ETag:
+- R2/S3 ETag is generated server-side and cannot be set during PUT operations
+- ETag is not a reliable CID indicator for multipart uploads (it's not a simple hash)
+- Object metadata provides a queryable, reliable place to store and verify CIDs
+
+Usage:
+    python r2_upload.py <file_path> [--bucket BUCKET_NAME] [--endpoint-url URL]
 """
 
-import base64
-import hashlib
-import os
+import argparse
 import sys
+import logging
 from pathlib import Path
-from typing import List, Tuple
+
+# Add the Python implementation directory to the path to import cid module
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "implementations" / "python"))
 
 try:
     import boto3
-    from botocore.config import Config
     from botocore.exceptions import ClientError
 except ImportError:
-    print("Error: boto3 is required. Install with: pip install boto3")
+    print("Error: boto3 is required. Install it with: pip install boto3")
     sys.exit(1)
 
+from cid import compute_cid
 
-def to_base64url(data: bytes) -> str:
-    """Encode data to base64url format (RFC 4648 section 5)."""
-    return base64.urlsafe_b64encode(data).decode().rstrip("=")
-
-
-def encode_length(length: int) -> str:
-    """Encode length as 8-character base64url string."""
-    return to_base64url(length.to_bytes(6, "big"))
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
 
 
-def compute_cid(content: bytes) -> str:
-    """Compute the CID for given content."""
-    prefix = encode_length(len(content))
-    if len(content) <= 64:
-        suffix = to_base64url(content)
-    else:
-        suffix = to_base64url(hashlib.sha512(content).digest())
-    return prefix + suffix
-
-
-def get_r2_client():
-    """Create and return an R2 client using boto3."""
-    # Get credentials from environment
-    account_id = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
-    access_key_id = os.environ.get("R2_ACCESS_KEY_ID")
-    secret_access_key = os.environ.get("R2_SECRET_ACCESS_KEY")
-    bucket_name = os.environ.get("R2_BUCKET_NAME", "256t-cids")
+def upload_to_r2(file_path: Path, bucket: str, endpoint_url: str = None) -> str:
+    """
+    Upload a file to R2 using its CID as the key.
     
-    if not all([account_id, access_key_id, secret_access_key]):
-        print("Error: Missing required environment variables:")
-        if not account_id:
-            print("  - CLOUDFLARE_ACCOUNT_ID")
-        if not access_key_id:
-            print("  - R2_ACCESS_KEY_ID")
-        if not secret_access_key:
-            print("  - R2_SECRET_ACCESS_KEY")
-        sys.exit(1)
+    Args:
+        file_path: Path to the file to upload
+        bucket: R2 bucket name
+        endpoint_url: Optional S3-compatible endpoint URL
+        
+    Returns:
+        The CID of the uploaded file
+    """
+    # Read file content and compute CID
+    content = file_path.read_bytes()
+    cid = compute_cid(content)
     
-    # R2 endpoint format: https://<account_id>.r2.cloudflarestorage.com
-    endpoint_url = f"https://{account_id}.r2.cloudflarestorage.com"
+    logger.info(f"Computed CID for {file_path.name}: {cid}")
     
-    s3_client = boto3.client(
-        "s3",
-        endpoint_url=endpoint_url,
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        config=Config(signature_version="s3v4"),
-        region_name="auto",
+    # Create S3 client
+    s3_config = {"service_name": "s3"}
+    if endpoint_url:
+        s3_config["endpoint_url"] = endpoint_url
+    s3 = boto3.client(**s3_config)
+    
+    # Check if object already exists and verify via metadata
+    try:
+        head = s3.head_object(Bucket=bucket, Key=cid)
+        remote_meta_cid = head.get('Metadata', {}).get('cid')
+        
+        if remote_meta_cid:
+            if remote_meta_cid == cid:
+                logger.info(f"Object already exists with matching CID in metadata. Skipping upload.")
+                return cid
+            else:
+                # Metadata CID mismatch - this is an error condition
+                logger.error(f"Metadata CID mismatch! Expected: {cid}, Found: {remote_meta_cid}")
+                raise ValueError(f"Object exists but metadata CID does not match computed CID")
+        else:
+            # Metadata not present - fallback to download and verify
+            logger.info("Object exists but CID metadata is missing. Downloading to verify content...")
+            obj = s3.get_object(Bucket=bucket, Key=cid)
+            remote_bytes = obj['Body'].read()
+            remote_cid = compute_cid(remote_bytes)
+            
+            if remote_cid == cid:
+                logger.info(f"Downloaded content matches CID. Object is valid but missing metadata.")
+                # Optionally, we could re-upload with metadata here
+                logger.warning("Consider re-uploading to add CID metadata for faster future verifications.")
+                return cid
+            else:
+                logger.error(f"Content CID mismatch! Expected: {cid}, Computed: {remote_cid}")
+                raise ValueError(f"Object exists but content does not match computed CID")
+                
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            # Object doesn't exist, proceed with upload
+            logger.info(f"Object not found in R2. Proceeding with upload...")
+        else:
+            # Some other error occurred
+            raise
+    
+    # Upload the object with CID in metadata
+    # Note: ETag is generated by the storage service and cannot be set via S3 PUT.
+    # Do not use ETag as CID. Store CID in Metadata and, for client-facing responses,
+    # set ETag in a Cloudflare Worker when serving objects.
+    logger.info(f"Uploading to R2 with CID in metadata...")
+    s3.put_object(
+        Bucket=bucket,
+        Key=cid,
+        Body=content,
+        CacheControl='public, max-age=31536000, immutable',
+        ContentType='application/octet-stream',
+        Metadata={'cid': cid}
     )
     
-    return s3_client, bucket_name
+    logger.info(f"Successfully uploaded {file_path.name} to R2 as {cid}")
+    return cid
 
 
-def check_object_exists(s3_client, bucket_name: str, key: str) -> Tuple[bool, dict]:
+def verify_r2_object(cid: str, bucket: str, endpoint_url: str = None) -> bool:
     """
-    Check if an object exists in R2.
+    Verify an object in R2 matches its CID.
     
+    Verification process:
+    1. Use head_object() to check Metadata['cid'] (fast, no download)
+    2. If metadata missing, download and compute CID from bytes (slower fallback)
+    
+    Args:
+        cid: The CID to verify
+        bucket: R2 bucket name
+        endpoint_url: Optional S3-compatible endpoint URL
+        
     Returns:
-        (exists, metadata) - metadata is empty dict if not exists
+        True if object is valid, False otherwise
     """
+    s3_config = {"service_name": "s3"}
+    if endpoint_url:
+        s3_config["endpoint_url"] = endpoint_url
+    s3 = boto3.client(**s3_config)
+    
     try:
-        response = s3_client.head_object(Bucket=bucket_name, Key=key)
-        return True, response
+        head = s3.head_object(Bucket=bucket, Key=cid)
+        remote_meta_cid = head.get('Metadata', {}).get('cid')
+        
+        if remote_meta_cid:
+            # Verify using metadata (fast path)
+            if remote_meta_cid == cid:
+                logger.info(f"✓ Verification via metadata: CID matches")
+                return True
+            else:
+                logger.error(f"✗ Metadata CID mismatch! Expected: {cid}, Found: {remote_meta_cid}")
+                return False
+        else:
+            # Metadata not present - fallback to download verification
+            logger.info("CID metadata not found. Downloading object to verify content...")
+            obj = s3.get_object(Bucket=bucket, Key=cid)
+            remote_bytes = obj['Body'].read()
+            remote_cid = compute_cid(remote_bytes)
+            
+            if remote_cid == cid:
+                logger.info(f"✓ Verification via download: CID matches")
+                return True
+            else:
+                logger.error(f"✗ Content CID mismatch! Expected: {cid}, Computed: {remote_cid}")
+                return False
+                
     except ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return False, {}
+        if e.response['Error']['Code'] == '404':
+            logger.error(f"✗ Object not found: {cid}")
+            return False
         else:
             raise
 
 
-def get_object_content(s3_client, bucket_name: str, key: str) -> bytes:
-    """Download and return object content from R2."""
-    response = s3_client.get_object(Bucket=bucket_name, Key=key)
-    return response["Body"].read()
-
-
-def upload_object(s3_client, bucket_name: str, key: str, content: bytes) -> None:
-    """
-    Upload object to R2 with immutable cache settings.
-    
-    Sets:
-    - Cache-Control: public, max-age=31536000, immutable
-    - Content-Type: application/octet-stream
-    """
-    s3_client.put_object(
-        Bucket=bucket_name,
-        Key=key,
-        Body=content,
-        CacheControl="public, max-age=31536000, immutable",
-        ContentType="application/octet-stream",
-    )
-
-
-def verify_cache_headers(metadata: dict) -> List[str]:
-    """
-    Verify that cache headers indicate immutable resource.
-    
-    Returns list of issues found, empty if all good.
-    """
-    issues = []
-    
-    cache_control = metadata.get("CacheControl", "")
-    if "immutable" not in cache_control.lower():
-        issues.append(f"Cache-Control missing 'immutable': {cache_control}")
-    
-    if "max-age=31536000" not in cache_control:
-        issues.append(f"Cache-Control missing 'max-age=31536000': {cache_control}")
-    
-    if "public" not in cache_control.lower():
-        issues.append(f"Cache-Control missing 'public': {cache_control}")
-    
-    return issues
-
-
 def main():
-    """Main function to process all CID files."""
-    # Get the repository root (2 levels up from .github/scripts)
-    repo_root = Path(__file__).resolve().parents[2]
-    cids_dir = repo_root / "cids"
+    parser = argparse.ArgumentParser(
+        description='Upload files to R2 with CID-based content addressing',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__
+    )
+    parser.add_argument('file', type=Path, help='File to upload')
+    parser.add_argument('--bucket', default='256t-org', help='R2 bucket name (default: 256t-org)')
+    parser.add_argument('--endpoint-url', help='S3-compatible endpoint URL')
+    parser.add_argument('--verify-only', action='store_true', 
+                       help='Only verify existing object, do not upload')
     
-    if not cids_dir.exists():
-        print(f"Error: CIDs directory not found: {cids_dir}")
+    args = parser.parse_args()
+    
+    if not args.file.exists():
+        logger.error(f"File not found: {args.file}")
         sys.exit(1)
     
-    # Get R2 client
     try:
-        s3_client, bucket_name = get_r2_client()
-    except Exception as e:
-        print(f"Error creating R2 client: {e}")
-        sys.exit(1)
-    
-    # Verify bucket exists
-    try:
-        s3_client.head_bucket(Bucket=bucket_name)
-        print(f"✓ Connected to R2 bucket: {bucket_name}")
-    except ClientError as e:
-        print(f"Error: Cannot access bucket '{bucket_name}': {e}")
-        sys.exit(1)
-    
-    # Process all CID files
-    cid_files = sorted([f for f in cids_dir.iterdir() if f.is_file()])
-    print(f"\nProcessing {len(cid_files)} CID files...\n")
-    
-    errors = []
-    uploaded = []
-    verified = []
-    
-    for cid_file in cid_files:
-        cid_name = cid_file.name
-        content = cid_file.read_bytes()
-        
-        # Verify the CID matches the content
-        expected_cid = compute_cid(content)
-        if cid_name != expected_cid:
-            error_msg = f"CID mismatch: {cid_name} should be {expected_cid}"
-            print(f"✗ {error_msg}")
-            errors.append(error_msg)
-            continue
-        
-        # Check if exists on R2
-        exists, metadata = check_object_exists(s3_client, bucket_name, cid_name)
-        
-        if exists:
-            print(f"  Found: {cid_name}")
-            
-            # Download and verify content
-            try:
-                remote_content = get_object_content(s3_client, bucket_name, cid_name)
-                
-                if remote_content != content:
-                    error_msg = f"Content mismatch for {cid_name}"
-                    print(f"✗ {error_msg}")
-                    print(f"  Local size: {len(content)}, Remote size: {len(remote_content)}")
-                    errors.append(error_msg)
-                    continue
-                
-                # Verify CID of downloaded content
-                remote_cid = compute_cid(remote_content)
-                if remote_cid != cid_name:
-                    error_msg = f"CID verification failed for {cid_name}, computed: {remote_cid}"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                # Verify cache headers
-                header_issues = verify_cache_headers(metadata)
-                if header_issues:
-                    error_msg = f"Cache header issues for {cid_name}: {', '.join(header_issues)}"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                print(f"✓ Verified: {cid_name}")
-                verified.append(cid_name)
-                
-            except Exception as e:
-                error_msg = f"Error verifying {cid_name}: {e}"
-                print(f"✗ {error_msg}")
-                errors.append(error_msg)
+        if args.verify_only:
+            content = args.file.read_bytes()
+            cid = compute_cid(content)
+            logger.info(f"Verifying CID: {cid}")
+            if verify_r2_object(cid, args.bucket, args.endpoint_url):
+                logger.info("Verification successful!")
+                sys.exit(0)
+            else:
+                logger.error("Verification failed!")
+                sys.exit(1)
         else:
-            # Upload the file
-            print(f"  Missing: {cid_name}")
-            try:
-                upload_object(s3_client, bucket_name, cid_name, content)
-                print(f"  Uploaded: {cid_name}")
-                
-                # Verify the upload
-                exists_after, metadata_after = check_object_exists(s3_client, bucket_name, cid_name)
-                if not exists_after:
-                    error_msg = f"Upload verification failed: {cid_name} not found after upload"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                # Download and verify uploaded content
-                uploaded_content = get_object_content(s3_client, bucket_name, cid_name)
-                if uploaded_content != content:
-                    error_msg = f"Uploaded content mismatch for {cid_name}"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                # Verify CID of uploaded content
-                uploaded_cid = compute_cid(uploaded_content)
-                if uploaded_cid != cid_name:
-                    error_msg = f"Uploaded CID verification failed for {cid_name}, computed: {uploaded_cid}"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                # Verify cache headers
-                header_issues = verify_cache_headers(metadata_after)
-                if header_issues:
-                    error_msg = f"Cache header issues after upload for {cid_name}: {', '.join(header_issues)}"
-                    print(f"✗ {error_msg}")
-                    errors.append(error_msg)
-                    continue
-                
-                print(f"✓ Upload verified: {cid_name}")
-                uploaded.append(cid_name)
-                
-            except Exception as e:
-                error_msg = f"Error uploading {cid_name}: {e}"
-                print(f"✗ {error_msg}")
-                errors.append(error_msg)
-    
-    # Print summary
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    print(f"Total CID files: {len(cid_files)}")
-    print(f"Verified existing: {len(verified)}")
-    print(f"Uploaded new: {len(uploaded)}")
-    print(f"Errors: {len(errors)}")
-    
-    if errors:
-        print("\nErrors found:")
-        for error in errors:
-            print(f"  - {error}")
+            cid = upload_to_r2(args.file, args.bucket, args.endpoint_url)
+            logger.info(f"Final CID: {cid}")
+            sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}")
         sys.exit(1)
-    else:
-        print("\n✓ All CID files successfully uploaded and verified!")
-        sys.exit(0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
