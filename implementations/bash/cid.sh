@@ -32,8 +32,50 @@ compute_cid() {
   printf '%s%s\n' "$(encode_length "$length")" "$suffix"
 }
 
+compute_cid_from_content() {
+  local content=$1
+  local length suffix
+  length=${#content}
+  if (( length <= 64 )); then
+    suffix=$(printf '%s' "$content" | base64 | tr '+/' '-_' | tr -d '=\n')
+  else
+    suffix=$(printf '%s' "$content" | sha512sum \
+      | awk '{print $1}' \
+      | perl -ne 'chomp; print pack("H*", $_)' \
+      | base64 \
+      | tr '+/' '-_' \
+      | tr -d '=\n')
+  fi
+  printf '%s%s\n' "$(encode_length "$length")" "$suffix"
+}
+
+download_cid() {
+  local base_url=$1
+  local cid=$2
+  local url="${base_url%/}/$cid"
+  local content
+  
+  if ! content=$(curl -sS -f "$url" 2>&1); then
+    echo "error:$content" >&2
+    return 1
+  fi
+  
+  local computed
+  computed=$(compute_cid_from_content "$content")
+  local is_valid
+  if [[ "$computed" == "$cid" ]]; then
+    is_valid="true"
+  else
+    is_valid="false"
+  fi
+  
+  echo "$content|$computed|$is_valid"
+}
+
 export BASE_DIR
 export EXAMPLES_DIR
 export CIDS_DIR
 export -f encode_length
 export -f compute_cid
+export -f compute_cid_from_content
+export -f download_cid
