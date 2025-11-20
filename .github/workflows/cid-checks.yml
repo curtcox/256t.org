@@ -323,7 +323,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Perl dependencies
-        run: sudo cpan -i LWP::UserAgent
+        run: sudo cpan -i LWP::UserAgent LWP::Protocol::https
       - name: Run Perl CID check
         run: perl implementations/perl/check.pl
 
