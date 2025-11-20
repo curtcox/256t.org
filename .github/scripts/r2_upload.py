@@ -69,7 +69,8 @@ def check_object_exists(cid: str) -> tuple[bool, bytes]:
         object_path = f"{BUCKET_NAME}/{cid}"
         returncode, stdout, stderr = run_wrangler_command([
             'r2', 'object', 'get', object_path,
-            '--file', tmp_path
+            '--file', tmp_path,
+            '--remote'
         ])
         
         if returncode == 0:
@@ -129,7 +130,8 @@ def upload_to_r2(file_path: Path) -> str:
         'r2', 'object', 'put', object_path,
         '--file', str(file_path),
         '--cache-control', 'public, max-age=31536000, immutable',
-        '--content-type', 'application/octet-stream'
+        '--content-type', 'application/octet-stream',
+        '--remote'
     ])
     
     if returncode != 0:
