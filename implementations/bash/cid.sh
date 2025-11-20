@@ -53,15 +53,19 @@ download_cid() {
   local base_url=$1
   local cid=$2
   local url="${base_url%/}/$cid"
-  local content
+  local tmpfile
+  tmpfile=$(mktemp)
   
-  if ! content=$(curl -sS -f "$url" 2>&1); then
-    echo "error:$content" >&2
+  # Download to temporary file to handle binary data
+  if ! curl -sS -f "$url" -o "$tmpfile" 2>&1; then
+    local error=$?
+    rm -f "$tmpfile"
+    echo "error:curl failed with exit code $error" >&2
     return 1
   fi
   
   local computed
-  computed=$(compute_cid_from_content "$content")
+  computed=$(compute_cid "$tmpfile")
   local is_valid
   if [[ "$computed" == "$cid" ]]; then
     is_valid="true"
@@ -69,7 +73,8 @@ download_cid() {
     is_valid="false"
   fi
   
-  echo "$content|$computed|$is_valid"
+  # Return tmpfile path instead of content, along with computed CID and validity
+  echo "$tmpfile|$computed|$is_valid"
 }
 
 export BASE_DIR

@@ -24,15 +24,16 @@ main() {
     # Check downloaded content
     local download_result
     if download_result=$(download_cid "$base_url" "$cid" 2>&1); then
-      IFS='|' read -r content computed is_valid <<<"$download_result"
+      IFS='|' read -r tmpfile computed is_valid <<<"$download_result"
       if [[ "$is_valid" != "true" ]]; then
         download_failures+=("$cid:$computed")
+        rm -f "$tmpfile"
       else
-        local local_content
-        local_content=$(<"$path")
-        if [[ "$content" != "$local_content" ]]; then
+        # Compare files byte-by-byte
+        if ! cmp -s "$tmpfile" "$path"; then
           download_failures+=("$cid:content mismatch with local file")
         fi
+        rm -f "$tmpfile"
       fi
     else
       download_failures+=("$cid:$download_result")
