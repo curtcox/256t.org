@@ -313,7 +313,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: r-lib/actions/setup-r@v2
       - name: Install R dependencies
-        run: Rscript -e "install.packages(c('digest','base64enc','httr'), repos='https://cloud.r-project.org')"
+        run: |
+          Rscript -e "install.packages(c('digest','base64enc','httr'), repos='https://cloud.r-project.org', quiet=FALSE)"
+          Rscript -e "cat('Installed packages:\n'); print(installed.packages()[,c('Package','Version')])"
       - name: Run R CID check
         run: Rscript implementations/r/check.R
 
