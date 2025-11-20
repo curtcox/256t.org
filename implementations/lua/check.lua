@@ -80,6 +80,32 @@ local function compute_cid(content)
   return prefix .. suffix
 end
 
+local function download_cid(base_url, cid)
+  base_url = base_url:gsub("/$", "")
+  local url = base_url .. "/" .. cid
+  
+  local handle = io.popen("curl -sS -f '" .. url .. "' 2>&1")
+  if not handle then
+    return nil, "Failed to execute curl"
+  end
+  
+  local content = handle:read("*a")
+  local success = handle:close()
+  
+  if not success then
+    return nil, content
+  end
+  
+  local computed = compute_cid(content)
+  local is_valid = (computed == cid)
+  
+  return {
+    content = content,
+    computed = computed,
+    is_valid = is_valid
+  }
+end
+
 local function list_entries(path)
   local handle = assert(io.popen("ls -1 '" .. path .. "'"))
   local entries = {}
@@ -93,30 +119,61 @@ end
 
 local function main()
   local mismatches = {}
+  local download_failures = {}
   local count = 0
+  local base_url = "https://256t.org"
 
   for _, name in ipairs(list_entries(cids_dir)) do
     local path = cids_dir .. "/" .. name
-    local content = read_file(path)
+    local local_content = read_file(path)
 
-    if content then
+    if local_content then
       count = count + 1
-      local expected = compute_cid(content)
+      local expected = compute_cid(local_content)
+      
+      -- Check local CID file
       if name ~= expected then
-        mismatches[#mismatches + 1] = { name = name, expected = expected }
+        mismatches[#mismatches + 1] = { cid = name, expected = expected }
+      end
+      
+      -- Check downloaded content
+      local result, err = download_cid(base_url, name)
+      if result then
+        if not result.is_valid then
+          download_failures[#download_failures + 1] = { cid = name, error = result.computed }
+        elseif result.content ~= local_content then
+          download_failures[#download_failures + 1] = { cid = name, error = "content mismatch with local file" }
+        end
+      else
+        download_failures[#download_failures + 1] = { cid = name, error = err }
       end
     end
   end
 
+  local has_errors = false
+
   if #mismatches > 0 then
     print("Found CID mismatches:")
     for _, mismatch in ipairs(mismatches) do
-      print("- " .. mismatch.name .. " should be " .. mismatch.expected)
+      print("- " .. mismatch.cid .. " should be " .. mismatch.expected)
     end
+    has_errors = true
+  end
+
+  if #download_failures > 0 then
+    io.stderr:write("Found download validation failures:\n")
+    for _, failure in ipairs(download_failures) do
+      io.stderr:write("- " .. failure.cid .. ": " .. failure.error .. "\n")
+    end
+    has_errors = true
+  end
+
+  if has_errors then
     return 1
   end
 
   print(string.format("All %d CID files match their contents.", count))
+  print(string.format("All %d downloaded CIDs are valid.", count))
   return 0
 end
 
