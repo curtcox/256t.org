@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const https = require('https');
 const path = require('path');
 
 const BASE_DIR = path.resolve(__dirname, '..', '..');
@@ -27,9 +28,30 @@ const computeCid = (content) => {
   return `${prefix}${suffix}`;
 };
 
+const downloadCid = (baseUrl, cid) => {
+  return new Promise((resolve, reject) => {
+    const url = `${baseUrl.replace(/\/$/, '')}/${cid}`;
+    https.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+        return;
+      }
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const content = Buffer.concat(chunks);
+        const computed = computeCid(content);
+        const isValid = computed === cid;
+        resolve({ content, computed, isValid });
+      });
+    }).on('error', reject);
+  });
+};
+
 module.exports = {
   BASE_DIR,
   EXAMPLES_DIR,
   CIDS_DIR,
   computeCid,
+  downloadCid,
 };

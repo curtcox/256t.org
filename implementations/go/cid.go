@@ -4,8 +4,12 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
+	"io"
+	"net/http"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 var (
@@ -46,4 +50,35 @@ func computeCID(content []byte) string {
 	}
 
 	return prefix + suffix
+}
+
+type DownloadResult struct {
+	Content  []byte
+	Computed string
+	IsValid  bool
+}
+
+func downloadCID(baseURL, cid string) (*DownloadResult, error) {
+	url := strings.TrimSuffix(baseURL, "/") + "/" + cid
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	computed := computeCID(content)
+	return &DownloadResult{
+		Content:  content,
+		Computed: computed,
+		IsValid:  computed == cid,
+	}, nil
 }
