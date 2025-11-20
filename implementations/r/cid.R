@@ -48,7 +48,29 @@ compute_cid <- function(content) {
   paste0(prefix, suffix)
 }
 
+download_cid <- function(base_url, cid) {
+  suppressPackageStartupMessages(library(httr))
+  url <- paste0(sub("/$", "", base_url), "/", cid)
+  
+  tryCatch({
+    response <- GET(url, timeout(10))
+    
+    if (status_code(response) != 200) {
+      stop(sprintf("HTTP %d", status_code(response)))
+    }
+    
+    content <- content(response, "raw")
+    computed <- compute_cid(content)
+    is_valid <- identical(computed, cid)
+    
+    list(content = content, computed = computed, is_valid = is_valid)
+  }, error = function(e) {
+    stop(e$message)
+  })
+}
+
 assign("BASE_DIR", BASE_DIR, envir = .GlobalEnv)
 assign("EXAMPLES_DIR", EXAMPLES_DIR, envir = .GlobalEnv)
 assign("CIDS_DIR", CIDS_DIR, envir = .GlobalEnv)
 assign("compute_cid", compute_cid, envir = .GlobalEnv)
+assign("download_cid", download_cid, envir = .GlobalEnv)
