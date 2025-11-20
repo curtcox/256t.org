@@ -1,6 +1,7 @@
 module CID
 
 using SHA
+using HTTP
 import Base64
 
 const BASE_DIR = normpath(joinpath(@__DIR__, "..", ".."))
@@ -35,7 +36,6 @@ struct DownloadResult
 end
 
 function download_cid(base_url::String, cid::String)
-    using HTTP
     url = string(rstrip(base_url, '/'), "/", cid)
     
     try
