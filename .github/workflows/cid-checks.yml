@@ -60,7 +60,7 @@ jobs:
         with:
           deno-version: v1.x
       - name: Run Deno CID check
-        run: deno run --allow-read implementations/deno/check.ts
+        run: deno run --allow-read --allow-net implementations/deno/check.ts
 
   ecmascript:
     name: ECMAScript CID check
