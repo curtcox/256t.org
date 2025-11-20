@@ -6,6 +6,7 @@ use File::Basename qw(dirname);
 use File::Spec;
 use Cwd qw(abs_path);
 use MIME::Base64 qw(encode_base64);
+use LWP::UserAgent;
 
 sub base_dir {
     my $script_dir = abs_path(dirname(__FILE__));
@@ -50,6 +51,29 @@ sub read_file_bytes {
     return <$fh>;
 }
 
+sub download_cid {
+    my ($base_url, $cid) = @_;
+    $base_url =~ s{/$}{};
+    my $url = "$base_url/$cid";
+    
+    my $ua = LWP::UserAgent->new(timeout => 10);
+    my $response = $ua->get($url);
+    
+    if (!$response->is_success) {
+        die $response->status_line;
+    }
+    
+    my $content = $response->content;
+    my $computed = compute_cid($content);
+    my $is_valid = $computed eq $cid;
+    
+    return {
+        content => $content,
+        computed => $computed,
+        is_valid => $is_valid
+    };
+}
+
 sub main {
     my $dir = cids_dir();
     opendir my $dh, $dir or die "Unable to open $dir: $!";
@@ -57,17 +81,36 @@ sub main {
     closedir $dh;
 
     my @mismatches;
+    my @download_failures;
     my $count = 0;
+    my $base_url = 'https://256t.org';
 
     for my $file (@files) {
         $count++;
         my $path = File::Spec->catfile($dir, $file);
-        my $content = read_file_bytes($path);
-        my $expected = compute_cid($content);
+        my $local_content = read_file_bytes($path);
+        my $expected = compute_cid($local_content);
         if ($file ne $expected) {
             push @mismatches, [$file, $expected];
         }
+        
+        # Check downloaded content
+        eval {
+            my $result = download_cid($base_url, $file);
+            if (!$result->{is_valid}) {
+                push @download_failures, [$file, $result->{computed}];
+            } elsif ($result->{content} ne $local_content) {
+                push @download_failures, [$file, 'content mismatch with local file'];
+            }
+        };
+        if ($@) {
+            my $error = $@;
+            chomp $error;
+            push @download_failures, [$file, $error];
+        }
     }
+
+    my $has_errors = 0;
 
     if (@mismatches) {
         print "Found CID mismatches:\n";
@@ -75,10 +118,24 @@ sub main {
             my ($actual, $expected) = @$mismatch;
             print "- $actual should be $expected\n";
         }
+        $has_errors = 1;
+    }
+
+    if (@download_failures) {
+        print STDERR "Found download validation failures:\n";
+        for my $failure (@download_failures) {
+            my ($cid, $error) = @$failure;
+            print STDERR "- $cid: $error\n";
+        }
+        $has_errors = 1;
+    }
+
+    if ($has_errors) {
         return 1;
     }
 
     print "All $count CID files match their contents.\n";
+    print "All $count downloaded CIDs are valid.\n";
     return 0;
 }
 
