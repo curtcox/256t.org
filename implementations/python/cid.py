@@ -2,7 +2,7 @@ import base64
 import hashlib
 from pathlib import Path
 from typing import Tuple
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -42,7 +42,8 @@ def download_cid(base_url: str, cid: str) -> Tuple[bytes, str, bool]:
         - is_valid: True if computed_cid matches the expected cid
     """
     url = f"{base_url.rstrip('/')}/{cid}"
-    with urlopen(url) as response:
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urlopen(req) as response:
         content = response.read()
     computed = compute_cid(content)
     return content, computed, computed == cid
