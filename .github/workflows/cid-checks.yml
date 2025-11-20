@@ -71,7 +71,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install node-fetch
-        run: npm install --no-save node-fetch
+        run: cd implementations/ecmascript && npm install --no-save node-fetch
       - name: Run ECMAScript CID check
         run: node implementations/ecmascript/check.js
 
