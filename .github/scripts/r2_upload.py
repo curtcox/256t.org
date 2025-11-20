@@ -61,10 +61,13 @@ def check_object_exists(cid: str) -> tuple[bool, bytes]:
     Returns:
         Tuple of (exists, content) where content is bytes if exists, else empty bytes
     """
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        tmp_path = tmp_file.name
+    # Create temporary file using mkstemp for better security
+    fd, tmp_path = tempfile.mkstemp()
     
     try:
+        # Close the file descriptor as wrangler will open the file
+        os.close(fd)
+        
         # Try to download the object
         object_path = f"{BUCKET_NAME}/{cid}"
         returncode, stdout, stderr = run_wrangler_command([
@@ -78,17 +81,21 @@ def check_object_exists(cid: str) -> tuple[bool, bytes]:
             content = Path(tmp_path).read_bytes()
             return True, content
         else:
-            # Object doesn't exist or other error
-            if 'not found' in stderr.lower() or 'does not exist' in stderr.lower():
+            # Check if it's a "not found" error based on exit code and error message
+            # Exit code 1 with specific error messages indicates object doesn't exist
+            if 'not found' in stderr.lower() or 'does not exist' in stderr.lower() or 'specified key does not exist' in stderr.lower():
                 return False, b''
             else:
-                # Some other error occurred
+                # Some other error occurred (authentication, network, etc.)
                 logger.error(f"Error checking object: {stderr}")
                 raise RuntimeError(f"Failed to check object existence: {stderr}")
     finally:
         # Clean up temporary file
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+        try:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        except OSError as e:
+            logger.warning(f"Failed to clean up temporary file {tmp_path}: {e}")
 
 
 def upload_to_r2(file_path: Path) -> str:

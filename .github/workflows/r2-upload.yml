@@ -37,9 +37,20 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           # Upload all example files to R2
+          failed=0
           for file in examples/*; do
             if [ -f "$file" ]; then
               echo "Processing $file..."
-              python .github/scripts/r2_upload.py "$file" || true
+              if ! python .github/scripts/r2_upload.py "$file"; then
+                echo "Failed to upload $file"
+                failed=$((failed + 1))
+              fi
             fi
           done
+          
+          if [ $failed -gt 0 ]; then
+            echo "Failed to upload $failed file(s)"
+            exit 1
+          fi
+          
+          echo "Successfully uploaded all files"
