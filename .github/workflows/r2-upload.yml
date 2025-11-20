@@ -38,7 +38,7 @@ jobs:
         run: |
           # Upload all example files to R2
           failed=0
-          for file in examples/*; do
+          for file in cids/*; do
             if [ -f "$file" ]; then
               echo "Processing $file..."
               if ! python .github/scripts/r2_upload.py "$file"; then
