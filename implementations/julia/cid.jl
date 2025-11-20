@@ -28,6 +28,32 @@ function compute_cid(content::Vector{UInt8})
     return string(prefix, suffix)
 end
 
-export BASE_DIR, EXAMPLES_DIR, CIDS_DIR, compute_cid
+struct DownloadResult
+    content::Vector{UInt8}
+    computed::String
+    is_valid::Bool
+end
+
+function download_cid(base_url::String, cid::String)
+    using HTTP
+    url = string(rstrip(base_url, '/'), "/", cid)
+    
+    try
+        response = HTTP.get(url)
+        if response.status != 200
+            error("HTTP $(response.status)")
+        end
+        
+        content = response.body
+        computed = compute_cid(content)
+        is_valid = computed == cid
+        
+        return DownloadResult(content, computed, is_valid)
+    catch e
+        rethrow(e)
+    end
+end
+
+export BASE_DIR, EXAMPLES_DIR, CIDS_DIR, compute_cid, download_cid
 
 end
