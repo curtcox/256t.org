@@ -2,48 +2,100 @@
 """
 R2 Upload Script for 256t.org Content-Addressable Storage
 
-This script uploads files to Cloudflare R2 (S3-compatible storage) using their
-CID (Content Identifier) as the key. It stores the CID in object metadata for
-reliable verification.
-
-Why we use metadata instead of ETag:
-- R2/S3 ETag is generated server-side and cannot be set during PUT operations
-- ETag is not a reliable CID indicator for multipart uploads (it's not a simple hash)
-- Object metadata provides a queryable, reliable place to store and verify CIDs
+This script uploads files to Cloudflare R2 using their CID (Content Identifier)
+as the key. It uses Cloudflare's Wrangler CLI for all R2 operations.
 
 Usage:
-    python r2_upload.py <file_path> [--bucket BUCKET_NAME] [--endpoint-url URL]
+    python r2_upload.py <file_path> [--verify-only]
 """
 
 import argparse
 import sys
 import logging
+import subprocess
+import tempfile
+import os
 from pathlib import Path
 
 # Add the Python implementation directory to the path to import cid module
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "implementations" / "python"))
-
-try:
-    import boto3
-    from botocore.exceptions import ClientError
-except ImportError:
-    print("Error: boto3 is required. Install it with: pip install boto3")
-    sys.exit(1)
 
 from cid import compute_cid
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+# Hardcoded bucket name
+BUCKET_NAME = "256t-cids"
 
-def upload_to_r2(file_path: Path, bucket: str, endpoint_url: str = None) -> str:
+
+def run_wrangler_command(args: list) -> tuple[int, str, str]:
+    """
+    Run a wrangler command and return the result.
+    
+    Args:
+        args: List of command arguments (e.g., ['r2', 'object', 'get', ...])
+        
+    Returns:
+        Tuple of (exit_code, stdout, stderr)
+    """
+    cmd = ['npx', 'wrangler'] + args
+    logger.debug(f"Running command: {' '.join(cmd)}")
+    
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True
+    )
+    
+    return result.returncode, result.stdout, result.stderr
+
+
+def check_object_exists(cid: str) -> tuple[bool, bytes]:
+    """
+    Check if an object exists in R2 and return its content if it does.
+    
+    Args:
+        cid: The CID to check
+        
+    Returns:
+        Tuple of (exists, content) where content is bytes if exists, else empty bytes
+    """
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_path = tmp_file.name
+    
+    try:
+        # Try to download the object
+        object_path = f"{BUCKET_NAME}/{cid}"
+        returncode, stdout, stderr = run_wrangler_command([
+            'r2', 'object', 'get', object_path,
+            '--file', tmp_path
+        ])
+        
+        if returncode == 0:
+            # Object exists, read its content
+            content = Path(tmp_path).read_bytes()
+            return True, content
+        else:
+            # Object doesn't exist or other error
+            if 'not found' in stderr.lower() or 'does not exist' in stderr.lower():
+                return False, b''
+            else:
+                # Some other error occurred
+                logger.error(f"Error checking object: {stderr}")
+                raise RuntimeError(f"Failed to check object existence: {stderr}")
+    finally:
+        # Clean up temporary file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+def upload_to_r2(file_path: Path) -> str:
     """
     Upload a file to R2 using its CID as the key.
     
     Args:
         file_path: Path to the file to upload
-        bucket: R2 bucket name
-        endpoint_url: Optional S3-compatible endpoint URL
         
     Returns:
         The CID of the uploaded file
@@ -54,135 +106,88 @@ def upload_to_r2(file_path: Path, bucket: str, endpoint_url: str = None) -> str:
     
     logger.info(f"Computed CID for {file_path.name}: {cid}")
     
-    # Create S3 client
-    s3_config = {"service_name": "s3"}
-    if endpoint_url:
-        s3_config["endpoint_url"] = endpoint_url
-    s3 = boto3.client(**s3_config)
+    # Check if object already exists and verify
+    exists, remote_content = check_object_exists(cid)
     
-    # Check if object already exists and verify via metadata
-    try:
-        head = s3.head_object(Bucket=bucket, Key=cid)
-        remote_meta_cid = head.get('Metadata', {}).get('cid')
+    if exists:
+        # Verify the content matches
+        remote_cid = compute_cid(remote_content)
         
-        if remote_meta_cid:
-            if remote_meta_cid == cid:
-                logger.info(f"Object already exists with matching CID in metadata. Skipping upload.")
-                return cid
-            else:
-                # Metadata CID mismatch - this is an error condition
-                logger.error(f"Metadata CID mismatch! Expected: {cid}, Found: {remote_meta_cid}")
-                raise ValueError(f"Object exists but metadata CID does not match computed CID")
+        if remote_cid == cid:
+            logger.info(f"Object already exists with matching CID. Skipping upload.")
+            return cid
         else:
-            # Metadata not present - fallback to download and verify
-            logger.info("Object exists but CID metadata is missing. Downloading to verify content...")
-            obj = s3.get_object(Bucket=bucket, Key=cid)
-            remote_bytes = obj['Body'].read()
-            remote_cid = compute_cid(remote_bytes)
-            
-            if remote_cid == cid:
-                logger.info(f"Downloaded content matches CID. Object is valid but missing metadata.")
-                # Optionally, we could re-upload with metadata here
-                logger.warning("Consider re-uploading to add CID metadata for faster future verifications.")
-                return cid
-            else:
-                logger.error(f"Content CID mismatch! Expected: {cid}, Computed: {remote_cid}")
-                raise ValueError(f"Object exists but content does not match computed CID")
-                
-    except ClientError as e:
-        if e.response['Error']['Code'] == '404':
-            # Object doesn't exist, proceed with upload
-            logger.info(f"Object not found in R2. Proceeding with upload...")
-        else:
-            # Some other error occurred
-            raise
+            # Content CID mismatch - this is an error condition
+            logger.error(f"Content CID mismatch! Expected: {cid}, Found: {remote_cid}")
+            raise ValueError(f"Object exists but content does not match computed CID")
     
-    # Upload the object with CID in metadata
-    # Note: ETag is generated by the storage service and cannot be set via S3 PUT.
-    # Do not use ETag as CID. Store CID in Metadata and, for client-facing responses,
-    # set ETag in a Cloudflare Worker when serving objects.
-    logger.info(f"Uploading to R2 with CID in metadata...")
-    s3.put_object(
-        Bucket=bucket,
-        Key=cid,
-        Body=content,
-        CacheControl='public, max-age=31536000, immutable',
-        ContentType='application/octet-stream',
-        Metadata={'cid': cid}
-    )
+    # Upload the object using Wrangler
+    logger.info(f"Uploading to R2...")
+    object_path = f"{BUCKET_NAME}/{cid}"
+    
+    returncode, stdout, stderr = run_wrangler_command([
+        'r2', 'object', 'put', object_path,
+        '--file', str(file_path),
+        '--cache-control', 'public, max-age=31536000, immutable',
+        '--content-type', 'application/octet-stream'
+    ])
+    
+    if returncode != 0:
+        logger.error(f"Upload failed: {stderr}")
+        raise RuntimeError(f"Failed to upload to R2: {stderr}")
     
     logger.info(f"Successfully uploaded {file_path.name} to R2 as {cid}")
     return cid
 
 
-def verify_r2_object(cid: str, bucket: str, endpoint_url: str = None) -> bool:
+def verify_r2_object(cid: str) -> bool:
     """
     Verify an object in R2 matches its CID.
     
     Verification process:
-    1. Use head_object() to check Metadata['cid'] (fast, no download)
-    2. If metadata missing, download and compute CID from bytes (slower fallback)
+    1. Download the object from R2
+    2. Compute the CID from the downloaded content
+    3. Compare with the expected CID
     
     Args:
         cid: The CID to verify
-        bucket: R2 bucket name
-        endpoint_url: Optional S3-compatible endpoint URL
         
     Returns:
         True if object is valid, False otherwise
     """
-    s3_config = {"service_name": "s3"}
-    if endpoint_url:
-        s3_config["endpoint_url"] = endpoint_url
-    s3 = boto3.client(**s3_config)
+    exists, remote_content = check_object_exists(cid)
     
-    try:
-        head = s3.head_object(Bucket=bucket, Key=cid)
-        remote_meta_cid = head.get('Metadata', {}).get('cid')
-        
-        if remote_meta_cid:
-            # Verify using metadata (fast path)
-            if remote_meta_cid == cid:
-                logger.info(f"✓ Verification via metadata: CID matches")
-                return True
-            else:
-                logger.error(f"✗ Metadata CID mismatch! Expected: {cid}, Found: {remote_meta_cid}")
-                return False
-        else:
-            # Metadata not present - fallback to download verification
-            logger.info("CID metadata not found. Downloading object to verify content...")
-            obj = s3.get_object(Bucket=bucket, Key=cid)
-            remote_bytes = obj['Body'].read()
-            remote_cid = compute_cid(remote_bytes)
-            
-            if remote_cid == cid:
-                logger.info(f"✓ Verification via download: CID matches")
-                return True
-            else:
-                logger.error(f"✗ Content CID mismatch! Expected: {cid}, Computed: {remote_cid}")
-                return False
-                
-    except ClientError as e:
-        if e.response['Error']['Code'] == '404':
-            logger.error(f"✗ Object not found: {cid}")
-            return False
-        else:
-            raise
+    if not exists:
+        logger.error(f"✗ Object not found: {cid}")
+        return False
+    
+    # Compute CID from downloaded content
+    remote_cid = compute_cid(remote_content)
+    
+    if remote_cid == cid:
+        logger.info(f"✓ Verification successful: CID matches")
+        return True
+    else:
+        logger.error(f"✗ Content CID mismatch! Expected: {cid}, Computed: {remote_cid}")
+        return False
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Upload files to R2 with CID-based content addressing',
+        description='Upload files to R2 with CID-based content addressing using Wrangler',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
     parser.add_argument('file', type=Path, help='File to upload')
-    parser.add_argument('--bucket', default='256t-org', help='R2 bucket name (default: 256t-org)')
-    parser.add_argument('--endpoint-url', help='S3-compatible endpoint URL')
     parser.add_argument('--verify-only', action='store_true', 
                        help='Only verify existing object, do not upload')
+    parser.add_argument('--debug', action='store_true',
+                       help='Enable debug logging')
     
     args = parser.parse_args()
+    
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
     
     if not args.file.exists():
         logger.error(f"File not found: {args.file}")
@@ -193,14 +198,14 @@ def main():
             content = args.file.read_bytes()
             cid = compute_cid(content)
             logger.info(f"Verifying CID: {cid}")
-            if verify_r2_object(cid, args.bucket, args.endpoint_url):
+            if verify_r2_object(cid):
                 logger.info("Verification successful!")
                 sys.exit(0)
             else:
                 logger.error("Verification failed!")
                 sys.exit(1)
         else:
-            cid = upload_to_r2(args.file, args.bucket, args.endpoint_url)
+            cid = upload_to_r2(args.file)
             logger.info(f"Final CID: {cid}")
             sys.exit(0)
     except Exception as e:
