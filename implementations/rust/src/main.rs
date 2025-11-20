@@ -110,6 +110,62 @@ fn compute_cid(path: &Path, content: &[u8]) -> std::io::Result<String> {
     Ok(format!("{}{}", prefix, suffix))
 }
 
+fn compute_cid_from_bytes(content: &[u8]) -> String {
+    let prefix = encode_length(content.len());
+    let suffix = if content.len() <= 64 {
+        to_base64url(content)
+    } else {
+        // Compute SHA-512 in-memory instead of using sha512sum
+        let output = std::process::Command::new("sha512sum")
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .and_then(|mut child| {
+                use std::io::Write;
+                child.stdin.as_mut().unwrap().write_all(content)?;
+                child.wait_with_output()
+            });
+        
+        match output {
+            Ok(output) if output.status.success() => {
+                let hex_hash = output.stdout.split(|b| *b == b' ').next().unwrap_or(&[]);
+                match hex_to_bytes(hex_hash) {
+                    Ok(hash) => to_base64url(&hash),
+                    Err(_) => return String::new(),
+                }
+            }
+            _ => return String::new(),
+        }
+    };
+
+    format!("{}{}", prefix, suffix)
+}
+
+struct DownloadResult {
+    content: Vec<u8>,
+    computed: String,
+    is_valid: bool,
+}
+
+fn download_cid(base_url: &str, cid: &str) -> Result<DownloadResult, Box<dyn std::error::Error>> {
+    let url = format!("{}/{}", base_url.trim_end_matches('/'), cid);
+    let response = reqwest::blocking::get(&url)?;
+    
+    if !response.status().is_success() {
+        return Err(format!("HTTP {}", response.status()).into());
+    }
+    
+    let content = response.bytes()?.to_vec();
+    let computed = compute_cid_from_bytes(&content);
+    let is_valid = computed == cid;
+    
+    Ok(DownloadResult {
+        content,
+        computed,
+        is_valid,
+    })
+}
+
 fn main() {
     let mut entries: Vec<_> = fs::read_dir(cids_dir())
         .expect("failed to read cids directory")
@@ -119,7 +175,9 @@ fn main() {
     entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
 
     let mut mismatches = Vec::new();
+    let mut download_failures = Vec::new();
     let mut count = 0usize;
+    let base_url = "https://256t.org";
 
     for entry in entries {
         if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
@@ -128,38 +186,52 @@ fn main() {
 
         count += 1;
         let path = entry.path();
-        let content = match fs::read(&path) {
-            Ok(bytes) => bytes,
-            Err(err) => {
-                eprintln!("Failed to read {}: {}", path.display(), err);
-                mismatches.push((path.file_name().unwrap().to_string_lossy().into_owned(), String::new()));
-                continue;
-            }
-        };
-
-        let expected = match compute_cid(&path, &content) {
-            Ok(cid) => cid,
-            Err(err) => {
-                eprintln!("Failed to compute CID for {}: {}", path.display(), err);
-                mismatches.push((path.file_name().unwrap().to_string_lossy().into_owned(), String::new()));
-                continue;
-            }
-        };
-
-        let actual = path
+        let cid = path
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or("")
             .to_string();
+            
+        let local_content = match fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(err) => {
+                eprintln!("Failed to read {}: {}", path.display(), err);
+                mismatches.push((cid.clone(), String::new()));
+                continue;
+            }
+        };
 
-        if expected != actual {
-            mismatches.push((actual, expected));
+        let expected = match compute_cid(&path, &local_content) {
+            Ok(cid) => cid,
+            Err(err) => {
+                eprintln!("Failed to compute CID for {}: {}", path.display(), err);
+                mismatches.push((cid.clone(), String::new()));
+                continue;
+            }
+        };
+
+        if expected != cid {
+            mismatches.push((cid.clone(), expected));
+        }
+        
+        // Check downloaded content
+        match download_cid(base_url, &cid) {
+            Ok(result) => {
+                if !result.is_valid {
+                    download_failures.push((cid.clone(), result.computed));
+                } else if result.content != local_content {
+                    download_failures.push((cid.clone(), "content mismatch with local file".to_string()));
+                }
+            }
+            Err(err) => {
+                download_failures.push((cid.clone(), err.to_string()));
+            }
         }
     }
 
-    if mismatches.is_empty() {
-        println!("All {} CID files match their contents.", count);
-    } else {
+    let mut has_errors = false;
+
+    if !mismatches.is_empty() {
         println!("Found CID mismatches:");
         for (actual, expected) in mismatches {
             if expected.is_empty() {
@@ -168,6 +240,21 @@ fn main() {
                 println!("- {} should be {}", actual, expected);
             }
         }
+        has_errors = true;
+    }
+
+    if !download_failures.is_empty() {
+        eprintln!("Found download validation failures:");
+        for (cid, error) in download_failures {
+            eprintln!("- {}: {}", cid, error);
+        }
+        has_errors = true;
+    }
+
+    if has_errors {
         std::process::exit(1);
     }
+
+    println!("All {} CID files match their contents.", count);
+    println!("All {} downloaded CIDs are valid.", count);
 }
