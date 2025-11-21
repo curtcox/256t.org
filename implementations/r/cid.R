@@ -49,17 +49,21 @@ compute_cid <- function(content) {
 }
 
 download_cid <- function(base_url, cid) {
-  suppressPackageStartupMessages(library(httr))
+  # Check if httr is available, if not try to load it
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    stop("httr package is not installed")
+  }
+  
   url <- paste0(sub("/$", "", base_url), "/", cid)
   
   tryCatch({
-    response <- GET(url, timeout(10))
+    response <- httr::GET(url, httr::timeout(10))
     
-    if (status_code(response) != 200) {
-      stop(sprintf("HTTP %d", status_code(response)))
+    if (httr::status_code(response) != 200) {
+      stop(sprintf("HTTP %d", httr::status_code(response)))
     }
     
-    content <- content(response, "raw")
+    content <- httr::content(response, "raw")
     computed <- compute_cid(content)
     is_valid <- identical(computed, cid)
     

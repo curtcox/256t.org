@@ -314,8 +314,9 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
       - name: Install R dependencies
         run: |
-          Rscript -e "install.packages(c('digest','base64enc','httr'), repos='https://cloud.r-project.org', quiet=FALSE)"
-          Rscript -e "cat('Installed packages:\n'); print(installed.packages()[,c('Package','Version')])"
+          Rscript -e "install.packages(c('digest','base64enc','httr'), repos='https://cloud.r-project.org/', lib=.libPaths()[1], dependencies=TRUE)"
+          Rscript -e "cat('Library paths:\n'); print(.libPaths())"
+          Rscript -e "cat('\nInstalled packages:\n'); print(installed.packages()[,c('Package','Version','LibPath')])"
       - name: Run R CID check
         run: Rscript implementations/r/check.R
 

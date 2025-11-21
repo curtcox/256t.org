@@ -71,10 +71,19 @@ async function computeCid(content) {
  */
 async function downloadCid(baseUrl, cid) {
   const url = `${baseUrl.replace(/\/$/, '')}/${cid}`;
+  
   // Use global.fetch for Node.js compatibility (set by check.js)
-  const fetchFn = typeof globalThis !== 'undefined' && globalThis.fetch 
-    ? globalThis.fetch 
-    : (typeof global !== 'undefined' && global.fetch ? global.fetch : fetch);
+  let fetchFn;
+  if (typeof global !== 'undefined' && global.fetch) {
+    fetchFn = global.fetch;
+  } else if (typeof globalThis !== 'undefined' && globalThis.fetch) {
+    fetchFn = globalThis.fetch;
+  } else if (typeof fetch !== 'undefined') {
+    fetchFn = fetch;
+  } else {
+    throw new Error('fetch is not available');
+  }
+  
   const response = await fetchFn(url);
   
   if (!response.ok) {
