@@ -490,13 +490,14 @@ jobs:
       - name: Install Unison
         run: |
           mkdir -p ~/.local/bin
-          curl -L https://github.com/unisonweb/unison/releases/download/release%2FM6j/ucm-linux.tar.gz -o /tmp/ucm.tar.gz
+          curl -L https://github.com/unisonweb/unison/releases/download/release/0.5.27/ucm-linux.tar.gz -o /tmp/ucm.tar.gz
           tar -xzf /tmp/ucm.tar.gz -C ~/.local/bin
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Run Unison CID check
         run: |
           cd implementations/unison
-          ucm run check.u
+          ~/.local/bin/ucm version
+          ~/.local/bin/ucm run check.u
   elm:
     name: Elm CID check
     runs-on: ubuntu-latest
