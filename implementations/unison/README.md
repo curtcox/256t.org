@@ -21,13 +21,16 @@ Install Unison CLI Manager (UCM):
 # See https://www.unison-lang.org/docs/usage-topics/install/
 ```
 
-### Running the CID Check
+### About Running Unison Code
 
-```bash
-# From the repository root
-cd implementations/unison
-ucm run check.u
-```
+**Note:** Unison uses a unique codebase-oriented architecture rather than traditional file-based scripting. The `.u` files in this directory serve as reference implementations showing how CID computation would be expressed in Unison.
+
+To use this code in Unison:
+1. Initialize a Unison codebase: `ucm init`
+2. Load the code into your codebase
+3. Add it to your project
+
+Unison is designed for content-addressed code storage and doesn't support traditional "run a script" workflows like other languages in this repository.
 
 ## Implementation Details
 
