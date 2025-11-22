@@ -160,6 +160,69 @@
     .status-icon.failure::before {
       content: "✗";
     }
+    .cors-status {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .cors-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .cors-icon.good {
+      background: #4caf50;
+      color: white;
+    }
+    .cors-icon.bad {
+      background: #f44336;
+      color: white;
+    }
+    .cors-icon.unknown {
+      background: #9e9e9e;
+      color: white;
+    }
+    .cors-icon.good::before {
+      content: "●";
+    }
+    .cors-icon.bad::before {
+      content: "✗";
+    }
+    .cors-icon.unknown::before {
+      content: "?";
+    }
+    .cors-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .cors-description {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .cors-links {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+    .cors-links a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .cors-links a:hover {
+      text-decoration: underline;
+    }
     .info-grid {
       display: grid;
       gap: 0.75rem;
@@ -213,6 +276,16 @@
         value="https://256t.org/cids"
         placeholder="https://256t.org/cids"
       >
+      <div id="corsStatus" class="cors-status" style="display: none;">
+        <div id="corsIcon" class="cors-icon"></div>
+        <div class="cors-details">
+          <div id="corsDescription" class="cors-description"></div>
+          <div class="cors-links">
+            <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" target="_blank" rel="noopener noreferrer">Learn about CORS</a>
+            <a href="https://enable-cors.org/" target="_blank" rel="noopener noreferrer">Enable CORS</a>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="form-group">
@@ -262,6 +335,11 @@
 
   <script src="implementations/ecmascript/cid.js"></script>
   <script>
+    // Constants
+    const CORS_CHECK_TIMEOUT_MS = 5000;
+    const CORS_CHECK_DEBOUNCE_MS = 500;
+    const CORS_TEST_CID = 'AAAAAAAA'; // Minimal dummy CID for testing
+
     const baseUrlInput = document.getElementById('baseUrl');
     const cidInput = document.getElementById('cid');
     const downloadButton = document.getElementById('downloadButton');
@@ -275,11 +353,79 @@
     const errorMessage = document.getElementById('errorMessage');
     const fullContentDiv = document.getElementById('fullContent');
     const fullContentDisplay = document.getElementById('fullContentDisplay');
+    const corsStatus = document.getElementById('corsStatus');
+    const corsIcon = document.getElementById('corsIcon');
+    const corsDescription = document.getElementById('corsDescription');
 
     // Check if content is SVG
     function isSvgContent(content) {
       const text = typeof content === 'string' ? content : new TextDecoder().decode(content);
       return text.trim().startsWith('<svg');
+    }
+
+    // Check CORS status for a given base URL
+    async function checkCorsStatus(baseUrl) {
+      if (!baseUrl || !baseUrl.trim()) {
+        corsStatus.style.display = 'none';
+        return;
+      }
+
+      // Show the CORS status section
+      corsStatus.style.display = 'flex';
+      
+      // Set to checking state
+      corsIcon.className = 'cors-icon unknown';
+      corsDescription.textContent = 'Checking CORS status...';
+
+      try {
+        // Use a HEAD request to a known CID to test CORS without downloading large content
+        // We'll use a minimal test - just try to fetch with CORS
+        const testUrl = `${baseUrl.replace(/\/$/, '')}/${CORS_TEST_CID}`;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CORS_CHECK_TIMEOUT_MS);
+        
+        const response = await fetch(testUrl, {
+          method: 'HEAD',
+          mode: 'cors',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // If we got here without an error, CORS is working
+        corsIcon.className = 'cors-icon good';
+        corsDescription.textContent = `CORS check passed: Successfully performed a HEAD request to ${baseUrl}. The server allows cross-origin requests.`;
+        
+      } catch (error) {
+        // Check the type of error
+        if (error.name === 'AbortError') {
+          // Timeout
+          corsIcon.className = 'cors-icon unknown';
+          corsDescription.textContent = `CORS status unknown: Request to ${baseUrl} timed out after ${CORS_CHECK_TIMEOUT_MS / 1000} seconds. The server might be slow or unreachable.`;
+        } else if (error.message.includes('CORS') || error.message.includes('cors')) {
+          // Explicit CORS error
+          corsIcon.className = 'cors-icon bad';
+          corsDescription.textContent = `CORS check failed: The server at ${baseUrl} does not allow cross-origin requests. Error: ${error.message}`;
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          // Network error - could be CORS or network issue
+          corsIcon.className = 'cors-icon bad';
+          corsDescription.textContent = `CORS check failed: Cannot reach ${baseUrl}. This is likely a CORS issue - the server may not have the appropriate Access-Control-Allow-Origin headers. Error: ${error.message}`;
+        } else {
+          // Unknown error
+          corsIcon.className = 'cors-icon unknown';
+          corsDescription.textContent = `CORS status unknown: Unexpected error while checking ${baseUrl}. Error: ${error.message}`;
+        }
+      }
+    }
+
+    // Debounce function to avoid checking too frequently
+    let corsCheckTimeout;
+    function debouncedCorsCheck(baseUrl) {
+      clearTimeout(corsCheckTimeout);
+      corsCheckTimeout = setTimeout(() => {
+        checkCorsStatus(baseUrl);
+      }, CORS_CHECK_DEBOUNCE_MS);
     }
 
     // Handle download
@@ -381,6 +527,14 @@
         handleDownload();
       }
     });
+
+    // Check CORS status when base URL changes
+    baseUrlInput.addEventListener('input', (e) => {
+      debouncedCorsCheck(e.target.value);
+    });
+
+    // Initial CORS check on page load
+    checkCorsStatus(baseUrlInput.value);
   </script>
 </body>
 </html>
