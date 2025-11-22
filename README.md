@@ -159,5 +159,6 @@ The 256t.org specification has been implemented in multiple programming language
 | Swift | ![Swift](https://img.shields.io/badge/Swift-FA7343?style=flat&logo=swift&logoColor=white) | [swift](https://github.com/curtcox/256t.org/tree/main/implementations/swift) |
 | Tcl | ![Tcl](https://img.shields.io/badge/Tcl-000000?style=flat) | [tcl](https://github.com/curtcox/256t.org/tree/main/implementations/tcl) |
 | TypeScript | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white) | [typescript](https://github.com/curtcox/256t.org/tree/main/implementations/typescript) |
+| Unison | ![Unison](https://img.shields.io/badge/Unison-4B32C3?style=flat) | [unison](https://github.com/curtcox/256t.org/tree/main/implementations/unison) |
 | Zig | ![Zig](https://img.shields.io/badge/Zig-F7A41D?style=flat&logo=zig&logoColor=white) | [zig](https://github.com/curtcox/256t.org/tree/main/implementations/zig) |
 
