@@ -478,3 +478,14 @@ jobs:
         run: gfortran implementations/fortran/check.f90 -o implementations/fortran/check
       - name: Run Fortran CID check
         run: implementations/fortran/check
+
+  elm:
+    name: Elm CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run Elm CID check
+        run: node implementations/elm/check.js

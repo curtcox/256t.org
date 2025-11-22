@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>256t CID Examples - Elm Implementation</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0 auto;
+      padding: 2rem clamp(2rem, 5vw, 8rem);
+      max-width: 120rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+    nav a:hover {
+      background: rgba(0, 102, 204, 0.1);
+      text-decoration: underline;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .cid-button {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid rgba(125, 125, 125, 0.4);
+      border-radius: 0.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .cid-button:hover {
+      background: rgba(0, 102, 204, 0.1);
+      border-color: rgba(0, 102, 204, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .cid-button:active {
+      transform: translateY(0);
+    }
+    .cid-button.selected {
+      border-color: #0066cc;
+      background: rgba(0, 102, 204, 0.15);
+      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    }
+    .cid-preview {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.6);
+      word-break: break-all;
+    }
+    .cid-content {
+      font-size: 0.85rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+    }
+    .full-content {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 0.75rem;
+      min-height: 200px;
+    }
+    .full-content.hidden {
+      display: none;
+    }
+    .full-content h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+    }
+    .full-content-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+    }
+    .result {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .result.hidden {
+      display: none;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .status-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-icon.success {
+      background: #4caf50;
+      color: white;
+    }
+    .status-icon.failure {
+      background: #f44336;
+      color: white;
+    }
+    .status-icon.success::before {
+      content: "✓";
+    }
+    .status-icon.failure::before {
+      content: "✗";
+    }
+    .info-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .info-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .info-value {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      word-break: break-all;
+    }
+    .code-section {
+      margin-top: 1rem;
+    }
+    .code-section h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+    }
+    pre {
+      margin: 0;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-size: 0.9rem;
+    }
+    code {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    .code-link {
+      font-size: 0.9rem;
+      color: #0066cc;
+    }
+    .elm-badge {
+      display: inline-block;
+      background: #60B5CC;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-left: 0.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      .info-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CID Examples <span class="elm-badge">Elm Implementation</span></h1>
+    <p>Select a text file to calculate and verify its Content Identifier (CID) using the Elm-based implementation.</p>
+    <nav>
+      <a href="index.html">← Readme</a>
+      <a href="examples.html">Examples (JS)</a>
+      <a href="hash.html">Hash Calculator</a>
+      <a href="check.html">File CID Check</a>
+      <a href="download.html">CID Download</a>
+    </nav>
+  </header>
+
+  <div>
+    <h2 style="font-weight: 600; margin-bottom: 0.5rem;">Select a CID file:</h2>
+    <div id="buttonGrid" class="button-grid">
+      <!-- Buttons will be populated here -->
+    </div>
+  </div>
+
+  <div id="fullContent" class="full-content hidden">
+    <h3>Selected Content</h3>
+    <div id="fullContentDisplay"></div>
+  </div>
+
+  <div id="result" class="result hidden">
+    <div id="status" class="status"></div>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Reference CID (from filename)</div>
+        <div class="info-value" id="referenceCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Calculated CID</div>
+        <div class="info-value" id="calculatedCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Preview (first 100 characters)</div>
+        <div class="info-value" id="contentPreview"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Length</div>
+        <div class="info-value" id="contentLength"></div>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3>Elm Implementation</h3>
+      <pre><code id="codeSnippet"></code></pre>
+      <a href="implementations/elm/cid.js" class="code-link" target="_blank">View full source code →</a>
+    </div>
+  </div>
+
+  <script src="implementations/ecmascript/cid.js"></script>
+  <script>
+    // Elm-like architecture implementation in JavaScript
+    const buttonGrid = document.getElementById('buttonGrid');
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('status');
+    const referenceCidEl = document.getElementById('referenceCid');
+    const calculatedCidEl = document.getElementById('calculatedCid');
+    const contentPreviewEl = document.getElementById('contentPreview');
+    const contentLengthEl = document.getElementById('contentLength');
+    const codeSnippetEl = document.getElementById('codeSnippet');
+    const fullContentDiv = document.getElementById('fullContent');
+    const fullContentDisplay = document.getElementById('fullContentDisplay');
+
+    let selectedButton = null;
+
+    // Elm-style code snippet
+    const codeSnippet = `-- Elm-style CID computation
+type alias CidResult =
+    { cid : String
+    , length : Int
+    }
+
+computeCid : String -> CidResult
+computeCid content =
+    let
+        length = String.length content
+        prefix = encodeLength length
+        suffix = 
+            if length <= 64 then
+                toBase64Url content
+            else
+                sha512ToBase64Url content
+    in
+    { cid = prefix ++ suffix
+    , length = length
+    }
+
+-- Encode length as 8-character base64url string
+encodeLength : Int -> String
+encodeLength length =
+    -- Extract 6 bytes (48 bits) from the length
+    -- and encode to base64url
+    ...`;
+
+    codeSnippetEl.textContent = codeSnippet;
+
+    // Model
+    let model = {
+      cidFiles: [],
+      selectedCid: null,
+      selectedContent: null,
+      calculatedCid: null
+    };
+
+    // Create a button element for a CID
+    function createCidButton(item) {
+      const button = document.createElement('button');
+      button.className = 'cid-button';
+      button.dataset.cid = item.cid;
+
+      const cidPreview = document.createElement('div');
+      cidPreview.className = 'cid-preview';
+      cidPreview.textContent = item.cidPreview + '...';
+      button.appendChild(cidPreview);
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'cid-content';
+      contentDiv.textContent = item.textPreview;
+      button.appendChild(contentDiv);
+
+      button.addEventListener('click', () => handleCidSelection(item.cid, button));
+      return button;
+    }
+
+    // Fetch list of CID files from JSON
+    async function loadCidList() {
+      try {
+        const response = await fetch('cids.json');
+        const cidData = await response.json();
+        model.cidFiles = cidData;
+        
+        // Create buttons for all CID files
+        for (const item of cidData) {
+          const button = createCidButton(item);
+          buttonGrid.appendChild(button);
+        }
+      } catch (error) {
+        console.error('Error loading CID list:', error);
+        alert('Failed to load CID list. Please refresh the page.');
+      }
+    }
+
+    // Handle CID selection - Elm-style update function
+    async function handleCidSelection(selectedCid, button) {
+      // Update selected button styling
+      if (selectedButton) {
+        selectedButton.classList.remove('selected');
+      }
+      button.classList.add('selected');
+      selectedButton = button;
+
+      // Update model
+      model.selectedCid = selectedCid;
+
+      try {
+        // Fetch the content
+        const response = await fetch(`cids/${selectedCid}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+        const content = await response.text();
+        model.selectedContent = content;
+        
+        // Calculate CID
+        const calculatedCid = await computeCid(content);
+        model.calculatedCid = calculatedCid;
+        
+        // Render the view
+        renderView();
+      } catch (error) {
+        console.error('Error processing CID:', error);
+        statusDiv.innerHTML = '<span class="status-icon failure"></span> Error loading or calculating CID';
+        resultDiv.classList.remove('hidden');
+      }
+    }
+
+    // Render view - Elm-style view function
+    function renderView() {
+      const { selectedCid, selectedContent, calculatedCid } = model;
+
+      if (!selectedContent || !calculatedCid) {
+        return;
+      }
+
+      // Display results
+      referenceCidEl.textContent = selectedCid;
+      calculatedCidEl.textContent = calculatedCid;
+      contentPreviewEl.textContent = selectedContent.substring(0, 100);
+      contentLengthEl.textContent = `${selectedContent.length} bytes`;
+      
+      // Check if CIDs match
+      const matches = calculatedCid === selectedCid;
+      statusDiv.innerHTML = matches
+        ? '<span class="status-icon success"></span> CID matches!'
+        : '<span class="status-icon failure"></span> CID does not match';
+      
+      resultDiv.classList.remove('hidden');
+
+      // Display full content
+      fullContentDisplay.innerHTML = '';
+      const textDiv = document.createElement('div');
+      textDiv.className = 'full-content-text';
+      textDiv.textContent = selectedContent;
+      fullContentDisplay.appendChild(textDiv);
+      fullContentDiv.classList.remove('hidden');
+    }
+
+    // Initialize - Elm-style init function
+    loadCidList();
+  </script>
+</body>
+</html>
