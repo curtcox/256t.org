@@ -70,10 +70,17 @@ This server hosts a small set of CIDs [here](cids/).
 
 ## Beyond the Scope of This Text
 
-- Some content could be restricted to certain people or requesting entities.
-- Some content could have disputed ownership, differing ownership in different jurisdictions, disputed distribution rights.
-- In order to serve or not serve content, these issues need to be decided.
-- How are such things decided?
+- Finding
+  - How do I find someplace that publishes CIDs? 
+- Publishing
+  - Where and how do I publish CIDs?
+- Metadata
+  - What metadata (HTTP headers for example) should accompany CID content?
+- Permissions
+  - Some content could be restricted to certain people or requesting entities.
+  - Some content could have disputed ownership, differing ownership in different jurisdictions, disputed distribution rights.
+  - In order to serve or not serve content, these issues need to be decided.
+  - How are such things decided?
 
 These things are beyond the scope of this text.
 
