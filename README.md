@@ -81,6 +81,7 @@ These things are beyond the scope of this text.
 
 - [Hash calculator](hash.html) — type text and instantly see its SHA-512 hash encoded in Base64URL.
 - [CID Examples](examples.html) — select example files and verify their CIDs using the ECMAScript implementation.
+- [CID Examples (Elm)](examples-elm.html) — select example files and verify their CIDs using the Elm implementation.
 - [File CID Check](check.html) — drag and drop files to analyze their content and calculate their CID.
 - [CID Download](download.html) — download and verify content from a 256t.org compatible server using a CID.
 
@@ -131,6 +132,7 @@ The 256t.org specification has been implemented in multiple programming language
 | Deno | ![Deno](https://img.shields.io/badge/Deno-000000?style=flat&logo=deno&logoColor=white) | [deno](https://github.com/curtcox/256t.org/tree/main/implementations/deno) |
 | ECMAScript | ![ECMAScript](https://img.shields.io/badge/ECMAScript-F7DF1E?style=flat&logo=javascript&logoColor=black) | [ecmascript](https://github.com/curtcox/256t.org/tree/main/implementations/ecmascript) |
 | Elixir | ![Elixir](https://img.shields.io/badge/Elixir-4B275F?style=flat&logo=elixir&logoColor=white) | [elixir](https://github.com/curtcox/256t.org/tree/main/implementations/elixir) |
+| Elm | ![Elm](https://img.shields.io/badge/Elm-60B5CC?style=flat&logo=elm&logoColor=white) | [elm](https://github.com/curtcox/256t.org/tree/main/implementations/elm) |
 | Emacs Lisp | ![Emacs Lisp](https://img.shields.io/badge/Emacs%20Lisp-7F5AB6?style=flat&logo=gnuemacs&logoColor=white) | [emacs-lisp](https://github.com/curtcox/256t.org/tree/main/implementations/emacs-lisp) |
 | Erlang | ![Erlang](https://img.shields.io/badge/Erlang-A90533?style=flat&logo=erlang&logoColor=white) | [erlang](https://github.com/curtcox/256t.org/tree/main/implementations/erlang) |
 | F# | ![F#](https://img.shields.io/badge/F%23-378BBA?style=flat&logo=fsharp&logoColor=white) | [fsharp](https://github.com/curtcox/256t.org/tree/main/implementations/fsharp) |
