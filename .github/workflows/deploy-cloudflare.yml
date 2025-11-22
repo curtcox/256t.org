@@ -1,4 +1,4 @@
-name: Deploy site to Cloudflare Pages
+name: Deploy site to Cloudflare R2
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: "cloudflare-pages"
+  group: "cloudflare-r2"
   cancel-in-progress: true
 
 jobs:
@@ -134,9 +134,17 @@ jobs:
                   shutil.copytree(item, dest)
           PY
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Set up Node.js for Wrangler
+        uses: actions/setup-node@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=256t-org
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy static files to R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python .github/scripts/r2_static_upload.py dist
