@@ -1,0 +1,63 @@
+-- CID verification script for 256t.org
+-- Checks that all CID files in the cids/ directory match their content
+
+use .cid
+
+-- Get list of files in a directory
+listFiles : Text -> {IO, Exception} [Text]
+listFiles dirPath =
+  dir = FilePath.FilePath dirPath
+  entries = Directory.list dir
+  -- Filter to only regular files, not directories
+  -- Use proper path joining instead of string concatenation
+  List.filter (f -> 
+    filePath = FilePath.FilePath dirPath FilePath./ f
+    not (Directory.isDirectory filePath)
+  ) entries
+
+-- Read file as bytes
+readFileBytes : Text -> {IO, Exception} Bytes
+readFileBytes path =
+  FilePath.readFile (FilePath.FilePath path)
+
+-- Check a single CID file
+checkCidFile : Text -> Text -> {IO, Exception} (Text, Boolean, Text)
+checkCidFile cidsDir filename =
+  use Text ++
+  path = cidsDir ++ "/" ++ filename
+  content = readFileBytes path
+  
+  Cid computed = computeCid content
+  isValid = computed Text.== filename
+  
+  (filename, isValid, computed)
+
+-- Main check function
+check : '{IO, Exception} ()
+check _ =
+  use Text ++
+  baseDir = "../../"
+  cidsDir = baseDir ++ "cids"
+  
+  printLine "Checking CID files..."
+  
+  -- Read all files from cids directory
+  files = listFiles cidsDir
+  
+  results = List.map (checkCidFile cidsDir) files
+  
+  mismatches = List.filter (cases (_, false, _) -> true; _ -> false) results
+  
+  if List.isEmpty mismatches then
+    printLine ("All " ++ Nat.toText (List.size results) ++ " CID files match their contents.")
+  else
+    printLine "Found CID mismatches:"
+    _ = List.map (cases
+      (filename, _, computed) -> 
+        printLine ("- " ++ filename ++ " should be " ++ computed)
+    ) mismatches
+    bug ("CID verification failed: " ++ Nat.toText (List.size mismatches) ++ " file(s) have incorrect CIDs. Please regenerate the affected CIDs.")
+
+-- Run the check
+run : '{IO, Exception} ()
+run = check

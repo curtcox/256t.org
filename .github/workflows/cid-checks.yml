@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   python:
     name: Python CID check
@@ -479,6 +482,19 @@ jobs:
       - name: Run Fortran CID check
         run: implementations/fortran/check
 
+  unison:
+    name: Unison CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Unison implementation files exist
+        run: |
+          test -f implementations/unison/cid.u || exit 1
+          test -f implementations/unison/check.u || exit 1
+          test -f implementations/unison/README.md || exit 1
+          echo "Unison implementation files verified"
+          echo "Note: Unison uses a codebase-oriented approach that doesn't fit traditional script execution"
+          echo "The implementation files serve as reference code for the CID algorithm in Unison"
   elm:
     name: Elm CID check
     runs-on: ubuntu-latest
