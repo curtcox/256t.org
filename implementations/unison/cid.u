@@ -18,8 +18,9 @@ base64urlEncode bytes =
 encodeLength : Nat -> Text
 encodeLength length =
   -- Convert length to bytes (big-endian, 48 bits = 6 bytes)
-  -- We need to encode a Nat as 6 bytes
-  bytes = Bytes.fromNat64be (Nat.toInt length)
+  -- Max value for 48 bits is 2^48 - 1 = 281,474,976,710,655
+  -- This is well within Nat64 range, so conversion is safe
+  bytes = Bytes.fromNat64be length
   -- Take last 6 bytes (drop first 2 bytes from 8-byte representation)
   lengthBytes = Bytes.drop 2 bytes
   base64urlEncode lengthBytes

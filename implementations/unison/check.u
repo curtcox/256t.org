@@ -9,7 +9,11 @@ listFiles dirPath =
   dir = FilePath.FilePath dirPath
   entries = Directory.list dir
   -- Filter to only regular files, not directories
-  List.filter (f -> not (Directory.isDirectory (FilePath.FilePath (dirPath Text.++ "/" Text.++ f)))) entries
+  -- Use proper path joining instead of string concatenation
+  List.filter (f -> 
+    filePath = FilePath.FilePath dirPath FilePath./ f
+    not (Directory.isDirectory filePath)
+  ) entries
 
 -- Read file as bytes
 readFileBytes : Text -> {IO, Exception} Bytes
@@ -52,7 +56,7 @@ check _ =
       (filename, _, computed) -> 
         printLine ("- " ++ filename ++ " should be " ++ computed)
     ) mismatches
-    bug "CID mismatches found"
+    bug ("CID verification failed: " ++ Nat.toText (List.size mismatches) ++ " file(s) have incorrect CIDs. Please regenerate the affected CIDs.")
 
 -- Run the check
 run : '{IO, Exception} ()
