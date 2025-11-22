@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>256t CID Download</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0 auto;
+      padding: 2rem clamp(2rem, 5vw, 8rem);
+      max-width: 120rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+    nav a:hover {
+      background: rgba(0, 102, 204, 0.1);
+      text-decoration: underline;
+    }
+    .form-section {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(125, 125, 125, 0.4);
+      background: rgba(0, 0, 0, 0.02);
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    input:focus {
+      outline: 2px solid rgba(0, 120, 255, 0.4);
+      border-color: transparent;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: none;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-family: inherit;
+    }
+    button:hover {
+      background: #0052a3;
+    }
+    button:active {
+      background: #003d7a;
+    }
+    button:disabled {
+      background: rgba(125, 125, 125, 0.4);
+      cursor: not-allowed;
+    }
+    .full-content {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 0.75rem;
+      min-height: 200px;
+    }
+    .full-content.hidden {
+      display: none;
+    }
+    .full-content h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+    }
+    .full-content-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+    }
+    .full-content-image {
+      max-width: 100%;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.5rem;
+      background: white;
+    }
+    .result {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .result.hidden {
+      display: none;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .status-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-icon.success {
+      background: #4caf50;
+      color: white;
+    }
+    .status-icon.failure {
+      background: #f44336;
+      color: white;
+    }
+    .status-icon.success::before {
+      content: "✓";
+    }
+    .status-icon.failure::before {
+      content: "✗";
+    }
+    .info-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .info-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    .info-value {
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      word-break: break-all;
+    }
+    .error-message {
+      color: #c62828;
+      font-weight: 600;
+      padding: 1rem;
+      background: rgba(198, 40, 40, 0.1);
+      border-radius: 0.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      .info-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CID Download</h1>
+    <p>Download and verify content from a 256t.org compatible server using a Content Identifier (CID).</p>
+    <nav>
+      <a href="index.html">← Readme</a>
+      <a href="hash.html">Hash Calculator</a>
+      <a href="check.html">File CID Check</a>
+      <a href="examples.html">CID Examples</a>
+    </nav>
+  </header>
+
+  <div class="form-section">
+    <div class="form-group">
+      <label for="baseUrl">Base URL</label>
+      <input 
+        type="text" 
+        id="baseUrl" 
+        value="https://256t.org/cids"
+        placeholder="https://256t.org/cids"
+      >
+    </div>
+    
+    <div class="form-group">
+      <label for="cid">Content Identifier (CID)</label>
+      <input 
+        type="text" 
+        id="cid" 
+        value="AAAAAACAmGbMBbFTIBqDWsG4RQr-nh1eTwNZRXZiHz74yQvyo-XVx65GkQMzA3ucEuPE0hJU0qI0LPx2j_z055LEVfXNXQ"
+        placeholder="Enter a CID..."
+      >
+    </div>
+    
+    <button id="downloadButton">Download Content</button>
+  </div>
+
+  <div id="result" class="result hidden">
+    <div id="status" class="status"></div>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Requested CID</div>
+        <div class="info-value" id="requestedCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Computed CID</div>
+        <div class="info-value" id="computedCid"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Length</div>
+        <div class="info-value" id="contentLength"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Content Preview (first 100 characters)</div>
+        <div class="info-value" id="contentPreview"></div>
+      </div>
+    </div>
+
+    <div id="errorContainer" class="hidden">
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+  </div>
+
+  <div id="fullContent" class="full-content hidden">
+    <h3>Downloaded Content</h3>
+    <div id="fullContentDisplay"></div>
+  </div>
+
+  <script src="implementations/ecmascript/cid.js"></script>
+  <script>
+    const baseUrlInput = document.getElementById('baseUrl');
+    const cidInput = document.getElementById('cid');
+    const downloadButton = document.getElementById('downloadButton');
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('status');
+    const requestedCidEl = document.getElementById('requestedCid');
+    const computedCidEl = document.getElementById('computedCid');
+    const contentLengthEl = document.getElementById('contentLength');
+    const contentPreviewEl = document.getElementById('contentPreview');
+    const errorContainer = document.getElementById('errorContainer');
+    const errorMessage = document.getElementById('errorMessage');
+    const fullContentDiv = document.getElementById('fullContent');
+    const fullContentDisplay = document.getElementById('fullContentDisplay');
+
+    // Check if content is SVG
+    function isSvgContent(content) {
+      const text = typeof content === 'string' ? content : new TextDecoder().decode(content);
+      return text.trim().startsWith('<svg');
+    }
+
+    // Handle download
+    async function handleDownload() {
+      const baseUrl = baseUrlInput.value.trim();
+      const cid = cidInput.value.trim();
+      
+      if (!baseUrl || !cid) {
+        alert('Please enter both base URL and CID');
+        return;
+      }
+
+      // Disable button and show loading state
+      downloadButton.disabled = true;
+      downloadButton.textContent = 'Downloading...';
+      
+      // Hide previous results
+      resultDiv.classList.add('hidden');
+      fullContentDiv.classList.add('hidden');
+      errorContainer.classList.add('hidden');
+
+      try {
+        // Download and verify content
+        const result = await downloadCid(baseUrl, cid);
+        
+        // Show result section
+        resultDiv.classList.remove('hidden');
+        
+        // Display CID information
+        requestedCidEl.textContent = cid;
+        computedCidEl.textContent = result.computed;
+        contentLengthEl.textContent = `${result.content.length} bytes`;
+        
+        // Show preview (first 100 characters)
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        const contentText = decoder.decode(result.content);
+        contentPreviewEl.textContent = contentText.substring(0, 100);
+        
+        // Check if CIDs match
+        if (result.isValid) {
+          statusDiv.innerHTML = '<span class="status-icon success"></span> CID matches! Content verified.';
+        } else {
+          statusDiv.innerHTML = '<span class="status-icon failure"></span> CID does not match! Content may be corrupted.';
+        }
+        
+        // Display full content
+        fullContentDisplay.innerHTML = '';
+        if (isSvgContent(result.content)) {
+          const svgContainer = document.createElement('div');
+          svgContainer.innerHTML = contentText;
+          const svgEl = svgContainer.querySelector('svg');
+          if (svgEl) {
+            svgEl.classList.add('full-content-image');
+            fullContentDisplay.appendChild(svgEl);
+          }
+        } else {
+          const textDiv = document.createElement('div');
+          textDiv.className = 'full-content-text';
+          textDiv.textContent = contentText;
+          fullContentDisplay.appendChild(textDiv);
+        }
+        fullContentDiv.classList.remove('hidden');
+        
+      } catch (error) {
+        console.error('Download error:', error);
+        
+        // Show error in result section
+        resultDiv.classList.remove('hidden');
+        statusDiv.innerHTML = '<span class="status-icon failure"></span> Download failed';
+        
+        // Show detailed error message
+        errorContainer.classList.remove('hidden');
+        errorMessage.textContent = `Error: ${error.message}`;
+        
+        // Clear other fields
+        requestedCidEl.textContent = cid;
+        computedCidEl.textContent = '—';
+        contentLengthEl.textContent = '—';
+        contentPreviewEl.textContent = '—';
+      } finally {
+        // Re-enable button
+        downloadButton.disabled = false;
+        downloadButton.textContent = 'Download Content';
+      }
+    }
+
+    // Add event listeners
+    downloadButton.addEventListener('click', handleDownload);
+    
+    // Allow Enter key to trigger download
+    cidInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleDownload();
+      }
+    });
+    
+    baseUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleDownload();
+      }
+    });
+  </script>
+</body>
+</html>
