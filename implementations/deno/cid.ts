@@ -28,3 +28,25 @@ export const computeCid = async (content: Uint8Array): Promise<string> => {
   const hashBuffer = await crypto.subtle.digest("SHA-512", content);
   return `${prefix}${toBase64Url(new Uint8Array(hashBuffer))}`;
 };
+
+export interface DownloadResult {
+  content: Uint8Array;
+  computed: string;
+  isValid: boolean;
+}
+
+export const downloadCid = async (baseUrl: string, cid: string): Promise<DownloadResult> => {
+  const url = `${baseUrl.replace(/\/$/, "")}/${cid}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  const content = new Uint8Array(arrayBuffer);
+  const computed = await computeCid(content);
+  const isValid = computed === cid;
+  
+  return { content, computed, isValid };
+};

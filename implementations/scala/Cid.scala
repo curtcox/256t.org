@@ -41,4 +41,29 @@ object Cid {
       case ex: Exception => Left(s"Failed to read ${path.getFileName}: ${ex.getMessage}")
     }
   }
+
+  case class DownloadResult(content: Array[Byte], computed: String, isValid: Boolean)
+
+  def downloadCid(baseUrl: String, cid: String): Either[String, DownloadResult] = {
+    try {
+      val url = new java.net.URL(s"${baseUrl.stripSuffix("/")}/$cid")
+      val conn = url.openConnection().asInstanceOf[java.net.HttpURLConnection]
+      conn.setRequestMethod("GET")
+      conn.setConnectTimeout(10000)
+      conn.setReadTimeout(10000)
+      
+      val responseCode = conn.getResponseCode
+      if (responseCode != 200) {
+        return Left(s"HTTP $responseCode: ${conn.getResponseMessage}")
+      }
+      
+      val content = conn.getInputStream.readAllBytes()
+      val computed = compute(content)
+      val isValid = computed == cid
+      
+      Right(DownloadResult(content, computed, isValid))
+    } catch {
+      case ex: Exception => Left(ex.getMessage)
+    }
+  }
 }

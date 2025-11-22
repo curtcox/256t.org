@@ -38,3 +38,7 @@ Thumbs.db
 
 # Wrangler local state
 .wrangler/
+
+# C# build artifacts
+**/obj/
+**/bin/

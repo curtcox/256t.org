@@ -48,4 +48,40 @@ public final class CidUtil {
         Files.createDirectories(path.getParent());
         Files.write(path, content);
     }
+
+    public static class DownloadResult {
+        public final byte[] content;
+        public final String computed;
+        public final boolean isValid;
+
+        public DownloadResult(byte[] content, String computed, boolean isValid) {
+            this.content = content;
+            this.computed = computed;
+            this.isValid = isValid;
+        }
+    }
+
+    public static DownloadResult downloadCid(String baseUrl, String cid) throws IOException {
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        String url = baseUrl + "/" + cid;
+        
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) 
+            new java.net.URL(url).openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            throw new IOException("HTTP " + responseCode + ": " + conn.getResponseMessage());
+        }
+        
+        byte[] content = conn.getInputStream().readAllBytes();
+        String computed = computeCid(content);
+        boolean isValid = computed.equals(cid);
+        
+        return new DownloadResult(content, computed, isValid);
+    }
 }

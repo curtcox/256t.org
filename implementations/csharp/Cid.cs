@@ -40,4 +40,25 @@ internal static class Cid
         var encoded = Convert.ToBase64String(data);
         return encoded.TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
+
+    public record DownloadResult(byte[] Content, string Computed, bool IsValid);
+
+    public static async Task<DownloadResult> DownloadAsync(string baseUrl, string cid)
+    {
+        var url = baseUrl.TrimEnd('/') + '/' + cid;
+        using var client = new HttpClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        
+        var response = await client.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}");
+        }
+        
+        var content = await response.Content.ReadAsByteArrayAsync();
+        var computed = Compute(content);
+        var isValid = computed == cid;
+        
+        return new DownloadResult(content, computed, isValid);
+    }
 }

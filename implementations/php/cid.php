@@ -34,3 +34,23 @@ function compute_cid(string $content): string
 
     return $prefix . $suffix;
 }
+
+function download_cid(string $base_url, string $cid): array
+{
+    $url = rtrim($base_url, '/') . '/' . $cid;
+    $content = @file_get_contents($url);
+    
+    if ($content === false) {
+        $error = error_get_last();
+        throw new Exception($error['message'] ?? 'Failed to download');
+    }
+    
+    $computed = compute_cid($content);
+    $is_valid = $computed === $cid;
+    
+    return [
+        'content' => $content,
+        'computed' => $computed,
+        'is_valid' => $is_valid
+    ];
+}

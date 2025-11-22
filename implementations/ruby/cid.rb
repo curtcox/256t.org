@@ -2,7 +2,9 @@
 
 require "base64"
 require "digest"
+require "net/http"
 require "pathname"
+require "uri"
 
 BASE_DIR = Pathname(__dir__).join("..", "..").realpath
 EXAMPLES_DIR = BASE_DIR.join("examples")
@@ -25,5 +27,15 @@ def compute_cid(content)
     to_base64url(Digest::SHA512.digest(content))
   end
   prefix + suffix
+end
+
+def download_cid(base_url, cid)
+  uri = URI("#{base_url.chomp('/')}/#{cid}")
+  response = Net::HTTP.get_response(uri)
+  raise "HTTP #{response.code}: #{response.message}" unless response.is_a?(Net::HTTPSuccess)
+  
+  content = response.body.force_encoding(Encoding::BINARY)
+  computed = compute_cid(content)
+  { content: content, computed: computed, valid: computed == cid }
 end
 

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { get } from 'node:https';
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
@@ -26,4 +27,24 @@ export const computeCid = (content) => {
       ? toBase64Url(content)
       : toBase64Url(createHash('sha512').update(content).digest());
   return `${prefix}${suffix}`;
+};
+
+export const downloadCid = (baseUrl, cid) => {
+  return new Promise((resolve, reject) => {
+    const url = `${baseUrl.replace(/\/$/, '')}/${cid}`;
+    get(url, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+        return;
+      }
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const content = Buffer.concat(chunks);
+        const computed = computeCid(content);
+        const isValid = computed === cid;
+        resolve({ content, computed, isValid });
+      });
+    }).on('error', reject);
+  });
 };

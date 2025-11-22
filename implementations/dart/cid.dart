@@ -29,3 +29,34 @@ String computeCid(List<int> content) {
       : _toBase64Url(Uint8List.fromList(sha512.convert(content).bytes));
   return '$prefix$suffix';
 }
+
+class DownloadResult {
+  final Uint8List content;
+  final String computed;
+  final bool isValid;
+
+  DownloadResult(this.content, this.computed, this.isValid);
+}
+
+Future<DownloadResult> downloadCid(String baseUrl, String cid) async {
+  final url = '${baseUrl.replaceAll(RegExp(r'/$'), '')}/$cid';
+  final client = HttpClient();
+  
+  try {
+    final request = await client.getUrl(Uri.parse(url));
+    final response = await request.close();
+    
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+    }
+    
+    final bytes = await response.expand((chunk) => chunk).toList();
+    final content = Uint8List.fromList(bytes);
+    final computed = computeCid(content);
+    final isValid = computed == cid;
+    
+    return DownloadResult(content, computed, isValid);
+  } finally {
+    client.close();
+  }
+}

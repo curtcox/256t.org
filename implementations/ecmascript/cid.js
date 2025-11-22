@@ -63,7 +63,43 @@ async function computeCid(content) {
   return `${prefix}${suffix}`;
 }
 
+/**
+ * Download content from a URL and validate its CID
+ * @param {string} baseUrl - Base URL to download from
+ * @param {string} cid - Expected content identifier
+ * @returns {Promise<{content: Uint8Array, computed: string, isValid: boolean}>}
+ */
+async function downloadCid(baseUrl, cid) {
+  const url = `${baseUrl.replace(/\/$/, '')}/${cid}`;
+  
+  // Get fetch function - check global first (Node.js), then globalThis, then global scope
+  const fetchFn = (typeof global !== 'undefined' && global.fetch) 
+    ? global.fetch.bind(global)
+    : (typeof globalThis !== 'undefined' && globalThis.fetch)
+    ? globalThis.fetch.bind(globalThis)
+    : (typeof fetch !== 'undefined')
+    ? fetch
+    : null;
+    
+  if (!fetchFn) {
+    throw new Error('fetch is not available');
+  }
+  
+  const response = await fetchFn(url);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  const content = new Uint8Array(arrayBuffer);
+  const computed = await computeCid(content);
+  const isValid = computed === cid;
+  
+  return { content, computed, isValid };
+}
+
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { toBase64Url, encodeLength, computeCid };
+  module.exports = { toBase64Url, encodeLength, computeCid, downloadCid };
 }
