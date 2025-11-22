@@ -1,6 +1,6 @@
 # Deployment
 
-This repository contains GitHub Actions workflows to automatically deploy the 256t.org site to both GitHub Pages and Cloudflare Pages.
+This repository contains GitHub Actions workflows to automatically deploy the 256t.org site to GitHub Pages and Cloudflare R2.
 
 ## GitHub Pages Deployment
 
@@ -8,28 +8,37 @@ The site is automatically deployed to GitHub Pages when changes are pushed to th
 
 The site is available at: https://curtcox.github.io/256t.org/
 
-## Cloudflare Pages Deployment
+## Cloudflare R2 Deployment (256t.org)
 
-The site is also automatically deployed to Cloudflare Pages when changes are pushed to the `main` branch. The workflow is defined in `.github/workflows/deploy-cloudflare.yml`.
+The site is automatically deployed to Cloudflare R2 when changes are pushed to the `main` branch. The workflow is defined in `.github/workflows/deploy-cloudflare.yml`.
+
+The 256t.org domain is backed by a Cloudflare R2 bucket (`256t-cids`) that hosts both:
+- **CID files**: Content-addressable storage files uploaded by the R2 upload workflow
+- **Static site files**: Generated website files (HTML, CSS, JS, etc.)
+
+Both types of files coexist in the same bucket without conflicts, as CIDs are 94-character base64url strings that don't overlap with static file names.
 
 ### Required Secrets
 
-To enable Cloudflare Pages deployment, the following GitHub repository secrets must be configured:
+To enable R2 deployment, the following GitHub repository secrets must be configured:
 
-1. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with permissions to edit Cloudflare Pages
+1. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with R2 read/write permissions
    - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Profile → API Tokens
-   - Create a new token with the "Cloudflare Pages" template or with "Account.Cloudflare Pages" permissions
+   - Create a new token with R2 read/write permissions
 
 2. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
    - Found in the Cloudflare Dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>`
    - Or in Account Settings → Account ID
 
-### Project Configuration
+### Deployment Configuration
 
-The Cloudflare Pages project is configured with:
-- **Project Name**: `256t-org`
+The R2 deployment:
+- **Bucket Name**: `256t-cids`
 - **Build Output Directory**: `dist/`
-- **Custom Domain**: `256t.org` (must be configured in Cloudflare Pages dashboard)
+- **Cache Headers**: 
+  - HTML/JSON files: `max-age=300` (5 minutes)
+  - Other static files: `max-age=3600` (1 hour)
+  - CID files: `max-age=31536000, immutable` (1 year, immutable)
 
 ### Manual Deployment
 
@@ -52,9 +61,11 @@ The generated site consists of:
 - `examples/` - Example text files for testing
 - `cids/` - Content Identifier files
 
-## CloudFlare R2 Storage
+## CloudFlare R2 CID Upload
 
-CID files are also uploaded to CloudFlare R2 for content-addressable storage. The workflow is defined in `.github/workflows/r2-upload.yml`.
+CID files are uploaded to CloudFlare R2 for content-addressable storage. The workflow is defined in `.github/workflows/r2-upload.yml`.
+
+This workflow uploads CID files to the same R2 bucket (`256t-cids`) that backs the 256t.org domain, where they coexist with the static site files.
 
 ### Schedule
 
@@ -64,19 +75,10 @@ The R2 upload workflow runs:
 
 ### Required Secrets
 
-To enable R2 uploads, configure these GitHub repository secrets:
+The R2 CID upload workflow uses the same secrets as the R2 site deployment:
 
-1. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID (same as above)
-
-2. **`R2_ACCESS_KEY_ID`**: R2 API access key ID
-   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → R2 → Manage R2 API Tokens
-   - Create a new API token with read/write permissions for your bucket
-
-3. **`R2_SECRET_ACCESS_KEY`**: R2 API secret access key
-   - Obtained when creating the R2 API token (only shown once)
-
-4. **`R2_BUCKET_NAME`**: (Optional) R2 bucket name
-   - Defaults to `256t-cids` if not specified
+1. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
+2. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with R2 read/write permissions
 
 ### How It Works
 
