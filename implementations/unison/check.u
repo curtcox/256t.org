@@ -5,31 +5,33 @@ use .cid
 
 -- Get list of files in a directory
 listFiles : Text -> {IO, Exception} [Text]
-listFiles dir = do
-  -- This would use Unison's directory listing functions
-  -- For now, this is a placeholder that would be implemented
-  []
+listFiles dirPath =
+  dir = FilePath.FilePath dirPath
+  entries = Directory.list dir
+  -- Filter to only regular files, not directories
+  List.filter (f -> not (Directory.isDirectory (FilePath.FilePath (dirPath Text.++ "/" Text.++ f)))) entries
 
 -- Read file as bytes
 readFileBytes : Text -> {IO, Exception} Bytes
-readFileBytes path = do
-  content = readFile path
-  Text.toUtf8 content
+readFileBytes path =
+  FilePath.readFile (FilePath.FilePath path)
 
 -- Check a single CID file
 checkCidFile : Text -> Text -> {IO, Exception} (Text, Boolean, Text)
-checkCidFile cidsDir filename = do
+checkCidFile cidsDir filename =
+  use Text ++
   path = cidsDir ++ "/" ++ filename
   content = readFileBytes path
   
   Cid computed = computeCid content
-  isValid = computed == filename
+  isValid = computed Text.== filename
   
   (filename, isValid, computed)
 
 -- Main check function
 check : '{IO, Exception} ()
-check = do
+check _ =
+  use Text ++
   baseDir = "../../"
   cidsDir = baseDir ++ "cids"
   
@@ -44,10 +46,9 @@ check = do
   
   if List.isEmpty mismatches then
     printLine ("All " ++ Nat.toText (List.size results) ++ " CID files match their contents.")
-    ()
   else
     printLine "Found CID mismatches:"
-    List.map (cases
+    _ = List.map (cases
       (filename, _, computed) -> 
         printLine ("- " ++ filename ++ " should be " ++ computed)
     ) mismatches

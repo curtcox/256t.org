@@ -6,45 +6,49 @@ unique type Cid = Cid Text
 -- Convert bytes to base64url encoding (URL-safe base64 without padding)
 base64urlEncode : Bytes -> Text
 base64urlEncode bytes =
+  use Text ++
   base64 = Bytes.toBase64 bytes
   -- Replace + with -, / with _, and remove padding =
-  Text.replace "+" "-" base64
-    |> Text.replace "/" "_"
-    |> Text.replace "=" ""
+  base64
+    |> Text.replaceAll "+" "-"
+    |> Text.replaceAll "/" "_"
+    |> Text.replaceAll "=" ""
 
 -- Encode content length as 8-character base64url string (6 bytes)
 encodeLength : Nat -> Text
 encodeLength length =
-  -- Convert length to 6-byte big-endian representation
-  bytes = Bytes.fromNat64be (Nat.toNat64 length)
-  -- Take last 6 bytes (drop first 2)
+  -- Convert length to bytes (big-endian, 48 bits = 6 bytes)
+  -- We need to encode a Nat as 6 bytes
+  bytes = Bytes.fromNat64be (Nat.toInt length)
+  -- Take last 6 bytes (drop first 2 bytes from 8-byte representation)
   lengthBytes = Bytes.drop 2 bytes
   base64urlEncode lengthBytes
 
 -- Compute CID from content bytes
 computeCid : Bytes -> Cid
 computeCid content =
+  use Text ++
   length = Bytes.size content
   prefix = encodeLength length
   
-  suffix = if length <= 64 then
+  suffix = if length Nat.<= 64 then
     -- For content <= 64 bytes, use content itself
     base64urlEncode content
   else
     -- For content > 64 bytes, use SHA-512 hash
-    hash = crypto.hash Sha512 content
+    hash = crypto.hashBytes crypto.HashAlgorithm.Sha2_512 content
     base64urlEncode hash
   
   Cid (prefix ++ suffix)
 
 -- Compute CID from file path
 computeCidFromFile : Text -> {IO, Exception} Cid
-computeCidFromFile path = do
-  content = readFile path
-  computeCid (Text.toUtf8 content)
+computeCidFromFile path = 
+  content = FilePath.readFile (FilePath.FilePath path)
+  computeCid content
 
 -- Verify a CID matches its content
 verifyCid : Cid -> Bytes -> Boolean
 verifyCid (Cid expected) content =
   Cid computed = computeCid content
-  computed == expected
+  computed Text.== expected
