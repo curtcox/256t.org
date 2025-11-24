@@ -37,6 +37,7 @@ jobs:
           # invoked.
           root = Path.cwd()
           readme = root / 'README.md'
+          publishing = root / 'PUBLISHING.md'
           site_dir = root / 'dist'
           site_dir.mkdir(exist_ok=True)
           
@@ -58,21 +59,14 @@ jobs:
               })
           (root / 'cids.json').write_text(json.dumps(cid_data, indent=2), encoding='utf-8')
           
-          html_body = markdown.markdown(
-              readme.read_text(encoding='utf-8'),
-              extensions=[
-                  'fenced_code',
-                  'tables',
-                  'toc',
-                  'sane_lists',
-              ],
-          )
-          (site_dir / 'index.html').write_text(f'''<!DOCTYPE html>
+          # Common HTML template function
+          def generate_html(title, body):
+              return f'''<!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>256t.org</title>
+            <title>{title}</title>
             <style>
               :root {{
                 color-scheme: light dark;
@@ -115,10 +109,34 @@ jobs:
             </style>
           </head>
           <body>
-          {html_body}
+          {body}
           </body>
           </html>
-          ''', encoding='utf-8')
+          '''
+          
+          # Convert README.md to index.html
+          html_body = markdown.markdown(
+              readme.read_text(encoding='utf-8'),
+              extensions=[
+                  'fenced_code',
+                  'tables',
+                  'toc',
+                  'sane_lists',
+              ],
+          )
+          (site_dir / 'index.html').write_text(generate_html('256t.org', html_body), encoding='utf-8')
+          
+          # Convert PUBLISHING.md to publishing.html
+          publishing_body = markdown.markdown(
+              publishing.read_text(encoding='utf-8'),
+              extensions=[
+                  'fenced_code',
+                  'tables',
+                  'toc',
+                  'sane_lists',
+              ],
+          )
+          (site_dir / 'publishing.html').write_text(generate_html('Publishing and Storage - 256t.org', publishing_body), encoding='utf-8')
 
           # Copy everything from repository to dist
           import os
