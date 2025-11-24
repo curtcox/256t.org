@@ -38,6 +38,7 @@ jobs:
           root = Path.cwd()
           readme = root / 'README.md'
           publishing = root / 'PUBLISHING.md'
+          faq = root / 'FAQ.md'
           site_dir = root / 'dist'
           site_dir.mkdir(exist_ok=True)
           
@@ -137,6 +138,18 @@ jobs:
               ],
           )
           (site_dir / 'publishing.html').write_text(generate_html('Publishing and Storage - 256t.org', publishing_body), encoding='utf-8')
+          
+          # Convert FAQ.md to faq.html
+          faq_body = markdown.markdown(
+              faq.read_text(encoding='utf-8'),
+              extensions=[
+                  'fenced_code',
+                  'tables',
+                  'toc',
+                  'sane_lists',
+              ],
+          )
+          (site_dir / 'faq.html').write_text(generate_html('FAQ - 256t.org', faq_body), encoding='utf-8')
 
           # Copy everything from repository to dist
           import os

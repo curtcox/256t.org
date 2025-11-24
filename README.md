@@ -96,6 +96,10 @@ These things are beyond the scope of this text.
 
 For information about deploying and publishing content-addressed storage using CIDs, see [Publishing and Storage](publishing.html).
 
+## FAQ
+
+Have questions about 256t.org? Check out the [Frequently Asked Questions](faq.html) page for answers to common questions about CIDs, implementation, security, and more.
+
 ## What about Collisions?
 
 There are a few different types of collisions that are important to distinquish between:
