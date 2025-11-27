@@ -3,5 +3,6 @@
  :aliases {:build {:main-opts ["-m" "cljs.main"
                                 "-t" "nodejs"
                                 "-o" "out"
+                                "--output-to" "out/main.js"
                                 "-O" "simple"
                                 "-c" "clojurescript.check"]}}}
