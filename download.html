@@ -453,6 +453,19 @@
       return text.trim().startsWith('<svg');
     }
 
+    // Display literal CID information if the CID contains embedded content
+    function displayLiteralCidInfo(cid) {
+      if (isLiteralCid(cid)) {
+        const literalBytes = extractLiteralContent(cid);
+        if (literalBytes) {
+          literalSection.classList.remove('hidden');
+          const literalDecoder = new TextDecoder('utf-8', { fatal: false });
+          literalText.textContent = literalDecoder.decode(literalBytes);
+          literalHexDump.textContent = toHexDump(literalBytes);
+        }
+      }
+    }
+
     // Check CORS status for a given base URL
     async function checkCorsStatus(baseUrl) {
       if (!baseUrl || !baseUrl.trim()) {
@@ -562,21 +575,8 @@
           statusDiv.innerHTML = '<span class="status-icon failure"></span> CID does not match! Content may be corrupted.';
         }
 
-        // Check if this is a literal CID and display literal information
-        if (isLiteralCid(cid)) {
-          const literalBytes = extractLiteralContent(cid);
-          if (literalBytes) {
-            // Show literal section
-            literalSection.classList.remove('hidden');
-            
-            // Display as text
-            const literalDecoder = new TextDecoder('utf-8', { fatal: false });
-            literalText.textContent = literalDecoder.decode(literalBytes);
-            
-            // Display hex dump
-            literalHexDump.textContent = toHexDump(literalBytes);
-          }
-        }
+        // Display literal CID information if applicable
+        displayLiteralCidInfo(cid);
         
         // Display full content
         fullContentDisplay.innerHTML = '';
@@ -614,15 +614,7 @@
         contentPreviewEl.textContent = '—';
 
         // Even if download failed, show literal CID info if applicable
-        if (isLiteralCid(cid)) {
-          const literalBytes = extractLiteralContent(cid);
-          if (literalBytes) {
-            literalSection.classList.remove('hidden');
-            const literalDecoder = new TextDecoder('utf-8', { fatal: false });
-            literalText.textContent = literalDecoder.decode(literalBytes);
-            literalHexDump.textContent = toHexDump(literalBytes);
-          }
-        }
+        displayLiteralCidInfo(cid);
       } finally {
         // Re-enable button
         downloadButton.disabled = false;
