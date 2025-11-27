@@ -1,0 +1,8 @@
+{:deps {org.clojure/clojurescript {:mvn/version "1.11.132"}}
+ :paths ["src"]
+ :aliases {:build {:main-opts ["-m" "cljs.main"
+                                "-t" "nodejs"
+                                "-o" "out"
+                                "--output-to" "out/main.js"
+                                "-O" "simple"
+                                "-c" "clojurescript.check"]}}}
