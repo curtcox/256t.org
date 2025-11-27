@@ -248,9 +248,76 @@
       background: rgba(198, 40, 40, 0.1);
       border-radius: 0.5rem;
     }
+    .literal-section {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: rgba(76, 175, 80, 0.1);
+      border: 2px solid rgba(76, 175, 80, 0.3);
+      border-radius: 0.75rem;
+    }
+    .literal-section.hidden {
+      display: none;
+    }
+    .literal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .literal-badge {
+      background: #4caf50;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .literal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .literal-description {
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.7);
+      margin-bottom: 1rem;
+    }
+    .literal-content-section {
+      margin-top: 1rem;
+    }
+    .literal-content-section h4 {
+      font-size: 0.95rem;
+      margin: 0 0 0.5rem 0;
+      color: rgba(0, 0, 0, 0.8);
+    }
+    .literal-text {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .hex-dump {
+      background: rgba(0, 0, 0, 0.08);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.8rem;
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.4;
+    }
     @media (prefers-color-scheme: dark) {
       .info-label {
         color: rgba(255, 255, 255, 0.6);
+      }
+      .literal-description {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .literal-content-section h4 {
+        color: rgba(255, 255, 255, 0.8);
       }
     }
   </style>
@@ -328,6 +395,26 @@
     </div>
   </div>
 
+  <div id="literalSection" class="literal-section hidden">
+    <div class="literal-header">
+      <span class="literal-badge">Literal CID</span>
+      <h3 class="literal-title">Content Embedded in CID</h3>
+    </div>
+    <p class="literal-description">
+      This CID contains a literal value. For content ≤ 64 bytes, the actual content is 
+      base64url-encoded directly in the CID instead of using a SHA-512 hash. 
+      No download is required to retrieve this content.
+    </p>
+    <div class="literal-content-section">
+      <h4>Literal Value as Text</h4>
+      <div id="literalText" class="literal-text"></div>
+    </div>
+    <div class="literal-content-section">
+      <h4>Hex Dump</h4>
+      <div id="literalHexDump" class="hex-dump"></div>
+    </div>
+  </div>
+
   <div id="fullContent" class="full-content hidden">
     <h3>Downloaded Content</h3>
     <div id="fullContentDisplay"></div>
@@ -356,6 +443,9 @@
     const corsStatus = document.getElementById('corsStatus');
     const corsIcon = document.getElementById('corsIcon');
     const corsDescription = document.getElementById('corsDescription');
+    const literalSection = document.getElementById('literalSection');
+    const literalText = document.getElementById('literalText');
+    const literalHexDump = document.getElementById('literalHexDump');
 
     // Check if content is SVG
     function isSvgContent(content) {
@@ -445,6 +535,7 @@
       // Hide previous results
       resultDiv.classList.add('hidden');
       fullContentDiv.classList.add('hidden');
+      literalSection.classList.add('hidden');
       errorContainer.classList.add('hidden');
 
       try {
@@ -469,6 +560,22 @@
           statusDiv.innerHTML = '<span class="status-icon success"></span> CID matches! Content verified.';
         } else {
           statusDiv.innerHTML = '<span class="status-icon failure"></span> CID does not match! Content may be corrupted.';
+        }
+
+        // Check if this is a literal CID and display literal information
+        if (isLiteralCid(cid)) {
+          const literalBytes = extractLiteralContent(cid);
+          if (literalBytes) {
+            // Show literal section
+            literalSection.classList.remove('hidden');
+            
+            // Display as text
+            const literalDecoder = new TextDecoder('utf-8', { fatal: false });
+            literalText.textContent = literalDecoder.decode(literalBytes);
+            
+            // Display hex dump
+            literalHexDump.textContent = toHexDump(literalBytes);
+          }
         }
         
         // Display full content
@@ -505,6 +612,17 @@
         computedCidEl.textContent = '—';
         contentLengthEl.textContent = '—';
         contentPreviewEl.textContent = '—';
+
+        // Even if download failed, show literal CID info if applicable
+        if (isLiteralCid(cid)) {
+          const literalBytes = extractLiteralContent(cid);
+          if (literalBytes) {
+            literalSection.classList.remove('hidden');
+            const literalDecoder = new TextDecoder('utf-8', { fatal: false });
+            literalText.textContent = literalDecoder.decode(literalBytes);
+            literalHexDump.textContent = toHexDump(literalBytes);
+          }
+        }
       } finally {
         // Re-enable button
         downloadButton.disabled = false;
