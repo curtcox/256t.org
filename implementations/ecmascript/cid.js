@@ -99,7 +99,133 @@ async function downloadCid(baseUrl, cid) {
   return { content, computed, isValid };
 }
 
+/**
+ * Convert a Base64URL string to Uint8Array
+ * @param {string} base64url - The Base64URL encoded string
+ * @returns {Uint8Array} Decoded bytes, or empty Uint8Array on invalid input
+ */
+function fromBase64Url(base64url) {
+  if (!base64url || typeof base64url !== 'string') {
+    return new Uint8Array(0);
+  }
+  try {
+    // Add padding if necessary
+    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch (e) {
+    return new Uint8Array(0);
+  }
+}
+
+/**
+ * Decode the length from a CID's 8-character prefix
+ * @param {string} cid - The full CID string
+ * @returns {number} The decoded length, or 0 on invalid input
+ */
+function decodeLength(cid) {
+  if (!cid || typeof cid !== 'string' || cid.length < 8) {
+    return 0;
+  }
+  const prefix = cid.substring(0, 8);
+  const bytes = fromBase64Url(prefix);
+  if (!bytes || bytes.length === 0) {
+    return 0;
+  }
+  let length = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    length = length * 256 + bytes[i];
+  }
+  return length;
+}
+
+/**
+ * Check if a CID contains a literal value (content ≤ 64 bytes)
+ * @param {string} cid - The CID to check
+ * @returns {boolean} True if the CID contains literal content
+ */
+function isLiteralCid(cid) {
+  const length = decodeLength(cid);
+  return length <= 64;
+}
+
+/**
+ * Extract the literal content from a CID (only valid for literal CIDs)
+ * @param {string} cid - The CID containing literal content
+ * @returns {Uint8Array|null} The literal content bytes, or null if not a literal CID
+ */
+function extractLiteralContent(cid) {
+  if (!cid || typeof cid !== 'string') {
+    return null;
+  }
+  if (!isLiteralCid(cid)) {
+    return null;
+  }
+  if (cid.length <= 8) {
+    return new Uint8Array(0);
+  }
+  const suffix = cid.substring(8);
+  if (!suffix) {
+    return new Uint8Array(0);
+  }
+  return fromBase64Url(suffix);
+}
+
+/**
+ * Convert bytes to a hex dump string
+ * @param {Uint8Array} bytes - The bytes to convert
+ * @returns {string} Hex dump string with offset, hex values, and ASCII representation
+ */
+function toHexDump(bytes) {
+  if (!bytes || typeof bytes.length !== 'number' || bytes.length === 0) {
+    return '';
+  }
+  
+  const lines = [];
+  const bytesPerLine = 16;
+  
+  for (let offset = 0; offset < bytes.length; offset += bytesPerLine) {
+    const chunk = bytes.slice(offset, offset + bytesPerLine);
+    
+    // Offset
+    const offsetStr = offset.toString(16).padStart(8, '0');
+    
+    // Hex values
+    const hexParts = [];
+    for (let i = 0; i < bytesPerLine; i++) {
+      if (i < chunk.length) {
+        hexParts.push(chunk[i].toString(16).padStart(2, '0'));
+      } else {
+        hexParts.push('  ');
+      }
+    }
+    const hexStr = hexParts.slice(0, 8).join(' ') + '  ' + hexParts.slice(8).join(' ');
+    
+    // ASCII representation
+    let asciiStr = '';
+    for (let i = 0; i < chunk.length; i++) {
+      const byte = chunk[i];
+      if (byte >= 32 && byte <= 126) {
+        asciiStr += String.fromCharCode(byte);
+      } else {
+        asciiStr += '.';
+      }
+    }
+    
+    lines.push(`${offsetStr}  ${hexStr}  |${asciiStr}|`);
+  }
+  
+  return lines.join('\n');
+}
+
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { toBase64Url, encodeLength, computeCid, downloadCid };
+  module.exports = { toBase64Url, fromBase64Url, encodeLength, decodeLength, computeCid, downloadCid, isLiteralCid, extractLiteralContent, toHexDump };
 }
