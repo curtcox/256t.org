@@ -56,5 +56,5 @@
   (let [exit-code (main)]
     (js/process.exit exit-code)))
 
-;; Auto-run when loaded
-(set! *main-cli-fn* -main)
+;; Run when executed as main script
+(-main)

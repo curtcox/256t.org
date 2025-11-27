@@ -1,14 +1,10 @@
 (ns clojurescript.cid
-  (:require ["crypto" :as crypto]
-            [clojure.string :as str]))
+  (:require ["crypto" :as crypto]))
 
 (defn- to-base64url
   "Convert buffer to Base64URL encoding (URL-safe, no padding)"
   [buffer]
-  (-> (.toString buffer "base64")
-      (str/replace #"\+" "-")
-      (str/replace #"/" "_")
-      (str/replace #"=+$" "")))
+  (.toString buffer "base64url"))
 
 (defn encode-length
   "Encode length as 8-character Base64URL string (6 bytes)"
