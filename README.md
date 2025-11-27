@@ -125,6 +125,7 @@ The 256t.org specification has been implemented in multiple programming language
 | C++ | ![C++](https://img.shields.io/badge/C++-00599C?style=flat&logo=cplusplus&logoColor=white) | [cpp](https://github.com/curtcox/256t.org/tree/main/implementations/cpp) |
 | C# | ![C#](https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white) | [csharp](https://github.com/curtcox/256t.org/tree/main/implementations/csharp) |
 | Clojure | ![Clojure](https://img.shields.io/badge/Clojure-5881D8?style=flat&logo=clojure&logoColor=white) | [clojure](https://github.com/curtcox/256t.org/tree/main/implementations/clojure) |
+| ClojureScript | ![ClojureScript](https://img.shields.io/badge/ClojureScript-5881D8?style=flat&logo=clojure&logoColor=white) | [clojurescript](https://github.com/curtcox/256t.org/tree/main/implementations/clojurescript) |
 | CMake | ![CMake](https://img.shields.io/badge/CMake-064F8C?style=flat&logo=cmake&logoColor=white) | [cmake](https://github.com/curtcox/256t.org/tree/main/implementations/cmake) |
 | Crystal | ![Crystal](https://img.shields.io/badge/Crystal-000000?style=flat&logo=crystal&logoColor=white) | [crystal](https://github.com/curtcox/256t.org/tree/main/implementations/crystal) |
 | D | ![D](https://img.shields.io/badge/D-B03931?style=flat&logo=d&logoColor=white) | [d](https://github.com/curtcox/256t.org/tree/main/implementations/d) |

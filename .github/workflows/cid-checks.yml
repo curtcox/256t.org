@@ -396,6 +396,29 @@ jobs:
       - name: Run Clojure CID check
         run: clojure -M -m implementations.clojure.check
 
+  clojurescript:
+    name: ClojureScript CID check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Clojure CLI
+        run: |
+          curl -O https://download.clojure.org/install/linux-install.sh
+          chmod +x linux-install.sh
+          sudo ./linux-install.sh
+      - name: Compile ClojureScript
+        working-directory: implementations/clojurescript
+        run: clojure -M:build
+      - name: Run ClojureScript CID check
+        run: node implementations/clojurescript/out/main.js
+
   nim:
     name: Nim CID check
     runs-on: ubuntu-latest
