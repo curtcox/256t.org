@@ -604,17 +604,6 @@
       return { valid: true, status: 'valid' };
     }
 
-    // Calculate expected suffix length based on content length
-    function getExpectedSuffixLength(contentLength) {
-      if (contentLength <= 0) return 0;
-      if (contentLength <= 64) {
-        // Literal content: base64url encoding
-        return Math.ceil((contentLength * 8) / 6);
-      }
-      // Hash content: 86 characters for SHA-512
-      return 86;
-    }
-
     // Get suffix length from CID
     function getSuffixLength(cid) {
       if (!cid || cid.length <= 8) return 0;
@@ -681,7 +670,6 @@
 
         // Calculate suffix length
         const suffixLength = getSuffixLength(cid);
-        const expectedSuffixLength = getExpectedSuffixLength(contentLength);
         
         // For literal CIDs, calculate actual content length from suffix
         if (literal && cid.length > 8) {
