@@ -40,8 +40,7 @@ See [WORKER_README.md](WORKER_README.md) for more details about the worker setup
 To enable R2 deployment, the following GitHub repository secrets must be configured:
 
 1. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with R2 read/write and Workers deploy permissions
-   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Profile → API Tokens
-   - Create a new token with R2 read/write and Workers deploy permissions
+   - See [CLOUDFLARE_API_TOKEN.md](CLOUDFLARE_API_TOKEN.md) for complete setup instructions
 
 2. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
    - Found in the Cloudflare Dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>`
