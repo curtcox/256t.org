@@ -14,6 +14,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy Cloudflare Worker
+    permissions:
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
