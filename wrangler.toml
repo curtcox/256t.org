@@ -1,0 +1,8 @@
+name = "256t-org-site"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Bind the R2 bucket to the worker
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "256t-cids"
