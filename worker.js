@@ -12,6 +12,19 @@ export default {
     const url = new URL(request.url);
     let path = url.pathname;
 
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
     // Handle root path - serve index.html
     if (path === '/' || path === '') {
       path = '/index.html';
