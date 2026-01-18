@@ -27,6 +27,14 @@ A Cloudflare Worker (`worker.js`) is deployed in front of the R2 bucket to handl
 
 The worker is automatically deployed when changes are pushed to `main` branch (workflow: `.github/workflows/deploy-worker.yml`).
 
+**Important**: After the worker is deployed for the first time, you need to manually configure the route in Cloudflare Dashboard:
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Workers & Pages
+2. Select the `256t-org-site` worker
+3. Go to Settings → Triggers → Routes
+4. Add route: `256t.org/*` for the `256t.org` zone
+
+See [WORKER_README.md](WORKER_README.md) for more details about the worker setup.
+
 ### Required Secrets
 
 To enable R2 deployment, the following GitHub repository secrets must be configured:
