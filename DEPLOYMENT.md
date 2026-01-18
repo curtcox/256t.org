@@ -18,17 +18,28 @@ The 256t.org domain is backed by a Cloudflare R2 bucket (`256t-cids`) that hosts
 
 Both types of files coexist in the same bucket without conflicts, as CIDs are 94-character base64url strings that don't overlap with static file names.
 
+### Cloudflare Worker
+
+A Cloudflare Worker (`worker.js`) is deployed in front of the R2 bucket to handle routing:
+- Serves `index.html` when accessing the root path (`/`)
+- Serves `index.html` for directory paths
+- Proxies all other requests directly to R2
+
+The worker is automatically deployed when changes are pushed to `main` branch (workflow: `.github/workflows/deploy-worker.yml`).
+
 ### Required Secrets
 
 To enable R2 deployment, the following GitHub repository secrets must be configured:
 
-1. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with R2 read/write permissions
+1. **`CLOUDFLARE_API_TOKEN`**: A Cloudflare API token with R2 read/write and Workers deploy permissions
    - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Profile → API Tokens
-   - Create a new token with R2 read/write permissions
+   - Create a new token with R2 read/write and Workers deploy permissions
 
 2. **`CLOUDFLARE_ACCOUNT_ID`**: Your Cloudflare Account ID
    - Found in the Cloudflare Dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>`
    - Or in Account Settings → Account ID
+
+**Note**: The API token needs Workers deploy permissions in addition to R2 permissions to deploy the routing worker.
 
 ### Deployment Configuration
 
