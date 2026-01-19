@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>256t.org - Content Addressable Storage</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0 auto;
+      padding: 2rem clamp(2rem, 5vw, 8rem);
+      max-width: 120rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    }
+    h2 {
+      margin: 1.5rem 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    nav a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+    nav a:hover {
+      background: rgba(0, 102, 204, 0.1);
+      text-decoration: underline;
+    }
+    .hero-images {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+      margin: 2rem 0;
+    }
+    .hero-image {
+      max-width: 300px;
+      max-height: 300px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .logo-image {
+      max-width: 200px;
+      max-height: 200px;
+    }
+    .concept-image {
+      max-width: 100%;
+      width: 800px;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      margin: 1rem auto;
+      display: block;
+    }
+    .description {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      font-size: 1.1rem;
+    }
+    .tools-section {
+      background: rgba(0, 0, 0, 0.03);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      margin-top: 1rem;
+    }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .tool-link {
+      display: block;
+      padding: 1rem;
+      background: rgba(0, 102, 204, 0.05);
+      border: 1px solid rgba(0, 102, 204, 0.2);
+      border-radius: 0.5rem;
+      color: #0066cc;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .tool-link:hover {
+      background: rgba(0, 102, 204, 0.1);
+      border-color: rgba(0, 102, 204, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .tool-link strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .tool-link span {
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.7);
+    }
+    .image-caption {
+      text-align: center;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: 0.5rem;
+    }
+    .image-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      text-align: center;
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    footer a {
+      color: #0066cc;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tool-link span {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .image-caption {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      footer {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero-images">
+      <div class="image-container">
+        <img src="examples/256t_logo.png" alt="256t.org Logo" class="hero-image logo-image">
+        <div class="image-caption">256t.org Logo</div>
+      </div>
+      <div class="image-container">
+        <img src="examples/256t_qr_code.png" alt="256t.org QR Code" class="hero-image logo-image">
+        <div class="image-caption">Scan to visit 256t.org</div>
+      </div>
+    </div>
+    <h1>256t.org</h1>
+    <p class="description">
+      Content Addressable Storage using SHA-512 hashes encoded in Base64URL.
+      A simple, verifiable way to reference content by its cryptographic fingerprint.
+    </p>
+  </header>
+
+  <section>
+    <h2>How It Works</h2>
+    <img src="examples/256t.png" alt="256t.org Content Addressable Storage Concept" class="concept-image">
+    <p class="image-caption">Visual overview of the 256t.org content-addressable storage specification</p>
+  </section>
+
+  <section class="tools-section">
+    <h2 style="margin-top: 0;">Tools</h2>
+    <div class="tools-grid">
+      <a href="examples.html" class="tool-link">
+        <strong>CID Examples</strong>
+        <span>Verify example files using ECMAScript</span>
+      </a>
+      <a href="examples-elm.html" class="tool-link">
+        <strong>CID Examples (Elm)</strong>
+        <span>Verify example files using Elm</span>
+      </a>
+      <a href="hash.html" class="tool-link">
+        <strong>Hash Calculator</strong>
+        <span>Calculate SHA-512 hashes instantly</span>
+      </a>
+      <a href="check.html" class="tool-link">
+        <strong>File CID Check</strong>
+        <span>Drag and drop files to calculate CIDs</span>
+      </a>
+      <a href="download.html" class="tool-link">
+        <strong>CID Download</strong>
+        <span>Download and verify content by CID</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Resources</h2>
+    <div class="tools-grid">
+      <a href="examples/256t_Content_Addressable_Storage_Specification.pdf" class="tool-link">
+        <strong>Specification (PDF)</strong>
+        <span>Full technical specification document</span>
+      </a>
+      <a href="examples/256t_and_the_End_of_Broken_Links.m4a" class="tool-link">
+        <strong>Audio Discussion</strong>
+        <span>256t and the End of Broken Links</span>
+      </a>
+      <a href="examples/256t.mp4" class="tool-link">
+        <strong>Video Explanation</strong>
+        <span>Visual guide to 256t.org</span>
+      </a>
+      <a href="https://github.com/curtcox/256t.org" class="tool-link">
+        <strong>GitHub Repository</strong>
+        <span>Source code and documentation</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <a href="https://github.com/curtcox/256t.org">View on GitHub</a> |
+      <a href="examples/256t_Content_Addressable_Storage_Specification.pdf">Read the Specification</a>
+    </p>
+  </footer>
+</body>
+</html>
