@@ -108,7 +108,7 @@ The [examples/](examples/) directory contains sample files for testing CID gener
 
 | File | Description |
 |------|-------------|
-| [256t.mp4](examples/256t.mp4) | Video explaining the 256t.org content-addressable storage specification |
+| [256t.mp4](examples/256t.mp4) | Video explaining the 256t.org content-addressable storage specification (or on [YouTube](https://www.youtube.com/watch?v=GrzonG2up5c)) |
 | [256t.png](examples/256t.png) | Visual representation of the 256t.org concept |
 | [256t_Content_Addressable_Storage_Specification.pdf](examples/256t_Content_Addressable_Storage_Specification.pdf) | PDF documentation of the full specification |
 | [256t_and_the_End_of_Broken_Links.m4a](examples/256t_and_the_End_of_Broken_Links.m4a) | Audio discussion on how 256t.org addresses link rot |
