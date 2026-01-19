@@ -1,5 +1,15 @@
 # [256t.org](https://curtcox.github.io/256t.org/)
 
+<p align="center">
+  <img src="examples/256t_logo.png" alt="256t.org Logo" width="200">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="examples/256t_qr_code.png" alt="256t.org QR Code" width="200">
+</p>
+
+<p align="center">
+  <img src="examples/256t.png" alt="256t.org Content Addressable Storage Concept" width="800">
+</p>
+
 ## What?
 
 256t.org is a domain dedicated to be a public specification for a specific type of content addressable storage.

@@ -113,6 +113,13 @@ jobs:
               a:hover, a:focus {{
                 text-decoration: underline;
               }}
+              img {{
+                max-width: 100%;
+                height: auto;
+              }}
+              p[align="center"] {{
+                text-align: center;
+              }}
             </style>
           </head>
           <body>
