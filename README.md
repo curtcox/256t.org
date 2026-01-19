@@ -1,5 +1,15 @@
 # [256t.org](https://curtcox.github.io/256t.org/)
 
+<p align="center">
+  <img src="examples/256t_logo.png" alt="256t.org Logo" width="200">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="examples/256t_qr_code.png" alt="256t.org QR Code" width="200">
+</p>
+
+<p align="center">
+  <img src="examples/256t.png" alt="256t.org Content Addressable Storage Concept" width="800">
+</p>
+
 ## What?
 
 256t.org is a domain dedicated to be a public specification for a specific type of content addressable storage.
@@ -91,6 +101,22 @@ These things are beyond the scope of this text.
 - [CID Examples (Elm)](examples-elm.html) — select example files and verify their CIDs using the Elm implementation.
 - [File CID Check](check.html) — drag and drop files to analyze their content and calculate their CID.
 - [CID Download](download.html) — download and verify content from a 256t.org compatible server using a CID.
+
+## Example Files
+
+The [examples/](examples/) directory contains sample files for testing CID generation and verification. Among these are 256t-branded resources that demonstrate the specification with various media types:
+
+| File | Description |
+|------|-------------|
+| [256t.mp4](examples/256t.mp4) | Video explaining the 256t.org content-addressable storage specification |
+| [256t.png](examples/256t.png) | Visual representation of the 256t.org concept |
+| [256t_Content_Addressable_Storage_Specification.pdf](examples/256t_Content_Addressable_Storage_Specification.pdf) | PDF documentation of the full specification |
+| [256t_and_the_End_of_Broken_Links.m4a](examples/256t_and_the_End_of_Broken_Links.m4a) | Audio discussion on how 256t.org addresses link rot |
+| [256t_logo.jpg](examples/256t_logo.jpg) | 256t.org logo (JPEG format) |
+| [256t_logo.png](examples/256t_logo.png) | 256t.org logo (PNG format) |
+| [256t_qr_code.png](examples/256t_qr_code.png) | QR code linking to 256t.org |
+
+These files can be used with the [CID Examples](examples.html) tool or the [File CID Check](check.html) tool to verify their content identifiers.
 
 ## Publishing
 
