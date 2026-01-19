@@ -4,7 +4,9 @@ compatibility_date = "2024-01-01"
 
 # Route all 256t.org traffic through this worker
 routes = [
+  { pattern = "256t.org", zone_name = "256t.org" },
   { pattern = "256t.org/*", zone_name = "256t.org" },
+  { pattern = "www.256t.org", zone_name = "256t.org" },
   { pattern = "www.256t.org/*", zone_name = "256t.org" }
 ]
 
