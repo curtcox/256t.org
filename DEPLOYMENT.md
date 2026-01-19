@@ -88,7 +88,7 @@ This workflow uploads CID files to the same R2 bucket (`256t-cids`) that backs t
 ### Schedule
 
 The R2 upload workflow runs:
-- **Daily** at 2:00 AM UTC
+- **Monthly** on the 1st at 2:00 AM UTC
 - **On-demand** via manual workflow dispatch
 
 ### Required Secrets
