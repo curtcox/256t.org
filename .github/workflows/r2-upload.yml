@@ -3,9 +3,9 @@ name: Upload CIDs to CloudFlare R2
 on:
   # Run on workflow dispatch (manual trigger)
   workflow_dispatch:
-  # Run daily at 2 AM UTC
+  # Run monthly on the 1st at 2 AM UTC
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 1 * *'
 
 jobs:
   upload-and-verify:
