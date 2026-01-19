@@ -92,6 +92,22 @@ These things are beyond the scope of this text.
 - [File CID Check](check.html) — drag and drop files to analyze their content and calculate their CID.
 - [CID Download](download.html) — download and verify content from a 256t.org compatible server using a CID.
 
+## Example Files
+
+The [examples/](examples/) directory contains sample files for testing CID generation and verification. Among these are 256t-branded resources that demonstrate the specification with various media types:
+
+| File | Description |
+|------|-------------|
+| [256t.mp4](examples/256t.mp4) | Video explaining the 256t.org content-addressable storage specification |
+| [256t.png](examples/256t.png) | Visual representation of the 256t.org concept |
+| [256t_Content_Addressable_Storage_Specification.pdf](examples/256t_Content_Addressable_Storage_Specification.pdf) | PDF documentation of the full specification |
+| [256t_and_the_End_of_Broken_Links.m4a](examples/256t_and_the_End_of_Broken_Links.m4a) | Audio discussion on how 256t.org addresses link rot |
+| [256t_logo.jpg](examples/256t_logo.jpg) | 256t.org logo (JPEG format) |
+| [256t_logo.png](examples/256t_logo.png) | 256t.org logo (PNG format) |
+| [256t_qr_code.png](examples/256t_qr_code.png) | QR code linking to 256t.org |
+
+These files can be used with the [CID Examples](examples.html) tool or the [File CID Check](check.html) tool to verify their content identifiers.
+
 ## Publishing
 
 For information about deploying and publishing content-addressed storage using CIDs, see [Publishing and Storage](publishing.html).
