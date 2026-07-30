@@ -13,11 +13,14 @@ Expires: 31 January 2027                                    30 July 2026
 
 This document defines the 't256' Uniform Resource Identifier (URI)
 scheme.  A 't256' URI contains exactly one 256t content identifier
-(CID) and nothing else.  A CID names content by its length and either
-its SHA-512 hash or, for content of 64 bytes or less, the content
-itself.  A 't256' URI therefore identifies content independently of
-any location, protocol, or server, and any party holding the content
-can verify that it matches the URI.
+(CID), optionally followed by a media type suffix of the kind
+commonly used at the end of HTTP URLs (".html", ".png", ".tar.gz").
+A CID names content by its length and either its SHA-512 hash or,
+for content of 64 bytes or less, the content itself.  A 't256' URI
+therefore identifies content independently of any location, protocol,
+or server, and any party holding the content can verify that it
+matches the URI.  The suffix, when present, indicates the media type
+with which the content should be interpreted.
 
 ## Status of This Memo
 
@@ -56,6 +59,10 @@ Existing practice embeds CIDs as the final path segment of an
 'https' URI, which ties the identifier to one particular host.  A
 URI scheme that carries only the CID allows content to be referenced
 without naming any host at all, leaving resolution to the consumer.
+HTTP URLs also commonly end in a filename extension (".html",
+".png") from which servers and clients infer a media type; a 't256'
+URI MAY carry the same kind of suffix to indicate how the content it
+names should be interpreted (Section 3.1).
 
 The natural scheme name would be "256t", matching the specification's
 name.  That spelling is not available: the URI syntax [RFC3986]
@@ -79,16 +86,20 @@ Section 5 of [RFC4648], used *without* padding characters ("=").
 
 "Content" means the sequence of octets that a CID names.
 
+"Media type" means an Internet media type (MIME type) as used in the
+HTTP Content-Type header field [RFC9110].
+
 ## 3. Scheme Syntax
 
-A 't256' URI is the scheme name, a colon, and a single CID.  The
-scheme is opaque: it has no authority component, no path hierarchy,
-no query component, and no defined fragment semantics.
+A 't256' URI is the scheme name, a colon, a single CID, and an
+optional media type suffix.  The scheme is opaque: it has no
+authority component, no path hierarchy, no query component, and no
+defined fragment semantics.
 
 In the Augmented Backus-Naur Form (ABNF) of [RFC5234]:
 
 ```
-t256-URI       = "t256:" cid
+t256-URI       = "t256:" cid [ suffix ]
 
 cid            = length-prefix payload
 
@@ -97,6 +108,10 @@ length-prefix  = 8base64url-char
 payload        = 0*86base64url-char
 
 base64url-char = ALPHA / DIGIT / "-" / "_"
+
+suffix         = 1*( "." label )
+
+label          = 1*( ALPHA / DIGIT )
 ```
 
 The following constraints apply in addition to the ABNF:
@@ -118,9 +133,11 @@ The following constraints apply in addition to the ABNF:
     a length congruent to 1 modulo 4, a payload length congruent to
     1 modulo 4 is invalid.
 
+Because "." is not in the base64url alphabet, the first "."
+character, if any, unambiguously ends the CID and begins the suffix.
 A CID is therefore between 8 characters (empty content) and 94
-characters long, and a 't256' URI is between 13 and 99 characters
-long.
+characters long, and a 't256' URI without a suffix is between 13 and
+99 characters long.
 
 The scheme name is case-insensitive as required by [RFC3986] and
 SHOULD be written in lowercase.  The CID is case-sensitive:
@@ -128,43 +145,84 @@ base64url distinguishes uppercase from lowercase, and two CIDs that
 differ only in case name different content.  Normalization processes
 MUST NOT alter the case of the CID.
 
-Because every character of a CID is in the "unreserved" set of
-[RFC3986], a CID never requires percent-encoding, and a 't256' URI
-producer MUST NOT percent-encode any part of one.  A consumer
-encountering a percent-encoded triplet in a 't256' URI MUST treat
-the URI as invalid rather than decode it.
+Because every character of a CID and of a suffix is in the
+"unreserved" set of [RFC3986], a 't256' URI never requires
+percent-encoding, and a 't256' URI producer MUST NOT percent-encode
+any part of one.  A consumer encountering a percent-encoded triplet
+in a 't256' URI MUST treat the URI as invalid rather than decode it.
+
+### 3.1. Media Type Suffix
+
+The optional suffix carries an implied media type, in the same way
+that a filename extension at the end of an HTTP URL path commonly
+does.  It is one or more dot-separated labels; the media type is
+determined from the final label using the extension-to-media-type
+mappings in common use by HTTP servers (for example, "html" implies
+text/html, "png" implies image/png, "json" implies application/json).
+Earlier labels, as in "t256:<cid>.tar.gz", do not participate in the
+mapping but MAY inform additional handling, as they do in HTTP
+practice.
+
+This document does not define a registry of suffixes.  Producers
+SHOULD use suffixes whose mapping to a media type registered in the
+IANA "Media Types" registry [RFC6838] is in widespread use.
+
+Producers SHOULD write suffixes in lowercase.  Consumers SHOULD map
+suffixes to media types case-insensitively, matching common HTTP
+server behavior.  A consumer that does not recognize the final label
+MUST process the URI as if no suffix were present.
+
+The suffix is a statement about interpretation, not identity: it has
+no effect on which content the URI names, and Section 8 explains
+that it is not protected by verification.
 
 ## 4. Scheme Semantics
 
-A 't256' URI names content; it does not name a location.  The
-operations available on it are:
+A 't256' URI names content; it does not name a location.  Which
+content it names is determined entirely by the CID; the suffix, if
+present, plays no part in verification, extraction, or retrieval.
+The operations available on a 't256' URI are:
 
 Verification:  Given candidate content, a consumer computes the CID
    of that content per Section 3 and compares it, as a case-
-   sensitive string, to the CID in the URI.  The content matches
-   the URI if and only if the strings are equal.
+   sensitive string, to the CID in the URI (excluding any suffix).
+   The content matches the URI if and only if the strings are equal.
 
 Direct extraction:  If the decoded length prefix is 64 or less, the
    URI itself contains the content, and a consumer MAY obtain the
    content by base64url-decoding the payload without any retrieval
    step.
 
-Retrieval:  A consumer MAY attempt to obtain the content from any
-   256t-compatible server.  Given a base URL, retrieval is an HTTP
+Retrieval:  A consumer MAY attempt to obtain the content by any
+   available mechanism, HTTP or otherwise.  One such mechanism is a
+   256t-compatible server: given a base URL, retrieval is an HTTP
    GET of the base URL with the CID appended as the final path
    segment [256T].  How a consumer discovers suitable servers is
    outside the scope of this document.  A consumer that retrieves
    content by any means MUST verify it as described above before
    treating it as the content named by the URI.
 
-Two 't256' URIs are equivalent if and only if their CIDs are
-codepoint-for-codepoint identical after case-normalizing the scheme
-name.
+Interpretation:  A consumer processing content obtained through a
+   URI with a suffix SHOULD treat the content as it would an HTTP
+   response payload whose Content-Type is the implied media type of
+   Section 3.1 — rendering, dispatching to handlers, and applying
+   security policy accordingly.  When there is no suffix (or the
+   suffix is unrecognized), the URI implies no media type, and the
+   consumer determines how to interpret the content by other means.
+
+Two 't256' URIs name the same content if and only if their CIDs are
+codepoint-for-codepoint identical.  Two 't256' URIs are equivalent
+if and only if, in addition, their suffixes are identical after
+case-normalizing the scheme name and the suffix.  URIs that name the
+same content but carry different suffixes are not equivalent, for
+the same reason that identical octets served with different HTTP
+Content-Type header fields are not interchangeable.
 
 ## 5. Encoding Considerations
 
 The scheme-specific part is restricted to the 64 characters of the
-base64url alphabet, all of which are unreserved in [RFC3986] and
+base64url alphabet plus the "." of the optional suffix, all of which
+are unreserved in [RFC3986] and
 representable in 7-bit US-ASCII.  No percent-encoding,
 internationalization, or character set considerations arise.  A
 't256' URI is identical in its URI form and its IRI form.
@@ -232,6 +290,17 @@ Confidentiality of small content:  For content of 64 octets or less,
    wherever URIs are logged, cached, displayed, or shared.  Base64url
    is an encoding, not encryption.
 
+Unauthenticated media type:  The suffix is not an input to the CID
+   and is therefore not protected by verification.  Anyone who can
+   alter a URI in transit or at rest can change or remove its suffix
+   without invalidating the URI, changing how consumers interpret
+   the (unchanged) content — for example, promoting text/plain to
+   text/html and thereby enabling script execution.  Consumers MUST
+   apply the same defenses they would apply to an untrusted HTTP
+   Content-Type header field, such as restricting content sniffing
+   and applying context-appropriate security policy before rendering
+   active content types.
+
 Length disclosure:  Every CID discloses the exact length of the
    content, which can itself be revealing (for example,
    distinguishing between a small set of candidate documents).
@@ -286,6 +355,9 @@ References:                  This document; https://256t.org
 
 - [RFC2392]  Levinson, E., "Content-ID and Message-ID Uniform
   Resource Locators", RFC 2392, August 1998.
+- [RFC6838]  Freed, N., Klensin, J., and T. Hansen, "Media Type
+  Specifications and Registration Procedures", BCP 13, RFC 6838,
+  January 2013.
 - [RFC6920]  Farrell, S., Kutscher, D., Dannewitz, C., Ohlman, B.,
   Keranen, A., and P. Hallam-Baker, "Naming Things with Hashes",
   RFC 6920, April 2013.
@@ -294,6 +366,8 @@ References:                  This document; https://256t.org
   June 2015.
 - [RFC8141]  Saint-Andre, P. and J. Klensin, "Uniform Resource
   Names (URNs)", RFC 8141, April 2017.
+- [RFC9110]  Fielding, R., Nottingham, M., and J. Reschke, "HTTP
+  Semantics", STD 97, RFC 9110, June 2022.
 
 ## Appendix A. Examples
 
@@ -319,6 +393,25 @@ its maximum length of 99 characters):
 
 ```
 t256:AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg
+```
+
+The "Hello, World!" content again, with a suffix implying the media
+type text/plain.  The CID is unchanged: both URIs name the same 13
+octets, and this one additionally says how to interpret them:
+
+```
+t256:AAAAAAANSGVsbG8sIFdvcmxkIQ.txt
+```
+
+A multi-label suffix, shown on the previous example's CID purely to
+illustrate the syntax.  The implied media type comes from the final
+label ("gz"); the earlier label conveys, as in HTTP practice, that
+the decompressed content would be a tar archive.  The suffix asserts
+an interpretation; it does not change, or certify anything about,
+the content the CID names:
+
+```
+t256:AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg.tar.gz
 ```
 
 ## Author's Address
