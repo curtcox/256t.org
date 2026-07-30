@@ -118,6 +118,10 @@ The [examples/](examples/) directory contains sample files for testing CID gener
 
 These files can be used with the [CID Examples](examples.html) tool or the [File CID Check](check.html) tool to verify their content identifiers.
 
+## URI Scheme
+
+A draft RFC proposing the `t256:` URI scheme — a URL that contains only a CID, with no host or path — is available at [rfc/draft-cox-t256-uri-scheme-00.md](rfc/draft-cox-t256-uri-scheme-00.md). (The spelling `256t:` is not a valid URI scheme because RFC 3986 requires schemes to begin with a letter.)
+
 ## Publishing
 
 For information about deploying and publishing content-addressed storage using CIDs, see [Publishing and Storage](publishing.html).
