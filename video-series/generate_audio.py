@@ -12,8 +12,11 @@ as long as its clip, and `self.cue("phrase")` lands on the moment the phrase
 is spoken. Clips whose text hasn't changed since they were generated are
 skipped, so editing one scene only re-voices that scene.
 
-    export ELEVENLABS_API_KEY=...        # never commit this
-    export ELEVENLABS_VOICE_ID=...       # the narrator voice
+The API key comes from ELEVENLABS_API_KEY, or else from the macOS keychain
+(generic password, service "elevenlabs"; override with ELEVENLABS_KEYCHAIN_SERVICE).
+The voice is ELEVENLABS_VOICE_ID, or looked up by name from --voice-name /
+ELEVENLABS_VOICE_NAME (default "Curt Cox 2").
+
     python3 video-series/generate_audio.py --dry-run      # what would be sent, and how many characters
     python3 video-series/generate_audio.py 1              # voice episode 1
     python3 video-series/generate_audio.py 1 --scene 3    # just episode 1, scene 3
@@ -30,7 +33,9 @@ import base64
 import hashlib
 import json
 import os
+import subprocess
 import sys
+import urllib.parse
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -41,6 +46,37 @@ AUDIO = HERE / "audio"
 API = "https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format={fmt}"
 DEFAULT_MODEL = "eleven_multilingual_v2"
 DEFAULT_FORMAT = "mp3_44100_128"
+DEFAULT_VOICE_NAME = "Curt Cox 2"
+DEFAULT_KEYCHAIN_SERVICE = "elevenlabs"
+
+
+def api_key() -> str:
+    key = os.environ.get("ELEVENLABS_API_KEY", "")
+    if key:
+        return key
+    service = os.environ.get("ELEVENLABS_KEYCHAIN_SERVICE", DEFAULT_KEYCHAIN_SERVICE)
+    result = subprocess.run(["security", "find-generic-password", "-s", service, "-w"],
+                            capture_output=True, text=True)
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def get_json(url: str, key: str) -> dict:
+    request = urllib.request.Request(url, headers={"xi-api-key": key, "Accept": "application/json"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.loads(response.read())
+
+
+def voice_id_for(name: str, key: str) -> str:
+    """Find a voice in the account by its display name."""
+    query = urllib.parse.urlencode({"search": name, "page_size": 100})
+    candidates = get_json(f"https://api.elevenlabs.io/v2/voices?{query}", key).get("voices", [])
+    if not any(v.get("name") == name for v in candidates):
+        candidates = get_json("https://api.elevenlabs.io/v1/voices", key).get("voices", [])
+    matches = [v["voice_id"] for v in candidates if v.get("name") == name]
+    if len(matches) != 1:
+        names = sorted({v.get("name", "?") for v in candidates})
+        raise SystemExit(f"expected one voice named {name!r}, found {len(matches)}; available: {names}")
+    return matches[0]
 
 
 def scenes(episodes: list[int], only_scene: int | None):
@@ -96,14 +132,19 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="list what would be generated; send nothing")
     parser.add_argument("--model", default=os.environ.get("ELEVENLABS_MODEL_ID", DEFAULT_MODEL))
     parser.add_argument("--format", default=DEFAULT_FORMAT, help="ElevenLabs output_format (mp3 formats only)")
+    parser.add_argument("--voice-name", default=os.environ.get("ELEVENLABS_VOICE_NAME", DEFAULT_VOICE_NAME))
     parser.add_argument("--settings", help='voice_settings as JSON, e.g. \'{"stability": 0.5, "similarity_boost": 0.75}\'')
     args = parser.parse_args()
 
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "")
-    key = os.environ.get("ELEVENLABS_API_KEY", "")
-    if not args.dry_run and (not voice or not key):
-        print("Set ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID (or use --dry-run).", file=sys.stderr)
-        return 1
+    key = "" if args.dry_run else api_key()
+    if not args.dry_run:
+        if not key:
+            print("No API key: set ELEVENLABS_API_KEY or add it to the keychain (or use --dry-run).",
+                  file=sys.stderr)
+            return 1
+        voice = voice or voice_id_for(args.voice_name, key)
+        print(f"voice {args.voice_name!r} = {voice}")
     settings = json.loads(args.settings) if args.settings else None
 
     pending, characters = 0, 0

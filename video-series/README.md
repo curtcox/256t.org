@@ -77,12 +77,13 @@ python3 video-series/manim/render.py 1 2 3 4 5 6 7 -q h
 1. **Narration.** `extract_narration.py` turns the scripts into `narration/`.
 2. **Voice.** `generate_audio.py` sends each scene's narration to ElevenLabs' text-to-speech
    "with timestamps" endpoint and saves `audio/epNN/sMM.mp3` plus the character alignment. It reads
-   `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` from the environment (optionally
-   `ELEVENLABS_MODEL_ID`; default `eleven_multilingual_v2`). It passes the neighboring scenes as context
+   the API key from `ELEVENLABS_API_KEY`, or else from the macOS keychain (generic password, service
+   `elevenlabs`). It uses the voice named "Curt Cox 2", looked up by name; override this with
+   `--voice-name` or `ELEVENLABS_VOICE_ID`. The model is `eleven_multilingual_v2` unless
+   `ELEVENLABS_MODEL_ID` is set. It passes the neighboring scenes as context
    so intonation carries across clips, and it skips scenes whose text hasn't changed. `--dry-run`
    sends nothing and prints the character count (about 56,000 for the whole series), which is what
-   ElevenLabs bills on. *This script has only been tested in dry-run mode, since no API key was used
-   during development. Expect to adjust it slightly if the API has changed.*
+   ElevenLabs bills on. The voice reads at roughly 160 words per minute.
 3. **Render.** `manim/render.py` renders each scene class in order, gives every clip a uniform audio
    track (silence where there's no narration yet), and concatenates them into
    `manim/output/epNN.mp4`. Use `-q l` for fast previews and `-q h` for 1080p60. `--sheet` also writes a
@@ -108,8 +109,7 @@ fall behind the voice, the render prints a `[timing]` line naming the cue and ho
 phrase no longer appears in the narration (say, after a script edit), the render fails with a clear
 error rather than drifting silently.
 
-> Decide whether to commit `audio/`. The clips cost money to regenerate, but the whole series is
-> roughly 60 MB of MP3.
+`audio/` is committed, because the clips cost money to regenerate.
 
 ## Script format
 
