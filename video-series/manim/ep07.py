@@ -229,6 +229,10 @@ class S05OneHashForTheWholeFile(NarratedScene):
             if phrase:
                 self.cue(phrase)
             self.play(FadeIn(row, shift=UP * 0.15), run_time=0.5)
+            if phrase == "Different choices give the same file different names":
+                self.play_at("In some popular systems", Indicate(row[2], color=TEAL, scale_factor=1.15))
+                self.play_at("gives every sequence of bytes exactly one name",
+                             Indicate(row[1], color=HASH_COLOR, scale_factor=1.15))
         ceiling = caption("ceiling: 2⁴⁸ − 1 bytes ≈ 256 TiB per file", 28, LENGTH_COLOR)
         self.play_at("the length prefix tops out", FadeIn(ceiling))
 
@@ -296,18 +300,56 @@ class S07TheNeighbors(NarratedScene):
              "And IPFS goes furthest"),
         ]
         shown = VGroup()
+        extras = VGroup()
+
+        def data_uri_beats(n):
+            inline = VGroup(label("256t inline:", 18, GREEN), mono(compute_cid(b"Hello"), 22, GREEN)).arrange(RIGHT, buff=0.15)
+            inline.next_to(n, DOWN, buff=0.15)
+            self.play_at("That's exactly 256t's inline case", FadeIn(inline, shift=UP * 0.1))
+            huge = mono("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA…", 18, GREY_B).next_to(inline, DOWN, buff=0.1)
+            huge.align_to(inline, LEFT)
+            self.play_at("so they can get huge", AddTextLetterByLetter(huge), run_time=1.0)
+            extras.add(inline, huge)
+
+        def sri_beats(n):
+            self.play_at("verification bolted onto an ordinary address", Indicate(n[1][1], color=BLUE_B, scale_factor=1.2))
+            gone = tag_box("location gone → 404 → stuck", RED, 20).next_to(n, LEFT, buff=0.3)
+            self.play_at("if the location disappears", FadeOut(extras), FadeIn(gone))
+            extras.add(gone)
+
+        def git_beats(n):
+            self.play_at("Length plus fingerprint", Indicate(n[1][2], color=ORANGE, scale_factor=1.3))
+
+        def ni_beats(n):
+            self.play_at("they label which hash algorithm was used", Indicate(n[1][1], color=TEAL, scale_factor=1.2))
+            lacks = tag_box("no length prefix · no inline content", GREY_B, 18).next_to(n, LEFT, buff=0.3)
+            self.play_at("no room for the length prefix", FadeOut(extras), FadeIn(lacks))
+            extras.add(lacks)
+
+        def ipfs_beats(n):
+            chips = VGroup(*[tag_box(t, PURPLE, 18) for t in ("names its algorithm + type", "chunked trees",
+                                                               "peer-to-peer network")])
+            chips.arrange(DOWN, buff=0.1).next_to(n, DOWN, buff=0.15)
+            self.play(FadeOut(extras), run_time=0.3)
+            for chip, chip_phrase in zip(chips, ["label their hash algorithm and content type",
+                                                 "chunked trees for large files", "a whole peer-to-peer network"]):
+                self.play_at(chip_phrase, FadeIn(chip, shift=LEFT * 0.1), run_time=0.4)
+            extras.add(chips)
+
+        beats = {"data: URI": data_uri_beats, "Subresource Integrity": sri_beats, "Git": git_beats,
+                 "ni: (RFC 6920)": ni_beats, "IPFS": ipfs_beats}
         for name, example, note, color, pos, phrase in cards:
             n = neighbor(name, example, note, color, pos)
             self.play_at(phrase, FadeIn(n, scale=0.9), run_time=0.6)
             shown.add(n)
-            if name == "Git":
-                self.play_at("Length plus fingerprint", Indicate(n[1][2], color=ORANGE, scale_factor=1.3))
+            if name in beats:
+                beats[name](n)
         us = VGroup(label("256t", 34, LENGTH_COLOR), label("a single path segment", 18, GREY_A)).arrange(DOWN, buff=0.05)
         us_bg = SurroundingRectangle(us, color=LENGTH_COLOR, buff=0.15, corner_radius=0.1, fill_color=BLACK, fill_opacity=0.9)
         badge = VGroup(us_bg, us).move_to(LEFT * 1.6 + UP * 0.9)
         inline_link = DashedLine(badge.get_left(), shown[0].get_right(), color=GREEN)
         hash_link = DashedLine(badge.get_right(), shown[2].get_left(), color=ORANGE)
-        self.play_at("sits in a deliberately small spot", FadeIn(badge, scale=1.3))
+        self.play_at("sits in a deliberately small spot", FadeOut(extras), FadeIn(badge, scale=1.3))
         self.play(Create(inline_link), Create(hash_link))
         self.play_at("at most ninety-four characters", Indicate(badge, color=LENGTH_COLOR))
 

@@ -208,9 +208,15 @@ class S05DecodeIsNotVerify(NarratedScene):
         sloppy = label('sloppy decoder returns "Hi" and never notices', 26, RED).move_to(DOWN * 0.2)
         self.play_at("A sloppy decoder might just return", FadeIn(sloppy))
 
+        fine = label("the bytes themselves are fine ✓", 26, GREEN).move_to(DOWN * 0.9)
+        self.play_at("you do get the right bytes", FadeIn(fine, shift=UP * 0.1))
+        danger = label("the danger: what you conclude about the name", 26, RED).move_to(DOWN * 1.5)
+        self.play_at("The danger is in what you conclude", FadeIn(danger, shift=UP * 0.1))
         keys = VGroup(*[tag_box(t, GREY_B, 22) for t in ("cache keys", "database index", "approved-document list")])
-        keys.arrange(RIGHT, buff=0.4).move_to(DOWN * 1.4)
-        self.play_at("can break anything that uses CIDs as keys", LaggedStart(*[FadeIn(k) for k in keys], lag_ratio=0.3))
+        keys.arrange(RIGHT, buff=0.4).move_to(DOWN * 2.5)
+        for key, phrase in zip(keys, ["like a cache", "a database index", "a list of approved documents"]):
+            self.play_at(phrase, FadeIn(key, shift=UP * 0.15), run_time=0.4)
+        self.play_at("a name that disagrees with itself", Indicate(liar, color=RED, scale_factor=1.1))
 
         # The rule.
         self.play_at("The fix is the same rule", *[FadeOut(m) for m in self.mobjects])
@@ -282,6 +288,9 @@ class S06CachingForever(NarratedScene):
                            label("a fact about one server, now — cache briefly", 22, RED)).arrange(RIGHT, buff=0.3)
         not_found.move_to(DOWN * 1.7)
         self.play_at('A "not found" response is different', FadeIn(not_found))
+        for phrase, text in [("which might be published there tomorrow", "…it may be published there tomorrow"),
+                             ('deserves a short cache lifetime', "→ cache it briefly (e.g. max-age=60)")]:
+            self.play_at(phrase, Transform(not_found[1], label(text, 22, RED).move_to(not_found[1], aligned_edge=LEFT)))
         types = VGroup(tag_box("Content-Type: image/png", GREY_B, 20), tag_box("Content-Type: text/plain", GREY_B, 20),
                        label("same bytes, same CID: a hint, not identity", 22, YELLOW)).arrange(RIGHT, buff=0.3)
         types.move_to(DOWN * 2.6)
@@ -319,13 +328,17 @@ class S07TrueEnoughRevisited(NarratedScene):
         quote = label("true enough despite being false", 36, GREY_A, slant=ITALIC).to_edge(UP, buff=0.5)
         rows = VGroup(*[label("•  " + a, 30) for a, _ in statements]).arrange(DOWN, aligned_edge=LEFT, buff=0.5)
         rows.move_to(UP * 0.4)
-        self.play_at("Let's go back to that honest list", FadeIn(quote), FadeIn(rows, lag_ratio=0.2))
+        self.play_at("Let's go back to that honest list", FadeIn(quote))
+        self.play_at("The three things the spec says", LaggedStart(*[FadeIn(r, shift=RIGHT * 0.2) for r in rows],
+                                                                  lag_ratio=0.4))
+        stamp = tag_box("+ verification", GREEN, 28).rotate(0.04).next_to(rows, DOWN, buff=0.5)
+        self.play_at("Verification changes what kind of statements", FadeIn(stamp, scale=1.4))
         cues = ["stops being a claim about the universe", '"The content is immutable" becomes',
                 '"cache it forever" becomes']
         for row, (_, rule), phrase in zip(rows, statements, cues):
             new = label("✓  " + rule, 30, GREEN).move_to(row, aligned_edge=LEFT)
             self.play_at(phrase, Transform(row, new))
-        self.play(FadeOut(quote))
+        self.play(FadeOut(quote), FadeOut(stamp))
         analogies = VGroup(*[tag_box(t, GREY_B, 22) for t in (
             "floating-point ≈ real numbers", "TCP ≈ reliable", "the Earth ≈ flat (for a house)")]).arrange(RIGHT, buff=0.3)
         analogies.move_to(DOWN * 2.0)
