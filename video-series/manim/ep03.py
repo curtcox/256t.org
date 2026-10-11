@@ -117,8 +117,13 @@ class S03CollisionsMustExist(NarratedScene):
         VGroup(right, rcount).move_to(RIGHT * 4 + UP * 0.2)
         rcount.align_to(lcount, DOWN)
         self.play_at("Consider just the files", FadeIn(left))
-        self.play_at("so there are two to the five hundred and twenty", FadeIn(lcount))
-        self.play_at("And how many possible SHA-512 outputs", FadeIn(right))
+        steps = VGroup(label("65 bytes: one too many\nto be stored inline", 26, GREY_A),
+                       label("256 = 2⁸ choices per byte", 28),
+                       label("256⁶⁵ = (2⁸)⁶⁵ = 2⁵²⁰", 32, YELLOW)).arrange(DOWN, buff=0.45).move_to(UP * 0.4)
+        self.play_at("one byte too long to be stored inline", FadeIn(steps[0], shift=UP * 0.2))
+        self.play_at("Each byte has two hundred fifty-six possibilities", FadeIn(steps[1], shift=UP * 0.2))
+        self.play_at("so there are two to the five hundred and twenty", FadeIn(steps[2], shift=UP * 0.2), FadeIn(lcount))
+        self.play_at("And how many possible SHA-512 outputs", FadeOut(steps), FadeIn(right))
         self.play_at("Two to the five hundred and twelve", FadeIn(rcount))
 
         # Pigeons into holes.
@@ -142,11 +147,15 @@ class S03CollisionsMustExist(NarratedScene):
         stamp = label("guaranteed to exist", 34, RED).rotate(0.12).move_to(right[0])
         self.play_at("Collisions don't merely exist", FadeIn(stamp, scale=1.6))
 
+        resistant = label('"collision resistant"', 26).move_to(DOWN * 0.9)
+        self.play_at('So when people say SHA-512 is "collision resistant"', FadeIn(resistant))
+        not_none = VGroup(resistant.copy(), label("≠  no collisions", 26, RED)).arrange(DOWN, buff=0.15).move_to(DOWN * 1.1)
+        self.play_at("they cannot mean there are no collisions", Transform(resistant, not_none))
         q = caption("the question is whether anyone can FIND one", 32, YELLOW).to_edge(DOWN, buff=0.25)
         self.play_at("nobody knows how to find even one", FadeIn(q, shift=UP))
 
         inline = tag_box("≤ 64 bytes:\nno hashing,\nso no pigeonholes", INLINE_COLOR, 26).move_to(DOWN * 0.6)
-        self.play_at("Notice, by the way", FadeIn(inline))
+        self.play_at("Notice, by the way", FadeOut(resistant), FadeIn(inline))
         self.play_at("collision free by construction", Indicate(inline, color=INLINE_COLOR))
 
 
@@ -167,19 +176,36 @@ class S04ThreeGames(NarratedScene):
         data_lines = VGroup(*[fit_width(label(t, 22, GREY_A), 4.1).next_to(c, DOWN, buff=0.15)
                               for t, c in zip(data, cards)])
         self.play_at("Security people split", FadeIn(label("three games", 36).to_edge(UP, buff=0.2)))
-        for card_, line, (phrase, data_phrase) in zip(cards, data_lines, [
-                ("Game one is called finding a preimage", "given an output, find any input"),
-                ("Game two is the second preimage", "here's a file, now find a different file"),
-                ("Game three is the collision", "find any two people")]):
+        costs = [c[1][2][1] for c in cards]
+        beats = [
+            ("Game one is called finding a preimage", "given an output, find any input",
+             [("the best you can do is guess inputs at random", lambda: Circumscribe(cards[0], color=YELLOW)),
+              ("that takes on the order of two to the five hundred and twelve tries",
+               lambda: Indicate(costs[0], color=YELLOW, scale_factor=1.4))]),
+            ("Game two is the second preimage", "here's a file, now find a different file",
+             [("This is also about two to the five hundred and twelve tries",
+               lambda: Indicate(costs[1], color=YELLOW, scale_factor=1.4))]),
+            ("Game three is the collision", "find any two people",
+             [("This turns out to be dramatically easier",
+               lambda: Indicate(costs[2], color=YELLOW, scale_factor=1.4))]),
+        ]
+        for card_, line, (phrase, data_phrase, extras) in zip(cards, data_lines, beats):
             self.play_at(phrase, FadeIn(card_, shift=UP * 0.2))
             self.play_at(data_phrase, FadeIn(line))
+            for extra_phrase, make in extras:
+                self.play_at(extra_phrase, make())
+        web = PairWeb(7, radius=0.55).move_to(RIGHT * 4.3 + DOWN * 3.05)
+        web_note = label("pairs grow faster than guesses", 20, BLUE_B).next_to(web, LEFT, buff=0.3)
+        self.play_at("the number of pairs grows much faster", FadeIn(web.dots), Create(web.lines), FadeIn(web_note))
+        root = label("√(2⁵¹²) = 2²⁵⁶", 28, YELLOW).next_to(web_note, LEFT, buff=0.6)
+        self.play_at("The cost drops to about the square root", FadeIn(root))
         cake = label("birthday effect — Episode 4", 22, YELLOW).next_to(cards[2], UP, buff=0.15)
         self.play_at("It's the famous birthday paradox", FadeIn(cake))
 
         # Scale: 2^256 is halfway to 2^512 in exponent, and near the atom count.
-        self.play_at('"Dramatically easier" is relative', FadeOut(VGroup(cards, data_lines, cake)))
+        self.play_at('"Dramatically easier" is relative', FadeOut(VGroup(cards, data_lines, cake, web, web_note, root)))
         bar = NumberLine(x_range=[0, 512, 64], length=11, include_numbers=False, color=GREY_B).move_to(UP * 1.2)
-        ticks = VGroup(*[label(f"2^{v}" if v else "1", 18, GREY_B).next_to(bar.n2p(v), DOWN, buff=0.15)
+        ticks = VGroup(*[label(power_text(v) if v else "1", 18, GREY_B).next_to(bar.n2p(v), DOWN, buff=0.15)
                          for v in (0, 128, 256, 384, 512)])
         m256 = VGroup(Triangle(color=YELLOW, fill_opacity=1).scale(0.12).rotate(PI).next_to(bar.n2p(256), UP, buff=0.05),
                       label("collision ~2²⁵⁶", 22, YELLOW))
@@ -282,6 +308,8 @@ class S05InsideTheBlender(NarratedScene):
         self.play_at("There is no secret anywhere in this", FadeOut(VGroup(grid, title, readout)))
         no_key = VGroup(label("no secret key", 48), label("everything is public", 34, GREY_B)).arrange(DOWN, buff=0.3)
         self.play(FadeIn(no_key))
+        public = tag_box("FIPS 180-4 · public since the early 2000s", GREY_B, 24).to_edge(DOWN, buff=0.7)
+        self.play_at("The algorithm is published", FadeIn(public, shift=UP * 0.2))
         backwards = label("security = nobody knows how to run it backwards, or steer it", 28, YELLOW)
         backwards.next_to(no_key, DOWN, buff=0.6)
         self.play_at("nobody knows how to run it backwards", Write(backwards))
@@ -348,12 +376,18 @@ class S07WhatTwoFiftySixNeeds(NarratedScene):
         self.play(FadeIn(cards))
         not_needed = label("not needed: CIDs aren't secret", 22, GREY_B).next_to(cards[0], DOWN, buff=0.2)
         self.play_at("Not the first one", cards[0].animate.set_opacity(0.3), FadeIn(not_needed))
+        hello = CIDText(compute_cid(b"Hello"), size=34)
+        recover = VGroup(hello, Arrow(LEFT * 0.5, RIGHT * 0.5, color=GREY_B), mono("Hello", 34, INLINE_COLOR))
+        recover.arrange(RIGHT, buff=0.3).move_to(DOWN * 2.5)
+        self.play_at("the CID literally contains the content", FadeIn(recover[0]))
+        fine = label("trivial to recover, and that's fine", 22, GREY_B).next_to(recover, DOWN, buff=0.15)
+        self.play_at("recovering the input is trivial", GrowArrow(recover[1]), FadeIn(recover[2]), FadeIn(fine))
 
         # Warning: a name, not a lock.
         warn_frame = RoundedRectangle(corner_radius=0.2, width=12.5, height=5.6, stroke_color=RED,
                                       fill_color=BLACK, fill_opacity=0.95)
         warn_title = label("a CID does not hide its content", 34, RED).move_to(warn_frame.get_top() + DOWN * 0.5)
-        self.play_at("a CID is a name, not a lock", FadeIn(warn_frame), FadeIn(warn_title))
+        self.play_at("a CID is a name, not a lock", FadeOut(VGroup(recover, fine)), FadeIn(warn_frame), FadeIn(warn_title))
         secret = CIDText(compute_cid(b"hunter2"), size=40).move_to(UP * 1.2)
         decoded = VGroup(label("decodes to", 24, GREY_B), mono("hunter2", 34, INLINE_COLOR)).arrange(RIGHT, buff=0.3)
         decoded.next_to(secret, DOWN, buff=0.2)

@@ -47,6 +47,9 @@ class S01FourKinds(NarratedScene):
         tag = label("this episode", 24, YELLOW).next_to(focus, DOWN, buff=0.15)
         self.play_at("This episode is about the accidental kind",
                      Create(focus), FadeIn(tag), grid.cards["adversarial"].animate.set_opacity(0.3))
+        dice = grid.cards["accidental"][1][0]
+        self.play_at("if the whole world keeps making files", Rotate(dice, angle=2 * TAU, run_time=1.5))
+        self.play_at("land on the same name by chance", Indicate(grid.cards["existing"], color=YELLOW))
 
 
 class S02ShrinkTheBattlefield(NarratedScene):
@@ -178,8 +181,12 @@ class S04ScalingUp(NarratedScene):
     episode, number = 4, 4
 
     def construct(self):
-        formula = label("P ≈ n² / 2⁵¹³", 48, YELLOW).to_edge(UP, buff=0.4)
+        formula = label("P ≈ n² / (2N)", 48, YELLOW).to_edge(UP, buff=0.4)
         self.play_at("Now plug in SHA-512", Write(formula))
+        n_is = label("N = 2⁵¹²", 40, HASH_COLOR).next_to(formula, DOWN, buff=0.4)
+        self.play_at("N is two to the five hundred twelve", FadeIn(n_is, shift=UP * 0.2))
+        self.play_at("over two to the five hundred thirteen",
+                     Transform(formula, label("P ≈ n² / 2⁵¹³", 48, YELLOW).move_to(formula)), FadeOut(n_is))
 
         # The exponent ladder: probability exponents from -520 to 0.
         ladder = NumberLine(x_range=[-520, 0, 40], length=6.0, rotation=PI / 2, color=GREY_B,
@@ -211,7 +218,7 @@ class S04ScalingUp(NarratedScene):
         for row, (exp, _), phrase in zip(table[1:], rows, cues):
             if phrase:
                 self.cue(phrase)
-            p = max(2 * exp - 513, -1)
+            p = 2 * exp - 513
             mark = Dot(ladder.n2p(p), color=RED if p >= -1 else YELLOW, radius=0.09)
             markers.add(mark)
             self.play(FadeIn(row, shift=UP * 0.15), FadeIn(mark, scale=2), run_time=0.6)
@@ -250,11 +257,13 @@ class S05GenerousCivilization(NarratedScene):
         math_lines = VGroup(
             label("8 × 10⁹ × 10⁹ / s × 4.35 × 10¹⁷ s", 30),
             label(f"≈ 3.5 × 10³⁶ ≈ 2¹²¹ files", 32, YELLOW),
-            label("P ≈ (2¹²¹)² / 2⁵¹³ = 2²⁴² / 2⁵¹³", 30),
+            label("(2¹²¹)² = 2²⁴²", 30),
+            label("P ≈ 2²⁴² / 2⁵¹³", 30),
             label("= 2⁻²⁷¹", 44, YELLOW),
-        ).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to(RIGHT * 2.7 + DOWN * 0.8)
+        ).arrange(DOWN, buff=0.25, aligned_edge=LEFT).move_to(RIGHT * 2.7 + DOWN * 1.0)
         for line, phrase in zip(math_lines, ["That's eight billion, times a billion", "Roughly three and a half",
-                                             "Square that", "is about one in two to the two hundred seventy-one"]):
+                                             "Square that", "Divide by two to the five hundred thirteen",
+                                             "is about one in two to the two hundred seventy-one"]):
             self.play_at(phrase, FadeIn(line, shift=UP * 0.15), run_time=0.6)
 
         # Pick one atom out of the observable universe.
@@ -284,6 +293,17 @@ class S05GenerousCivilization(NarratedScene):
         foot_bg = BackgroundRectangle(foot, fill_opacity=0.9)
         VGroup(foot_bg, foot).next_to(atoms, DOWN, buff=0.2)
         self.play_at("And that's with an unfair simplification", FadeIn(foot_bg), FadeIn(foot))
+        one_bin = VGroup(Rectangle(width=4.0, height=1.4, color=GREY_B, fill_color=BLACK, fill_opacity=0.92),
+                         label("every file, one bin", 26, GREY_A))
+        one_bin[1].move_to(one_bin[0])
+        one_bin.move_to(UP * 0.6)
+        self.play_at("We lumped every file together in one bin", FadeIn(one_bin))
+        bins = VGroup(*[VGroup(Rectangle(width=1.1, height=1.4, color=HASH_COLOR, fill_color=BLACK, fill_opacity=0.92),
+                               label(n, 18, HASH_COLOR)) for n in ("65 B", "66 B", "1,511 B", "1 MB", "…")])
+        for b in bins:
+            b[1].move_to(b[0])
+        bins.arrange(RIGHT, buff=0.15).move_to(one_bin)
+        self.play_at("exactly the same length", ReplacementTransform(one_bin, bins))
 
 
 class S06WhatActuallyGoesWrong(NarratedScene):
@@ -359,6 +379,9 @@ class S08TheVerdict(NarratedScene):
         pair = VGroup(VGroup(a, ha).arrange(RIGHT, buff=0.5), VGroup(b, hb).arrange(RIGHT, buff=0.5))
         pair.arrange(DOWN, buff=0.3).move_to(DOWN * 0.3)
         self.play_at("Similar files don't produce similar fingerprints", FadeIn(pair))
+        self.play_at("like lots of files that start the same way",
+                     Indicate(VGroup(a.cells[:8], b.cells[:8]), color=YELLOW, scale_factor=1.05))
+        self.play_at("doesn't help collisions along", Indicate(VGroup(ha, hb), color=HASH_COLOR, scale_factor=1.05))
         never = label("collisions of any kind ever found for SHA-512: 0", 28, GREEN).next_to(pair, DOWN, buff=0.4)
         self.play_at("nobody has ever found a collision", FadeIn(never))
 
