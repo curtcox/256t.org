@@ -2,7 +2,9 @@ Over six episodes, we've seen everything two fifty-six tee does. It's a short li
 
 What's striking is the much longer list of things it deliberately doesn't do. The spec even has a section for them, called "beyond the scope of this text." In this final episode, I want to go through those omissions, because each one is a trade-off, and each trade-off buys something. Then we'll meet the neighbors: other systems that made different choices.
 
-First, finding. A C-I-D tells you what you want, but not where it is. two fifty-six tee says nothing about which servers host which content, or how you'd find them. The same C-I-D can go on the end of any server's address, or be a filename in a folder on your disk, and whatever comes back gets checked the same way.
+First, finding. A C-I-D tells you what you want, but not where it is. Two fifty-six tee says nothing about which servers host which content, or how you'd find them. The same C-I-D can go on the end of any server's address, or be a filename in a folder on your disk, and whatever comes back gets checked the same way.
+
+There's even a draft proposal, in the two fifty-six tee repository, for a kind of link that drops the server entirely: the letters t two fifty-six, a colon, and then the C-I-D. A link like that names the content without choosing anyone to fetch it from. And yes, the t moved to the front, because the rules for links don't allow a link type to start with a digit.
 
 That might feel like a gap. But consider the alternative. The moment a name includes a location, you're back to street addresses, and everything that breaks when the house moves. By keeping finding out of the name, two fifty-six tee lets any number of finding systems be built on top of it, and replaced, without a single name ever changing.
 
@@ -10,7 +12,9 @@ Second, metadata. A C-I-D knows nothing about a file's name, its type, its autho
 
 And that's a feature. Upload the same photo three times under three different filenames, and it gets one name. That makes duplicates collapse on their own, and it means two people who've never met will agree on what to call the same thing.
 
-But what if you do want metadata? Then write it down as content. A small document that says "this is the Gettysburg Address, it's plain text," and then refers to the text by its C-I-D. That little document has its own C-I-D, too. And now something interesting happens. A document that lists other documents by C-I-D, named by its own C-I-D, pins down that entire collection, exactly. Change any file inside it, and the collection's name changes. Names inside content let you build whole structures out of names, and the structures inherit all the same guarantees.
+The draft URI scheme does allow one small hint: a suffix, like dot t x t or dot p n g, on the end, just like a web address. But notice where it sits. It's after the C-I-D, not inside it. It says how to read the bytes, not which bytes, and it isn't checked by verification.
+
+For anything more than a hint, write it down as content. A small document that says "this is the Gettysburg Address, it's plain text," and then refers to the text by its C-I-D. That little document has its own C-I-D, too. And now something interesting happens. A document that lists other documents by C-I-D, named by its own C-I-D, pins down that entire collection, exactly. Change any file inside it, and the collection's name changes. Names inside content let you build whole structures out of names, and the structures inherit all the same guarantees.
 
 Third, permissions. Some content is private. Some has disputed ownership, or is legal to distribute in one country and not another. The spec acknowledges all of that, and then, explicitly, declines to decide it. A C-I-D is a precise name for some bytes. Who's allowed to serve those bytes, and to whom, are human questions, and they're answered by people and laws, not by an encoding.
 
@@ -20,7 +24,7 @@ That has a cost. Like we saw last episode, you can reject bad bytes early, but y
 
 Many systems avoid that with a structure called a Merkle tree. Cut the file into chunks. Hash each chunk. Then hash the hashes together in pairs, and pairs of those, all the way up to a single root, and name the file by that root. Now every chunk can be checked on its own the moment it arrives, so you can pull different pieces from different servers, and re-fetch only the piece that went wrong.
 
-So why doesn't two fifty-six tee do that? Because a tree has parameters. How big are the chunks? How wide is the tree? Different choices give the same file different names. In some popular systems, the same file really can end up with several different identifiers depending on settings. two fifty-six tee gives every sequence of bytes exactly one name, and an implementation that fits on a slide. It's choosing simplicity and uniqueness over piecewise verification.
+So why doesn't two fifty-six tee do that? Because a tree has parameters. How big are the chunks? How wide is the tree? Different choices give the same file different names. In some popular systems, the same file really can end up with several different identifiers depending on settings. Two fifty-six tee gives every sequence of bytes exactly one name, and an implementation that fits on a slide. It's choosing simplicity and uniqueness over piecewise verification.
 
 One more limit falls out of the format: the length prefix tops out at just under two hundred fifty-six terabytes. For a single file, that's comfortably more than almost anyone needs.
 
@@ -28,7 +32,7 @@ Fifth, the hash function itself is fixed. A C-I-D doesn't say "this was made wit
 
 Some systems instead put a small label at the front of every name saying which algorithm was used, so they can switch to a new one later. That flexibility is real, but it isn't free. The same content ends up with different names under different algorithms, and every implementation has to handle every option.
 
-two fifty-six tee takes the other side of that bet: one algorithm, one name per content, and nothing to negotiate. If SHA five-twelve ever did start to crack, the remedy would be a new scheme, and the history we looked at suggests there would be years of warning to make that move.
+Two fifty-six tee takes the other side of that bet: one algorithm, one name per content, and nothing to negotiate. If SHA five-twelve ever did start to crack, the remedy would be a new scheme, and the history we looked at suggests there would be years of warning to make that move.
 
 Now let's meet the neighbors, because seeing where two fifty-six tee sits among them is the best way to understand it.
 
@@ -38,9 +42,11 @@ Subresource Integrity is the web's way of saying "load this script from this loc
 
 Git names every file's contents by a hash. And in a nice bit of convergent design, the thing Git hashes starts with the word "blob" and the file's length, before the content. Length plus fingerprint. Git has used SHA one, which is part of why the SHA one collisions we saw caused real concern, and it has been moving toward SHA two-fifty-six.
 
+There's even an internet standard for names like these, called "Naming Things with Hashes." Its links start with the letters n i, and they label which hash algorithm was used. Two fifty-six tee's draft link scheme considered it, but its format has no room for the length prefix, or for carrying small content inline.
+
 Magnet links in BitTorrent name a torrent by the hash of its description, and the newer version of BitTorrent uses Merkle trees, so each piece can be checked as it arrives. And I P F S goes furthest: self-describing names that label their hash algorithm and content type, chunked trees for large files, and a whole peer-to-peer network for finding things.
 
-two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data URI. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.
+Two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data URI. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.
 
 So let's put the whole thing back together.
 

@@ -8,6 +8,8 @@ pronunciation map below is applied, and the result is written to:
     narration/epNN/sMM.txt   one file per scene (one audio clip per Manim scene)
     narration/epNN.txt       the whole episode, scenes separated by blank lines
 
+It also rewrites the runtime/word-count line at the top of each script.
+
 Run from anywhere:  python3 video-series/extract_narration.py
 """
 
@@ -21,6 +23,7 @@ WORDS_PER_MINUTE = 150
 # Applied in order, as whole-word regex replacements. Edit to taste after
 # auditioning the voice; ElevenLabs pronunciation dictionaries work too.
 PRONUNCIATIONS = [
+    (r"t256", "tee two fifty-six"),
     (r"256t\.org", "two fifty-six tee dot org"),
     (r"256t", "two fifty-six tee"),
     (r"SHA-512", "SHA five-twelve"),
@@ -45,7 +48,22 @@ def speakable(text: str) -> str:
     text = re.sub(r"[*_`]", "", text)
     for pattern, spoken in PRONUNCIATIONS:
         text = re.sub(rf"(?<![\w-]){pattern}(?![\w])", spoken, text)
-    return text
+    # A replacement can land at the start of a sentence; keep it capitalized.
+    return re.sub(r'(^|[.!?]"?\s+)([a-z])',
+                  lambda m: m.group(1) + m.group(2).upper(), text)
+
+
+def update_header(script: Path, words: int) -> None:
+    """Keep the runtime and word-count line in the script header in sync."""
+    minutes = words / WORDS_PER_MINUTE
+    header = (f"**Target runtime:** ~{round(minutes + 1.5)} minutes "
+              f"(≈{minutes:.1f} min of narration at {WORDS_PER_MINUTE} wpm, "
+              f"plus animation holds) · **Narration:** {words:,} words")
+    text = script.read_text()
+    updated = re.sub(r"^\*\*Target runtime:\*\*.*$", header, text,
+                     count=1, flags=re.MULTILINE)
+    if updated != text:
+        script.write_text(updated)
 
 
 def scenes(markdown: str):
@@ -101,6 +119,7 @@ def main() -> int:
             episode_words += len(" ".join(paragraphs).split())
 
         (OUT / f"{episode}.txt").write_text("\n\n".join(episode_parts) + "\n")
+        update_header(script, episode_words)
         minutes = episode_words / WORDS_PER_MINUTE
         print(f"{script.name}: {len(episode_parts)} scenes, "
               f"{episode_words} words, ~{minutes:.1f} min narration")

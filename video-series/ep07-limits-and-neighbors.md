@@ -1,6 +1,6 @@
 # Episode 7 — Limits and Neighbors
 
-**Target runtime:** ~10 minutes (≈8.3 min of narration at 150 wpm, plus animation holds) · **Narration:** 1,244 words
+**Target runtime:** ~11 minutes (≈9.5 min of narration at 150 wpm, plus animation holds) · **Narration:** 1,418 words
 
 **Episode goal:** Show that 256t is defined as much by what it leaves out as by what it includes. Walk
 through each deliberate omission (discovery, metadata, permissions, chunking, algorithm agility) as a
@@ -15,6 +15,10 @@ BitTorrent magnet links, IPFS), and close the series.
 - data: URIs (RFC 2397) put the content itself inside the link.
 - BitTorrent magnet links identify a torrent by the hash of its info dictionary; BitTorrent v2 uses
   per-file SHA-256 Merkle trees.
+- The draft RFC in this repo (`rfc/draft-cox-t256-uri-scheme-00.md`) defines a `t256:` URI scheme: the scheme
+  name, a CID, and an optional media-type suffix such as `.txt`. The suffix is not part of the CID and is not
+  protected by verification. It also explains why `256t:` can't be used (RFC 3986 schemes must start with a letter).
+- RFC 6920 ("Naming Things with Hashes") defines the `ni:` URI scheme, e.g. `ni:///sha-256;<base64url digest>`.
 - IPFS CIDs include a version, a content-type codec, and a "multihash" naming the hash algorithm; large
   files are split into chunks (256 KiB by default in the reference implementation) arranged in a tree.
 
@@ -51,9 +55,13 @@ BitTorrent magnet links, IPFS), and close the series.
 - Show the same CID appended to three different base URLs:
   `https://256t.org/AAAAAAXn…`, `https://mirror.example/AAAAAAXn…`, `file:///archive/AAAAAAXn…`.
   The three resulting bytes all pass the same `VerifierLoop`.
+- Then the base URLs fade away entirely, leaving `t256:AAAAAAXnpY8K…`. A small label: `draft URI scheme: no host at all`.
+  A footnote card explains the spelling: `256t:` ✗ (`URI schemes must start with a letter`) → `t256:` ✓.
 
 **Narration**
 > First, finding. A CID tells you what you want, but not where it is. 256t says nothing about which servers host which content, or how you'd find them. The same CID can go on the end of any server's address, or be a filename in a folder on your disk, and whatever comes back gets checked the same way.
+>
+> There's even a draft proposal, in the 256t repository, for a kind of link that drops the server entirely: the letters t two fifty-six, a colon, and then the CID. A link like that names the content without choosing anyone to fetch it from. And yes, the t moved to the front, because the rules for links don't allow a link type to start with a digit.
 >
 > That might feel like a gap. But consider the alternative. The moment a name includes a location, you're back to street addresses, and everything that breaks when the house moves. By keeping finding out of the name, 256t lets any number of finding systems be built on top of it, and replaced, without a single name ever changing.
 
@@ -78,6 +86,8 @@ BitTorrent magnet links, IPFS), and close the series.
   ```
   It goes through the `RecipeMachine` and gets its *own* CID. An arrow from the JSON's `file` field points to the
   Gettysburg ribbon.
+- Suffix beat: `t256:AAAAAAANSGVsbG8sIFdvcmxkIQ.txt`. A brace splits it: `CID → which bytes` (verified, GREEN lock) and
+  `.txt → how to read them` (a hint, no lock). Swap `.txt` for `.html`: the CID is untouched and still verifies.
 - Extend into a small tree: a "collection" document lists several such documents by CID; its own CID names the
   whole collection. Caption: `names inside content → structures made of names`.
 
@@ -86,7 +96,9 @@ BitTorrent magnet links, IPFS), and close the series.
 >
 > And that's a feature. Upload the same photo three times under three different filenames, and it gets one name. That makes duplicates collapse on their own, and it means two people who've never met will agree on what to call the same thing.
 >
-> But what if you do want metadata? Then write it down as content. A small document that says "this is the Gettysburg Address, it's plain text," and then refers to the text by its CID. That little document has its own CID, too. And now something interesting happens. A document that lists other documents by CID, named by its own CID, pins down that entire collection, exactly. Change any file inside it, and the collection's name changes. Names inside content let you build whole structures out of names, and the structures inherit all the same guarantees.
+> The draft URI scheme does allow one small hint: a suffix, like dot t x t or dot p n g, on the end, just like a web address. But notice where it sits. It's after the CID, not inside it. It says how to read the bytes, not which bytes, and it isn't checked by verification.
+>
+> For anything more than a hint, write it down as content. A small document that says "this is the Gettysburg Address, it's plain text," and then refers to the text by its CID. That little document has its own CID, too. And now something interesting happens. A document that lists other documents by CID, named by its own CID, pins down that entire collection, exactly. Change any file inside it, and the collection's name changes. Names inside content let you build whole structures out of names, and the structures inherit all the same guarantees.
 
 ---
 
@@ -168,6 +180,7 @@ BitTorrent magnet links, IPFS), and close the series.
     `<script src="https://cdn.example/lib.js" integrity="sha384-…">`. Label: `location + fingerprint check`.
   - **Git** (upper right) — `hash("blob 1511\0" + content)`. Label: `also mixes in the length!`
   - **Magnet links / BitTorrent** (upper right) — `magnet:?xt=urn:btih:…`. Label: `fingerprint of a torrent's description; v2 uses Merkle trees`.
+  - **ni: URIs, RFC 6920** (upper right) — `ni:///sha-256;UyaQV…`. Label: `an IETF standard for hash names; labels its algorithm`.
   - **IPFS** (upper right, furthest from center) — `bafy…`. Label: `self-describing hash, chunked tree, a whole network`.
 - 256t drops in last, straddling the horizontal axis: its inline region overlaps the data: URI card, and its
   hashed region sits in the upper right next to Git. Label: `a single path segment`.
@@ -180,6 +193,8 @@ BitTorrent magnet links, IPFS), and close the series.
 > Subresource Integrity is the web's way of saying "load this script from this location, but refuse it unless its hash matches this." It's verification bolted onto an ordinary address. It solves the content-drift problem, but if the location disappears, you're stuck, because the fingerprint isn't used to find anything.
 >
 > Git names every file's contents by a hash. And in a nice bit of convergent design, the thing Git hashes starts with the word "blob" and the file's length, before the content. Length plus fingerprint. Git has used SHA-1, which is part of why the SHA-1 collisions we saw caused real concern, and it has been moving toward SHA-256.
+>
+> There's even an internet standard for names like these, called "Naming Things with Hashes." Its links start with the letters n i, and they label which hash algorithm was used. 256t's draft link scheme considered it, but its format has no room for the length prefix, or for carrying small content inline.
 >
 > Magnet links in BitTorrent name a torrent by the hash of its description, and the newer version of BitTorrent uses Merkle trees, so each piece can be checked as it arrives. And IPFS goes furthest: self-describing names that label their hash algorithm and content type, chunked trees for large files, and a whole peer-to-peer network for finding things.
 >

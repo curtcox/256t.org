@@ -1,4 +1,4 @@
-Security people split "can you find a collision?" into three separate games, and they have very different difficulties. Let's use fingerprints of people, because the analogy works well here.
+Security people split "can you find a collision?" Into three separate games, and they have very different difficulties. Let's use fingerprints of people, because the analogy works well here.
 
 Game one is called finding a preimage. I hand you a fingerprint, just the print, and you have to find any person in the world who has it. For a hash, that's: given an output, find any input that produces it. If the hash behaves like it's supposed to, the best you can do is guess inputs at random until one hits, and with five hundred and twelve bits of output, that takes on the order of two to the five hundred and twelve tries.
 

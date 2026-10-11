@@ -2,4 +2,4 @@ Fifth, the hash function itself is fixed. A C-I-D doesn't say "this was made wit
 
 Some systems instead put a small label at the front of every name saying which algorithm was used, so they can switch to a new one later. That flexibility is real, but it isn't free. The same content ends up with different names under different algorithms, and every implementation has to handle every option.
 
-two fifty-six tee takes the other side of that bet: one algorithm, one name per content, and nothing to negotiate. If SHA five-twelve ever did start to crack, the remedy would be a new scheme, and the history we looked at suggests there would be years of warning to make that move.
+Two fifty-six tee takes the other side of that bet: one algorithm, one name per content, and nothing to negotiate. If SHA five-twelve ever did start to crack, the remedy would be a new scheme, and the history we looked at suggests there would be years of warning to make that move.

@@ -1,3 +1,5 @@
-First, finding. A C-I-D tells you what you want, but not where it is. two fifty-six tee says nothing about which servers host which content, or how you'd find them. The same C-I-D can go on the end of any server's address, or be a filename in a folder on your disk, and whatever comes back gets checked the same way.
+First, finding. A C-I-D tells you what you want, but not where it is. Two fifty-six tee says nothing about which servers host which content, or how you'd find them. The same C-I-D can go on the end of any server's address, or be a filename in a folder on your disk, and whatever comes back gets checked the same way.
+
+There's even a draft proposal, in the two fifty-six tee repository, for a kind of link that drops the server entirely: the letters t two fifty-six, a colon, and then the C-I-D. A link like that names the content without choosing anyone to fetch it from. And yes, the t moved to the front, because the rules for links don't allow a link type to start with a digit.
 
 That might feel like a gap. But consider the alternative. The moment a name includes a location, you're back to street addresses, and everything that breaks when the house moves. By keeping finding out of the name, two fifty-six tee lets any number of finding systems be built on top of it, and replaced, without a single name ever changing.

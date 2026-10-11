@@ -1,6 +1,6 @@
 # Episode 6 — Verify, Cache, Trust
 
-**Target runtime:** ~10 minutes (≈8.0 min of narration at 150 wpm, plus animation holds) · **Narration:** 1,203 words
+**Target runtime:** ~10 minutes (≈8.5 min of narration at 150 wpm, plus animation holds) · **Narration:** 1,274 words
 
 **Episode goal:** Turn "always verify" into a precise procedure, show how the length prefix makes that
 procedure robust against misbehaving servers, expose the decode-vs-recompute pitfall, and explain why
@@ -145,6 +145,8 @@ as a deliberate engineering stance.
   - `404 Not Found` card with a clock icon: `"not found" describes the server, not the content — don't cache it forever`.
   - `Content-Type: image/png` vs `Content-Type: text/plain` on two copies of the same ribbon with the same CID:
     `headers are hints, not identity`.
+  - The same applies to the draft `t256:` URI's suffix: `t256:…IQ.txt` → `t256:…IQ.html`. The CID still verifies
+    (GREEN), but a warning triangle appears over a browser icon: `text treated as HTML can run scripts`.
 
 **Narration**
 > There's an old joke in programming that there are only two hard things: cache invalidation, and naming things. Content addressing is a nice punchline to that joke, because by solving naming in this particular way, it makes cache invalidation disappear.
@@ -153,7 +155,7 @@ as a deliberate engineering stance.
 >
 > So a server can tell every cache along the way to keep it. The 256t FAQ suggests a header like this one. Public, meaning any cache may store it. A max age of one year, which is the conventional way of saying "as long as you like." And immutable, which tells browsers not to even bother checking back. The CID also makes a perfect version tag, since it already changes exactly when the content changes.
 >
-> Two small cautions. A "not found" response is different. It's a statement about one server at one moment, not about the content, which might be published there tomorrow. So "not found" deserves a short cache lifetime, not a permanent one. And headers like the content type aren't part of the name. The same bytes have the same CID whether a server calls them an image or plain text. Treat that kind of information as a hint.
+> Two small cautions. A "not found" response is different. It's a statement about one server at one moment, not about the content, which might be published there tomorrow. So "not found" deserves a short cache lifetime, not a permanent one. And headers like the content type aren't part of the name. The same bytes have the same CID whether a server calls them an image or plain text. Treat that kind of information as a hint. The same goes for the file-type suffix that the draft 256t link format allows on the end of a CID. Verification covers the bytes, not the suffix. So anyone who can edit a link could change "read this as text" into "read this as a web page," and a careless browser might then run code hidden in that text. Give those hints the same suspicion you'd give any other unverified header.
 
 ---
 

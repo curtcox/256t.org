@@ -1,4 +1,4 @@
-two fifty-six tee is one specific, deliberately minimal choice of recipe.
+Two fifty-six tee is one specific, deliberately minimal choice of recipe.
 
 The name it produces is called a C-I-D, short for content identifier. A C-I-D is at most ninety-four characters long, and it's built only from characters that are safe to use in web addresses and filenames. So it can sit at the end of a URL, or be the name of a file, or live in a database column, without any special escaping.
 

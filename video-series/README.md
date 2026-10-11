@@ -6,18 +6,19 @@ narration is meant for ElevenLabs voice synthesis and the graphics for Manim.
 **Audience:** curious generalists who are comfortable with exponents and a little algebra. No prior
 knowledge of hashing or base64 is assumed, but every technical detail is stated precisely.
 
-| # | Episode | Script | Narration | Big idea |
-|---|---------|--------|-----------|----------|
-| 1 | Where vs. What: Names That Can't Break | [ep01](ep01-where-vs-what.md) | 1,575 words | Link rot and content drift come from naming locations. Name the content instead. |
-| 2 | Anatomy of a CID | [ep02](ep02-anatomy-of-a-cid.md) | 1,431 words | 8, 64, 86, 94 and "256" all fall out of base64 arithmetic. Decode a CID by hand. |
-| 3 | What a Hash Promises | [ep03](ep03-what-a-hash-promises.md) | 1,379 words | Collisions must exist (pigeonhole). The promise is that nobody can *find* them. There are three games, and 256t needs two of them. |
-| 4 | Accidental Collisions | [ep04](ep04-accidental-collisions.md) | 1,294 words | The birthday bound, derived. A billion files per person per second since the Big Bang gives about 2^−271. |
-| 5 | Adversarial Collisions: It's Easier to Lie | [ep05](ep05-adversarial-collisions.md) | 1,383 words | Liar vs. forger. Verification defeats lying completely. The "twins" scenario. How MD5 and SHA-1 actually died. |
-| 6 | Verify, Cache, Trust | [ep06](ep06-verify-cache-trust.md) | 1,203 words | The verification loop, the length prefix as a hard stop, decoding vs. verifying, and caching forever. |
-| 7 | Limits and Neighbors | [ep07](ep07-limits-and-neighbors.md) | 1,244 words | What 256t deliberately leaves out, and how it compares to data: URIs, SRI, Git, BitTorrent, and IPFS. |
+| # | Episode | Script | Big idea |
+|---|---------|--------|----------|
+| 1 | Where vs. What: Names That Can't Break | [ep01](ep01-where-vs-what.md) | Link rot and content drift come from naming locations. Name the content instead. |
+| 2 | Anatomy of a CID | [ep02](ep02-anatomy-of-a-cid.md) | 8, 64, 86, 94 and "256" all fall out of base64 arithmetic. Decode a CID by hand. |
+| 3 | What a Hash Promises | [ep03](ep03-what-a-hash-promises.md) | Collisions must exist (pigeonhole). The promise is that nobody can *find* them. There are three games, and 256t needs two of them. |
+| 4 | Accidental Collisions | [ep04](ep04-accidental-collisions.md) | The birthday bound, derived. A billion files per person per second since the Big Bang gives about 2^−271. |
+| 5 | Adversarial Collisions: It's Easier to Lie | [ep05](ep05-adversarial-collisions.md) | Liar vs. forger. Verification defeats lying completely. The "twins" scenario. How MD5 and SHA-1 actually died. |
+| 6 | Verify, Cache, Trust | [ep06](ep06-verify-cache-trust.md) | The verification loop, the length prefix as a hard stop, decoding vs. verifying, and caching forever. |
+| 7 | Limits and Neighbors | [ep07](ep07-limits-and-neighbors.md) | What 256t deliberately leaves out, the draft `t256:` URI scheme, and how 256t compares to data: URIs, SRI, Git, `ni:` URIs, BitTorrent, and IPFS. |
 
-Total narration is about 9,500 words, roughly 63 minutes at 150 words per minute. With animation holds,
-each episode should run about 10–12 minutes.
+Total narration is about 9,750 words, roughly 65 minutes at 150 words per minute. With animation holds,
+each episode should run about 10–12 minutes. `extract_narration.py` prints current per-episode counts and
+keeps the runtime line at the top of each script up to date.
 
 ## Files
 
@@ -72,6 +73,7 @@ it easy to time animations to the clip, either by hand or with a tool like `mani
   | Written | Spoken (default) |
   |---|---|
   | 256t / 256t.org | "two fifty-six tee" / "… dot org" |
+  | t256 (URI scheme) | "tee two fifty-six" |
   | SHA-512, SHA-256, SHA-1 | "SHA five-twelve", "SHA two-fifty-six", "SHA one" |
   | MD5 | "M D five" |
   | base64 / base64url | "base sixty-four" / "base sixty-four U R L" |
@@ -178,6 +180,8 @@ Re-check anything time-sensitive (marked ⏱) right before recording.
 | Best practical SHA-512 attacks: collision for 27 of 80 steps, semi-free-start collision for 39 of 80 steps. No full SHA-512 collision is known ⏱ | 5 | [Dobraunig, Eichlseder & Mendel, ASIACRYPT 2015](https://www.iacr.org/archive/asiacrypt2015/94520180/94520180.pdf). Check the IACR ePrint archive for newer records before recording. |
 | Quantum collision search for a 512-bit hash stays around 2^170 even under optimistic assumptions | 5 | Brassard–Høyer–Tapp (2^(n/3)). The narration hedges this as "numbers like." |
 | Git hashes `blob <size>\0<content>`, historically with SHA-1, with SHA-256 as a newer object format | 7 | Git documentation (`git hash-object`, hash-function-transition) |
+| `t256:` URI scheme. The optional media-type suffix is outside the CID and not covered by verification. `256t:` is invalid because RFC 3986 schemes must begin with a letter | 6, 7 | [rfc/draft-cox-t256-uri-scheme-00.md](../rfc/draft-cox-t256-uri-scheme-00.md) (this repo) |
+| RFC 6920 `ni:` "Naming Things with Hashes" labels the hash algorithm and can't express the length prefix or inline content | 7 | RFC 6920. The draft `t256` RFC, §6 |
 | IPFS default chunk size 256 KiB. CIDs carry a multihash and codec | 7 | IPFS/Kubo docs. The script only says "chunks" in the narration. |
 | "There are only two hard things in Computer Science…" | 6 | Phil Karlton (widely attributed) |
 
@@ -195,8 +199,8 @@ Re-check anything time-sensitive (marked ⏱) right before recording.
 
 ## Open issue for the spec
 
-The scripts follow the spec's table and every implementation: content of **exactly 64 bytes is
-inline**. The FAQ ("What happens with content exactly 64 bytes long?") says that either form is
+The scripts follow the spec's table, every implementation, and the draft `t256` RFC (§3, constraint 2):
+content of **exactly 64 bytes is inline**. The FAQ ("What happens with content exactly 64 bytes long?") says that either form is
 allowed, with inline preferred. That contradicts the table and the code, and it would give some
 64-byte contents two valid CIDs, which undercuts Episode 6's "one canonical name" point. Consider
 changing the FAQ to say that 64-byte content is always inline.

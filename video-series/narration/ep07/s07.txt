@@ -6,6 +6,8 @@ Subresource Integrity is the web's way of saying "load this script from this loc
 
 Git names every file's contents by a hash. And in a nice bit of convergent design, the thing Git hashes starts with the word "blob" and the file's length, before the content. Length plus fingerprint. Git has used SHA one, which is part of why the SHA one collisions we saw caused real concern, and it has been moving toward SHA two-fifty-six.
 
+There's even an internet standard for names like these, called "Naming Things with Hashes." Its links start with the letters n i, and they label which hash algorithm was used. Two fifty-six tee's draft link scheme considered it, but its format has no room for the length prefix, or for carrying small content inline.
+
 Magnet links in BitTorrent name a torrent by the hash of its description, and the newer version of BitTorrent uses Merkle trees, so each piece can be checked as it arrives. And I P F S goes furthest: self-describing names that label their hash algorithm and content type, chunked trees for large files, and a whole peer-to-peer network for finding things.
 
-two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data URI. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.
+Two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data URI. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.
