@@ -643,12 +643,12 @@ def tag_box(text: str, color=WHITE, size: float = 24) -> VGroup:
 
 
 def card(title: str, body: str | None = None, color=WHITE, width: float = 4.2,
-         height: float = 2.2, icon: Mobject | None = None) -> VGroup:
+         height: float = 2.2, icon: Mobject | None = None, body_size: float = 20) -> VGroup:
     frame = RoundedRectangle(corner_radius=0.2, width=width, height=height,
                              stroke_color=color, fill_color=GREY_E, fill_opacity=0.9)
     parts = VGroup(label(title, 30, color))
     if body:
-        parts.add(fit_width(label(body, 20, GREY_A), width - 0.4))
+        parts.add(fit_width(label(body, body_size, GREY_A), width - 0.4))
     parts.arrange(DOWN, buff=0.18)
     if icon is not None:
         icon.scale_to_fit_height(min(0.7, height * 0.3))
@@ -702,3 +702,77 @@ EPISODE_TITLES = [
 def series_row() -> VGroup:
     cards = VGroup(*[episode_card(i + 1, t) for i, t in enumerate(EPISODE_TITLES)])
     return cards.arrange(RIGHT, buff=0.15)
+
+
+def dice_icon(color=WHITE, size: float = 0.8) -> VGroup:
+    face = RoundedRectangle(corner_radius=0.12, width=1, height=1, color=color)
+    pips = VGroup(*[Dot(face.get_center() + np.array([x, y, 0]) * 0.28, radius=0.07, color=color)
+                    for x, y in ((-1, 1), (0, 0), (1, -1), (1, 1), (-1, -1))])
+    return VGroup(face, pips).scale_to_fit_height(size)
+
+
+def mask_icon(color=ADVERSARY_COLOR, size: float = 0.8) -> VGroup:
+    band = Ellipse(width=1.6, height=0.6, color=color, fill_color=color, fill_opacity=0.9)
+    eyes = VGroup(Ellipse(width=0.35, height=0.2, fill_color=BLACK, fill_opacity=1, stroke_width=0).shift(LEFT * 0.35),
+                  Ellipse(width=0.35, height=0.2, fill_color=BLACK, fill_opacity=1, stroke_width=0).shift(RIGHT * 0.35))
+    return VGroup(band, eyes).scale_to_fit_width(size * 1.4)
+
+
+def merge_icon(size: float = 0.8) -> VGroup:
+    a = Line(LEFT + UP * 0.5, ORIGIN, color=GREY_A, stroke_width=6)
+    b = Line(LEFT + DOWN * 0.5, ORIGIN, color=TEAL, stroke_width=6)
+    tag = RoundedRectangle(corner_radius=0.08, width=0.7, height=0.4, color=HASH_COLOR).next_to(ORIGIN, RIGHT, buff=0.05)
+    return VGroup(a, b, tag).scale_to_fit_height(size)
+
+
+def wrong_return_icon(size: float = 0.8) -> VGroup:
+    out = Arrow(LEFT, RIGHT, color=GREY_B, buff=0).shift(UP * 0.3)
+    back = Arrow(RIGHT, LEFT, color=BAD_COLOR, buff=0).shift(DOWN * 0.3)
+    return VGroup(out, back).scale_to_fit_height(size)
+
+
+class TaxonomyGrid(VGroup):
+    """The spec's four kinds of collision, laid out as two axes.
+
+    Horizontal: how did it happen (accidental ↔ adversarial).
+    Vertical: how far did it get (existing → problem).
+    """
+
+    DEFINITIONS = {
+        "accidental": "purely by chance",
+        "adversarial": "someone tried to cause it",
+        "existing": "a CID has been produced\nfrom different content",
+        "problem": "using the CID returned\nthe wrong content",
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        icons = {"accidental": dice_icon(), "adversarial": mask_icon(), "existing": merge_icon(),
+                 "problem": wrong_return_icon()}
+        self.cards = {}
+        for name, text in self.DEFINITIONS.items():
+            color = BAD_COLOR if name == "problem" else WHITE
+            self.cards[name] = card(name, text, color=color, width=3.6, height=2.2, icon=icons[name])
+        self.cards["accidental"].move_to(LEFT * 4.6)
+        self.cards["adversarial"].move_to(RIGHT * 4.6)
+        self.cards["existing"].move_to(UP * 2.3)
+        self.cards["problem"].move_to(DOWN * 2.3)
+        self.h_axis = DoubleArrow(self.cards["accidental"].get_right(), self.cards["adversarial"].get_left(),
+                                  buff=0.15, color=GREY_B, stroke_width=3)
+        self.v_axis = Arrow(self.cards["existing"].get_bottom(), self.cards["problem"].get_top(),
+                            buff=0.15, color=GREY_B, stroke_width=3)
+        self.h_label = label("how did it happen?", 22, GREY_B).next_to(self.h_axis, UP, buff=0.1).shift(RIGHT * 1.4)
+        self.v_label = label("how far did it get?", 22, GREY_B).next_to(self.v_axis, RIGHT, buff=0.15).shift(DOWN * 0.6)
+        self.add(self.h_axis, self.v_axis, self.h_label, self.v_label, *self.cards.values())
+
+
+_SUPERSCRIPTS = str.maketrans("0123456789-+", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺")
+
+
+def sup(exponent) -> str:
+    """Unicode superscript for an exponent, e.g. sup(-433) -> '⁻⁴³³'."""
+    return str(exponent).translate(_SUPERSCRIPTS)
+
+
+def power_text(exponent, base: str = "2") -> str:
+    return f"{base}{sup(exponent)}"
