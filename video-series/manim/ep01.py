@@ -432,8 +432,9 @@ class S05DesigningTheRecipe(NarratedScene):
         rib = ByteRibbon.text(data, cell_size=0.6).move_to(stage + UP * 0.8)
         total = mono(f"sum = {sum(data) % 256}", 30, YELLOW).next_to(rib, DOWN, buff=0.4)
         self.play(FadeOut(VGroup(pngs, png_note)), FadeIn(rib), FadeIn(total))
-        c1, c2 = rib.cells[1], rib.cells[4]
-        self.play_at("Swap two bytes", c1.animate.move_to(c2.get_center()), c2.animate.move_to(c1.get_center()),
+        c1, c2 = rib.cells[2], rib.cells[3]  # "c" and "r": secret -> sercet, two different bytes
+        self.play_at("Swap two bytes", c1.animate(path_arc=PI / 2).move_to(c2.get_center()),
+                     c2.animate(path_arc=PI / 2).move_to(c1.get_center()),
                      run_time=1.0)
         x2 = XMark(0.5).next_to(total, RIGHT, buff=0.4)
         self.play(Indicate(total), GrowFromCenter(x2))
