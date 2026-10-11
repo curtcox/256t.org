@@ -560,14 +560,22 @@ class StreamGauge(VGroup):
         total = width * (1 + overflow)
         self.track = Rectangle(width=total, height=0.5, stroke_color=GREY_B)
         self.track.move_to(ORIGIN)
-        self.origin = self.track.get_left()
-        self.stop_x = self.origin + RIGHT * width
-        self.stop = DashedLine(self.stop_x + UP * 0.55, self.stop_x + DOWN * 0.55,
+        stop_x = self.track.get_left() + RIGHT * width
+        self.stop = DashedLine(stop_x + UP * 0.55, stop_x + DOWN * 0.55,
                                color=LENGTH_COLOR, stroke_width=4)
         self.stop_label = label(f"L = {length:,} bytes", 22, LENGTH_COLOR).next_to(self.stop, UP, buff=0.1)
         self.fill = Rectangle(width=0.001, height=0.46, stroke_width=0, fill_color=TEAL,
                               fill_opacity=0.8).move_to(self.origin, aligned_edge=LEFT)
         self.add(self.track, self.fill, self.stop, self.stop_label)
+
+    # Computed on demand so they stay right after the gauge is moved or scaled.
+    @property
+    def origin(self) -> np.ndarray:
+        return self.track.get_left()
+
+    @property
+    def stop_x(self) -> np.ndarray:
+        return self.stop.get_center()
 
     def fill_to(self, nbytes: float, color=TEAL, run_time: float = 1.5) -> Animation:
         width = max(nbytes * self.unit, 0.001)

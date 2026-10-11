@@ -51,12 +51,36 @@ def contact_sheet(video: Path, out: Path, frames: int = 12) -> None:
                     "-frames:v", "1", str(out)], check=True)
 
 
+def has_audio(video: Path) -> bool:
+    streams = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries",
+                              "stream=index", "-of", "csv=p=0", str(video)],
+                             capture_output=True, text=True, check=True).stdout
+    return bool(streams.strip())
+
+
+def with_uniform_audio(video: Path, out: Path) -> Path:
+    """Copy the video and give it a 48 kHz stereo AAC track (silence if it has none),
+    so scenes with and without narration can be concatenated losslessly."""
+    if has_audio(video):
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video), "-c:v", "copy",
+               "-c:a", "aac", "-ar", "48000", "-ac", "2", str(out)]
+    else:
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video),
+               "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-shortest",
+               "-c:v", "copy", "-c:a", "aac", str(out)]
+    subprocess.run(cmd, check=True)
+    return out
+
+
 def stitch(videos: list[Path], out: Path) -> None:
-    listing = out.with_suffix(".txt")
-    listing.write_text("".join(f"file '{v}'\n" for v in videos))
+    work = out.parent / f".{out.stem}-parts"
+    work.mkdir(exist_ok=True)
+    parts = [with_uniform_audio(v, work / v.name) for v in videos]
+    listing = work / "list.txt"
+    listing.write_text("".join(f"file '{p}'\n" for p in parts))
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
                     "-i", str(listing), "-c", "copy", str(out)], check=True)
-    listing.unlink()
+    shutil.rmtree(work)
 
 
 def main() -> int:

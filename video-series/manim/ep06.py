@@ -92,7 +92,8 @@ class S03LengthPrefixEarnsItsKeep(NarratedScene):
         self.play_at("that eight-character length prefix", GrowFromCenter(brace), FadeIn(brace_label))
 
         gauge = StreamGauge(L, width=9.5).move_to(UP * 0.4)
-        gear = VGroup(Circle(0.35, color=HASH_COLOR), label("SHA-512", 16, HASH_COLOR)).next_to(gauge, DOWN, buff=0.3)
+        gear = VGroup(Circle(0.45, color=HASH_COLOR), fit_width(label("SHA-512", 16, HASH_COLOR), 0.7))
+        gear.next_to(gauge, DOWN, buff=0.3)
         gear[1].move_to(gear[0])
         gear_note = label("hashing as bytes arrive", 20, HASH_COLOR).next_to(gear, RIGHT, buff=0.2)
         self.play_at("Before a single byte arrives", FadeIn(gauge))

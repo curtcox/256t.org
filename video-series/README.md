@@ -27,9 +27,17 @@ video-series/
   README.md                 this file: overview, style guide, production notes, fact-check table
   ep01-…md … ep07-…md       full scripts: scenes with visuals, on-screen text, and narration
   extract_narration.py      regenerates narration/ from the scripts
+  generate_audio.py         voices narration/ with ElevenLabs into audio/ (clips + timestamps)
   narration/
     ep01.txt … ep07.txt     whole-episode narration, ready to paste into ElevenLabs
     ep01/s01.txt …          one file per scene, for per-scene audio clips
+  audio/                    (created by generate_audio.py) epNN/sMM.mp3 + sMM.json alignment
+  manim/
+    common.py               palette, fonts, NarratedScene, and the recurring visuals
+    ep01.py … ep07.py       one Scene class per script scene (S01…, S02…, …)
+    sha512_rounds.py        readable SHA-512 exposing its rounds (drives Episode 3's diffusion)
+    render.py               renders an episode scene by scene and stitches it
+    output/, media/         render output (git-ignored)
 ```
 
 **The scripts are the source of truth.** If you edit narration, edit the `> ` blockquote under
@@ -45,6 +53,64 @@ and estimated durations.
 > Keep this directory out of `examples/`. Every file in `examples/` gets a CID generated for it by the
 > implementations' `generate` scripts.
 
+## Producing the videos
+
+Requirements: [Manim Community](https://www.manim.community/) 0.21 or later, plus ffmpeg. No LaTeX
+is needed, because every piece of text, including math, is typeset with Pango `Text`.
+
+```bash
+python3 video-series/extract_narration.py
+```
+
+```bash
+python3 video-series/generate_audio.py --dry-run
+```
+
+```bash
+python3 video-series/generate_audio.py
+```
+
+```bash
+python3 video-series/manim/render.py 1 2 3 4 5 6 7 -q h
+```
+
+1. **Narration.** `extract_narration.py` turns the scripts into `narration/`.
+2. **Voice.** `generate_audio.py` sends each scene's narration to ElevenLabs' text-to-speech
+   "with timestamps" endpoint and saves `audio/epNN/sMM.mp3` plus the character alignment. It reads
+   `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` from the environment (optionally
+   `ELEVENLABS_MODEL_ID`; default `eleven_multilingual_v2`). It passes the neighboring scenes as context
+   so intonation carries across clips, and it skips scenes whose text hasn't changed. `--dry-run`
+   sends nothing and prints the character count (about 56,000 for the whole series), which is what
+   ElevenLabs bills on. *This script has only been tested in dry-run mode, since no API key was used
+   during development. Expect to adjust it slightly if the API has changed.*
+3. **Render.** `manim/render.py` renders each scene class in order, gives every clip a uniform audio
+   track (silence where there's no narration yet), and concatenates them into
+   `manim/output/epNN.mp4`. Use `-q l` for fast previews and `-q h` for 1080p60. `--sheet` also writes a
+   4×3 contact sheet per scene, which is a quick way to review a whole episode at a glance.
+   `--scene S05SmallThings` renders a single scene.
+
+You can render before any audio exists. Each scene then runs for its estimated narration length
+(150 words per minute), so the timing is close but not exact. Once audio exists, scenes snap to the
+real clips automatically.
+
+### How scenes sync to the voice
+
+Every scene subclasses `NarratedScene` and calls `self.cue("phrase")` or
+`self.play_at("phrase", *animations)` with a phrase copied from the script's narration. The phrase is
+matched against the narration text (case and punctuation don't matter, and the pronunciation map is
+applied, so you write "CID" rather than "C-I-D"). The time comes from:
+
+- the ElevenLabs character alignment, if `audio/epNN/sMM.json` exists, so it's exact;
+- otherwise, the phrase's position in the text, scaled to the clip's length (or to the estimate).
+
+When `construct()` finishes, the scene holds until the narration ends, plus a short tail. If animations
+fall behind the voice, the render prints a `[timing]` line naming the cue and how late it was. If a cue
+phrase no longer appears in the narration (say, after a script edit), the render fails with a clear
+error rather than drifting silently.
+
+> Decide whether to commit `audio/`. The clips cost money to regenerate, but the whole series is
+> roughly 60 MB of MP3.
+
 ## Script format
 
 Each episode file has a header (runtime, goal, facts used, new recurring visuals), followed by numbered
@@ -57,8 +123,8 @@ scenes:
 - **On-screen text** (optional): exact strings to typeset.
 - **Narration**: the spoken text, as a markdown blockquote.
 
-One scene maps to one Manim `Scene` class and one audio clip (`narration/epNN/sMM.txt`). That makes
-it easy to time animations to the clip, either by hand or with a tool like `manim-voiceover`.
+One scene maps to one Manim `Scene` class (`manim/epNN.py`, class `SMM…`) and one audio clip
+(`narration/epNN/sMM.txt` → `audio/epNN/sMM.mp3`).
 
 ## ElevenLabs notes
 
@@ -100,35 +166,38 @@ name in the scripts.
 | Adversary | `PURPLE` | Liar and Forger figures, attacker-controlled servers |
 | Neutral / padding bits | `GREY` | Padding zeros in base64, inactive elements |
 
-**Type:** a monospace font (e.g. JetBrains Mono, or Menlo as a fallback) for CIDs, code, bytes, and
-bits. Use the default LaTeX for math. A full 94-character CID is wide, so `scale_to_fit_width` it to
-roughly 90% of the frame and keep it on a single line. Never wrap a CID.
+**Type:** Menlo (`MONO` in `common.py`) for CIDs, code, bytes, and bits, and Avenir Next (`SANS`) for
+everything else. Exponents use Unicode superscripts (`power_text(-271)` gives `2⁻²⁷¹`), so no LaTeX is
+needed. A full 94-character CID is wide, so `CIDText(..., max_width=FRAME_W - 1)` fits it to the frame
+on a single line. It stays readable at 1080p. Never wrap a CID.
 
-**Recurring mobjects.** Build these once in a shared `common.py` and import them in every episode:
+**Recurring visuals.** These are implemented in `manim/common.py` unless noted. Some names differ
+slightly from the scripts' visual directions, which were written before the code:
 
 | Name | Introduced | Description |
 |---|---|---|
 | `ByteRibbon` | Ep 1 | Horizontal strip of cells, each a byte (hex or char). Length scales with content. Can tint cells. |
-| `RecipeMachine` | Ep 1 | Rounded box with a crank. Ribbon in, `CIDTag` out. Label is swappable (`public recipe`, `SHA-512`). |
-| `CIDTag` | Ep 1 | Monospace CID with colored segments (BLUE prefix + GOLD or GREEN suffix). |
+| `RecipeMachine` | Ep 1 | Rounded box with a crank. Ribbon in, tag out (`feed_through`). Label is swappable (`public recipe`, `SHA-512`). |
+| `CIDText` | Ep 1 | Monospace CID with colored segments (BLUE prefix + GOLD or GREEN suffix), exposing `.prefix` and `.suffix`. |
 | `ServerRack` | Ep 1 | Simple server icon. A face variant (`?`) is used for unknown mirrors, and a PURPLE variant for adversaries. |
 | `VerifierLoop` | Ep 1 | Circuit: request → receive → compute → compare → GREEN check or RED X. |
 | `CacheBox` | Ep 1 | Box with an `∞` badge. |
 | `BitStrip` | Ep 2 | Row of 0/1 cells, which can be sliced into 6-bit groups. |
-| `Base64Gear` | Ep 2 | 3 bytes (24 bits) ↔ 4 characters regrouping animation. |
+| `BitStrip.group_boxes` | Ep 2 | The "base64 gear": 3 bytes (24 bits) regrouped into four 6-bit characters. |
 | `LengthOdometer` | Ep 2 | 8 base-64 wheels showing a length prefix. |
-| `HashBlender` | Ep 3 | Schematic SHA-512 round over 8 registers `a`–`h`. |
-| `DiffusionGrid` | Ep 3 | 512-cell heat map of changed output bits. |
-| `FingerprintCard` | Ep 3 | Thumbprint icon. |
+| (in `ep03.py`) | Ep 3 | Schematic SHA-512 round over 8 registers `a`–`h`. |
+| `DiffusionGrid` | Ep 3 | 512-cell heat map of changed bits, driven by real SHA-512 states (`sha512_rounds.py`). |
+| `FingerprintIcon` | Ep 1 | Thumbprint icon. |
 | `TaxonomyGrid` | Ep 4 | Accidental/adversarial × existing/problem cards. |
 | `PairWeb` | Ep 4 | Dots joined by every pairwise line (birthday problem). |
-| `ExponentLadder` | Ep 4 | Vertical log₂ scale for probabilities. |
-| `Liar`, `Forger` | Ep 5 | Two simple PURPLE masked figures (paint can, blueprints). |
-| `TwinRibbons` | Ep 5 | Two different ribbons wired to one RED-outlined tag. |
-| `Timeline` | Ep 5 | Multi-track timeline (MD5 / SHA-1 / SHA-512). |
+| (in `ep04.py`) | Ep 4 | Vertical log₂ "exponent ladder" for probabilities. |
+| `MaskedFigure("liar" / "forger")` | Ep 5 | Two simple PURPLE masked figures (paint can, blueprints). |
+| `TwinRibbons` (in `ep05.py`) | Ep 5 | Two different documents wired to one shared CID tag. |
+| (in `ep05.py`) | Ep 5 | Multi-track timeline (MD5 / SHA-1). |
 | `StreamGauge` | Ep 6 | Progress bar with a hard stop at L bytes. |
 | `MerkleTree` | Ep 7 | Chunks → leaf hashes → root. |
-| `NeighborMap` | Ep 7 | 2-D map of related systems. |
+| (in `ep07.py`) | Ep 7 | 2-D map of related systems. |
+| `NarratedScene` | all | Base scene: paces itself to the narration and provides `cue` / `play_at`. |
 
 **Don't** use 3Blue1Brown's own trademark assets (the Pi creatures, the logo). Copying the look and pacing
 of the style is fine. Copying its characters is not.
