@@ -82,8 +82,8 @@ class S02WhatAHashIs(NarratedScene):
             block.next_to(machine.body, RIGHT, buff=0.4)
             if phrase:
                 self.cue(phrase)
-            self.play(feed_through(machine, rib, block, run_time=1.1))
-            self.play(FadeOut(block), run_time=0.2)
+            self.play(feed_through(machine, rib, block, run_time=0.8))
+            self.play(FadeOut(block), run_time=0.15)
 
         tags = VGroup(*[tag_box(t, WHITE, 24) for t in ("any size in", "fixed size out", "deterministic", "fast")])
         tags.arrange(RIGHT, buff=0.3).next_to(machine, DOWN, buff=0.8)

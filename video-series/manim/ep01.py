@@ -204,9 +204,9 @@ class S03NamingTheThing(NarratedScene):
         machine = RecipeMachine().move_to(RIGHT * 0.6 + UP * 0.3)
         tag = mono(GETTYSBURG_CID[:12] + "…", 28, HASH_COLOR)
         self.play_at("by a fixed, public recipe", FadeIn(machine), FadeOut(words), FadeOut(strike))
-        self.play_at("Feed the bytes in", feed_through(machine, ribbon, tag))
+        self.play_at("Feed the bytes in", feed_through(machine, ribbon, tag, run_time=1.8))
         equation = label("name = f(content)", 40, YELLOW).to_edge(DOWN, buff=0.8)
-        self.play(Write(equation))
+        self.play(Write(equation), run_time=0.7)
 
         # Three people, three machines, one name.
         self.play_at("The crucial property", FadeOut(VGroup(machine, tag, what)), equation.animate.to_edge(UP))
