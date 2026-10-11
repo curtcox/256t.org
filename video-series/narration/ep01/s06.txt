@@ -1,0 +1,9 @@
+two fifty-six tee is one specific, deliberately minimal choice of recipe.
+
+The name it produces is called a C-I-D, short for content identifier. A C-I-D is at most ninety-four characters long, and it's built only from characters that are safe to use in web addresses and filenames. So it can sit at the end of a URL, or be the name of a file, or live in a database column, without any special escaping.
+
+Here's a real one. This is the C-I-D of the Gettysburg Address, fifteen hundred and eleven bytes of text. Put it after two fifty-six tee dot org and you have a link to those exact bytes.
+
+A C-I-D has two parts. The first eight characters encode the length of the content. The rest is a SHA five-twelve fingerprint of the content. Or, and here's that sticky note coming back, if the content is sixty-four bytes or less, the rest is just the content itself. Here's the C-I-D for the word "Hello." It's short enough that its name simply contains it.
+
+And the rule for a server is just as minimal. Ask for a C-I-D, and you either get back bytes that match it, or you get "not found." That's the whole contract.

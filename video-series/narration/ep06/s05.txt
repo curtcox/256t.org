@@ -1,0 +1,9 @@
+Remember how the single byte A became Q Q? The first Q carries six real bits. The second carries the last two real bits, plus four padding zeros. A decoder only needs those two real bits, so many decoders simply ignore the padding.
+
+Which means if someone hands you Q R instead of Q Q, a lenient decoder will throw away those extra bits and still give you the letter A. In fact, any of sixteen different second characters will decode to the same byte. But only one of those strings, with zeros in the padding, is the C-I-D of A.
+
+There's a second version of this trap. A C-I-D's length prefix might claim five bytes, while the characters after it only decode to two. A sloppy decoder might just return the two bytes and never notice the disagreement.
+
+Now, in both cases you do get the right bytes for whatever the string decodes to. The danger is in what you conclude. Two different-looking names for the same content can break anything that uses C-I-Ds as keys, like a cache, a database index, or a list of approved documents. And a name that disagrees with itself should never be accepted as a name.
+
+The fix is the same rule as before, applied consistently. Never verify by decoding a C-I-D and trusting what comes out. Always go the other way: take the bytes, compute their C-I-D with the standard recipe, and compare the strings. The recipe only ever produces one canonical name, so anything else fails the comparison.

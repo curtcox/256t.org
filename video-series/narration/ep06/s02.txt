@@ -1,0 +1,3 @@
+Here's the whole procedure. You requested a C-I-D. You receive some bytes. You compute the C-I-D of those bytes, using exactly the same recipe as everyone else. And you compare the two C-I-Ds as strings. If they're identical, you accept the bytes. If not, you throw them away, and try somewhere else.
+
+Notice what's not in this loop. Nothing the server says about itself. Not its name, not its reputation, not any headers or labels it attaches. The only thing that crosses from the untrusted side to the trusted side is the bytes, and the bytes are checked against the name you already had. That's why you can fetch from a stranger.

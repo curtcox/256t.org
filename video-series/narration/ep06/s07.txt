@@ -1,0 +1,5 @@
+Let's go back to that honest list from the first episode. The three things the spec says are "true enough despite being false."
+
+Verification changes what kind of statements those are. "A C-I-D uniquely determines content" stops being a claim about the universe, and becomes a rule about you: you only accept content that has this C-I-D. "The content is immutable" becomes: anything else served under this name gets rejected. And "cache it forever" becomes: once a copy has been verified, it never needs checking again.
+
+Engineering is full of statements like this. Computers treat floating-point numbers as if they were real numbers. Networks treat a stream of unreliable packets as a reliable connection. A carpenter treats the Earth as flat. None of these are true. All of them are true enough, as long as you know exactly where the crack is, and you've decided it's somewhere you can live with. Over the last two episodes, we've measured exactly where two fifty-six tee's crack is.

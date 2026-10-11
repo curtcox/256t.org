@@ -1,0 +1,65 @@
+Here is a sentence you have seen a hundred times. Page not found.
+
+In 2024, Pew Research went back to a large sample of web pages that existed in 2013, and tried to load them again. About thirty-eight percent were simply gone. A decade earlier, a team at Harvard Law School looked at the web links cited in United States Supreme Court opinions, documents that are supposed to last for centuries, and found that about half of them no longer led to the material the Justices had cited.
+
+And there is a quieter failure that is arguably worse. Sometimes the link still works. It just doesn't show you what it used to. The page was edited. The file was replaced. The dataset was quietly updated. Nothing warns you. Same address, different content.
+
+This series is about a small, almost stubbornly simple idea for fixing both problems at once. It's written up at a site called two fifty-six tee dot org. But before we get to its specifics, I want to spend this first episode on the idea underneath it, because once you see that idea clearly, most of the design choices we'll look at later will feel less like choices and more like consequences.
+
+Let's look closely at what an ordinary web address actually says.
+
+Every part of it is about location. This part says which computer to contact. This part says which folder on that computer. And this last part says which name to ask for inside that folder. Read it out loud and it's really a set of directions. Go here. Then go here. Then ask for this.
+
+That's a street address. And a street address is a great way to find a house. It's a terrible way to identify one.
+
+If the house is torn down, the address leads you to an empty lot. That's link rot. And if a different house gets built on the same spot, the address still leads you somewhere, quite confidently, just to the wrong thing. That's content drift. The address never promised anything about the house. It only ever promised a place.
+
+So here's the alternative. What if, instead of naming where some content lives, the name described what the content is?
+
+And I don't mean a description in words, like "annual report, 2013." I mean a name computed directly from the bytes themselves, by a fixed, public recipe. Feed the bytes in, turn the crank, and a name comes out.
+
+The crucial property is that the recipe doesn't depend on anything except the bytes. Not which computer you're on, not the file's name, not the date. So anyone, anywhere, running the same recipe on the same bytes, gets exactly the same name, without ever talking to each other.
+
+This idea is called content addressing. And it's worth pausing on what that name leaves out. It says nothing about which machine to contact. Nothing about folders. It's not directions to the house. It's more like a precise description of the house, so precise that only one house in the world could match it.
+
+Once names are computed from content, a whole list of nice properties falls out, almost for free.
+
+First: any copy will do. If the name means "these exact bytes," then it stops mattering where the bytes come from. A big server, a library's archive, a friend's laptop, a cache on the other side of the planet. If someone has a copy, they can hand it to you, and it's just as good as the original, because it is the original.
+
+Second, and this is the one I find genuinely remarkable: you can check. When the bytes arrive, you run the recipe yourself. If the name you compute matches the name you asked for, you got the right thing. That's true even if the bytes came from a stranger you have no reason to trust. Trust moves away from the messenger and onto the math.
+
+Third, caching gets easy. The hardest question about any cached copy is, is this still current? With content names, that question disappears. A copy can't be stale, because the name means exactly these bytes, forever.
+
+And fourth, nothing can change underneath its name. If someone edits the file, they haven't changed the file. They've made a new file, with a new name. The old name still means the old bytes. Updates don't overwrite history. They sit beside it.
+
+Now, that last point has a flip side. A content name can never mean "the latest version of the annual report," because the latest version keeps changing, and the name can't. If you want that, you need a separate kind of pointer that you update over time. That's a real and interesting problem. But it's a different problem, built on top of this one. The scheme we're looking at only tries to solve the bottom layer: a name for some bytes that can't break.
+
+So what should the recipe be? Let's write down what we want from it. The name should be short, and the same size no matter how big the content is, so it fits in a web address. The same bytes should always give the same name. Different bytes should give different names. And it should be hard for anyone to fake: hard to craft different bytes that produce a name you were expecting.
+
+The laziest possible recipe is to use the content itself as its name. And notice, that's perfect in every way but one. Same bytes, same name. Different bytes, different names, guaranteed. Impossible to fake. The only problem is size. A short word makes a lovely short name, but a movie makes a name that's as long as the movie. So that fails in general. But keep it in the back of your mind, because for very small things, it's hard to beat.
+
+What about the length of the content? Short, fixed size, but obviously lots of different files share a length. What about the first few bytes? Even worse than you'd think. Every P N G image in the world starts with the same eight bytes. What about a simple checksum, like adding up all the bytes? Better spread out, but trivial to fool. Swap two bytes and the sum doesn't even notice.
+
+What we actually want is something that takes any amount of data and scrambles it down to a short, fixed-size output, so thoroughly that changing a single bit anywhere in the input changes about half the bits of the output, in a way no one knows how to predict or steer. That's a cryptographic hash function. We'll spend an entire episode on what that phrase promises, and what it doesn't. For now, think of it as a fingerprint for data.
+
+And that asterisk on "different bytes give different names" is going to be our main character for a couple of episodes. Hold onto it.
+
+two fifty-six tee is one specific, deliberately minimal choice of recipe.
+
+The name it produces is called a C-I-D, short for content identifier. A C-I-D is at most ninety-four characters long, and it's built only from characters that are safe to use in web addresses and filenames. So it can sit at the end of a URL, or be the name of a file, or live in a database column, without any special escaping.
+
+Here's a real one. This is the C-I-D of the Gettysburg Address, fifteen hundred and eleven bytes of text. Put it after two fifty-six tee dot org and you have a link to those exact bytes.
+
+A C-I-D has two parts. The first eight characters encode the length of the content. The rest is a SHA five-twelve fingerprint of the content. Or, and here's that sticky note coming back, if the content is sixty-four bytes or less, the rest is just the content itself. Here's the C-I-D for the word "Hello." It's short enough that its name simply contains it.
+
+And the rule for a server is just as minimal. Ask for a C-I-D, and you either get back bytes that match it, or you get "not found." That's the whole contract.
+
+Now, if you've been paying attention, something should be bothering you. There are infinitely many possible files, and only finitely many names of ninety-four characters or less. So some different files must share a name. That's not a weakness of the particular recipe. It's just counting.
+
+The two fifty-six tee spec is refreshingly upfront about this. It lists a few statements it says you can treat as "true enough despite being false." That a C-I-D uniquely determines its content. That the content is immutable. That it can be cached forever.
+
+So the real question isn't whether these statements are perfectly true. They aren't. The question is how true is true enough, and for whom. That's what most of this series is about.
+
+Here's where we're going. Next time, we'll take a C-I-D apart character by character, and you'll see that every number in the format, the eight, the sixty-four, the eighty-six, the ninety-four, and even the "two fifty-six" in the name, falls out of a little arithmetic. Then we'll look at what a hash function actually promises. Then two episodes on collisions: the accidental kind, where we'll find out just how true "true enough" is, and the adversarial kind, where someone is actively trying to fool you. After that, how verification and caching work in practice. And finally, what two fifty-six tee deliberately leaves out, and how it compares to its neighbors.
+
+See you in the next one.

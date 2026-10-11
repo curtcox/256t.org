@@ -1,0 +1,5 @@
+Second, metadata. A C-I-D knows nothing about a file's name, its type, its author, or its date. Just the bytes.
+
+And that's a feature. Upload the same photo three times under three different filenames, and it gets one name. That makes duplicates collapse on their own, and it means two people who've never met will agree on what to call the same thing.
+
+But what if you do want metadata? Then write it down as content. A small document that says "this is the Gettysburg Address, it's plain text," and then refers to the text by its C-I-D. That little document has its own C-I-D, too. And now something interesting happens. A document that lists other documents by C-I-D, named by its own C-I-D, pins down that entire collection, exactly. Change any file inside it, and the collection's name changes. Names inside content let you build whole structures out of names, and the structures inherit all the same guarantees.

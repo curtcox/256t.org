@@ -1,0 +1,7 @@
+So here's the alternative. What if, instead of naming where some content lives, the name described what the content is?
+
+And I don't mean a description in words, like "annual report, 2013." I mean a name computed directly from the bytes themselves, by a fixed, public recipe. Feed the bytes in, turn the crank, and a name comes out.
+
+The crucial property is that the recipe doesn't depend on anything except the bytes. Not which computer you're on, not the file's name, not the date. So anyone, anywhere, running the same recipe on the same bytes, gets exactly the same name, without ever talking to each other.
+
+This idea is called content addressing. And it's worth pausing on what that name leaves out. It says nothing about which machine to contact. Nothing about folders. It's not directions to the house. It's more like a precise description of the house, so precise that only one house in the world could match it.

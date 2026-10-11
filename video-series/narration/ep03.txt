@@ -1,0 +1,55 @@
+Here are two words that differ in a single letter: Hello with a capital H, and hello with a lowercase one. Their inline C-I-Ds differ in a single character, which makes sense. The C-I-D is just the word, re-encoded.
+
+Now here are their SHA five-twelve fingerprints. Not one family resemblance. Line up the bits and count, and two hundred and thirty-nine of the five hundred and twelve bits are different. Very close to half. Which is exactly what you'd expect if the two outputs were completely unrelated random numbers.
+
+That's not a quirk of this example. It's the whole design goal. Last time we treated this fingerprint as a black box. Today we open the box, at least a little, and ask a precise question: what exactly is it promising?
+
+A hash function is a recipe that takes any amount of data, from nothing at all to an enormous file, and produces an output of a fixed size. For SHA five-twelve, that's always five hundred and twelve bits. It's deterministic: the same input always gives exactly the same output, on any computer, forever. And it's fast. Your laptop can hash hundreds of megabytes a second.
+
+The usual metaphor is a fingerprint. It's a small thing that stands in for a big thing, and you can compare two fingerprints much more easily than you can compare two whole people.
+
+But metaphors leak, and this one leaks in an important place. So let's find the leak.
+
+Here's the leak. Consider just the files that are exactly sixty-five bytes long, one byte too long to be stored inline. How many are there? Each byte has two hundred fifty-six possibilities, which is eight bits' worth, so there are two to the five hundred and twenty of them.
+
+And how many possible SHA five-twelve outputs are there? Two to the five hundred and twelve.
+
+More files than fingerprints. So by pure counting, the pigeonhole principle, lots of different files must share a fingerprint. In fact, on average, every possible SHA five-twelve output is shared by two hundred and fifty-six different sixty-five byte files. And that's just the sixty-five byte files. Collisions don't merely exist. They're everywhere.
+
+So when people say SHA five-twelve is "collision resistant," they cannot mean there are no collisions. What they mean is something much more interesting. They mean that, although collisions are everywhere, nobody knows how to find even one.
+
+Notice, by the way, that this argument says nothing about inline C-I-Ds. For content of sixty-four bytes or less, there's no hashing, and so no pigeonholes. That part of the name space is collision free by construction.
+
+Security people split "can you find a collision?" into three separate games, and they have very different difficulties. Let's use fingerprints of people, because the analogy works well here.
+
+Game one is called finding a preimage. I hand you a fingerprint, just the print, and you have to find any person in the world who has it. For a hash, that's: given an output, find any input that produces it. If the hash behaves like it's supposed to, the best you can do is guess inputs at random until one hits, and with five hundred and twelve bits of output, that takes on the order of two to the five hundred and twelve tries.
+
+Game two is the second preimage. Now I hand you a specific person, call her Alice, and you have to find somebody else whose fingerprint matches hers. For data: here's a file, now find a different file with the same hash. This is also about two to the five hundred and twelve tries, because you're still trying to hit one particular target.
+
+Game three is the collision. I give you nothing at all. You just have to find any two people, anywhere, whose fingerprints match each other. This turns out to be dramatically easier. You don't need to hit a target, you just need any two of your guesses to hit each other, and the number of pairs grows much faster than the number of guesses. The cost drops to about the square root: two to the two hundred and fifty-six. We'll derive exactly why in the next episode. It's the famous birthday paradox.
+
+"Dramatically easier" is relative, though. Two to the two hundred and fifty-six is a number with seventy-eight digits. That's in the same general neighborhood as the number of atoms in the observable universe.
+
+So how does SHA five-twelve actually scramble things this thoroughly? I won't go through every wire, but the shape of it is worth seeing.
+
+First, the input gets padded, and as part of that padding, SHA five-twelve writes the length of the message into the very end. Then it's chopped into blocks of a thousand and twenty-four bits. Each block gets mixed into a running internal state, and that state is carried forward to the next block. When the last block is done, the final state is the hash.
+
+The mixing itself is made of humble operations. Eight registers of sixty-four bits each. Rotate some bits around. Combine some with exclusive-or. Use one register to choose bits from two others, take a majority vote between three, add things together and let them overflow. Each of these is trivial on its own. Then shift everything over by one, and do it again. Eighty times per block.
+
+Watch what happens to a single flipped input bit. After one round, it's touched almost nothing. A few rounds later, its influence has spread across a chunk of the state. Well before round eighty, every output bit depends on it in a tangled way, and about half of them flip. That's the avalanche we saw at the start.
+
+And here's what I find striking. There is no secret anywhere in this. No key, no hidden ingredient. The algorithm is published, and has been since the early two thousands. Its entire security rests on the fact that, after decades of the world's cryptographers trying, nobody knows how to run it backwards, or to steer its output.
+
+Cryptographers have a yardstick for this. Imagine an ideal hash: a gigantic ledger. Whenever a new input shows up, you flip five hundred and twelve fair coins and write the result down next to it. If the same input ever comes back, you look up what you wrote before. Perfectly unpredictable, and perfectly consistent.
+
+No real function can be that ledger. But a good hash is supposed to be indistinguishable from it, for every practical purpose. The costs I quoted for the three games are what the ideal ledger would give you. When real hash functions have failed, it's because someone found a way to tell them apart from the ledger, a shortcut that made one of those games cheaper. That's what happened to the older functions M D five and SHA one, and we'll look at those stories in the episode on adversaries.
+
+So which of these three games does two fifty-six tee actually care about?
+
+Not the first one, it turns out. A C-I-D isn't trying to keep anything secret. For short content, the C-I-D literally contains the content, so recovering the input is trivial, and that's fine. Which leads to a practical warning: a C-I-D is a name, not a lock. Don't treat the C-I-D of something secret as if it hides that secret. If the secret is short, it's sitting right there in the name. And even if it's long, anyone who can guess the possibilities can just compute the C-I-D of each guess and see which one matches.
+
+What two fifty-six tee does rely on is the second and third games. It needs that nobody can take content you already have and produce different content with the same name. And it needs that nobody can produce two different pieces of content that share a name. Those are the properties that make "this C-I-D means these bytes" true enough.
+
+So two fifty-six tee's design really comes down to one sentence. Where it can be perfect, it is: the identity function for small content, with no collisions at all. And where it can't be perfect, it uses a function whose collisions are everywhere, but which no one has ever been able to find.
+
+Which raises the next question. If collisions exist, what are the odds you'll ever run into one by accident? That's next time.

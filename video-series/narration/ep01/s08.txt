@@ -1,0 +1,3 @@
+Here's where we're going. Next time, we'll take a C-I-D apart character by character, and you'll see that every number in the format, the eight, the sixty-four, the eighty-six, the ninety-four, and even the "two fifty-six" in the name, falls out of a little arithmetic. Then we'll look at what a hash function actually promises. Then two episodes on collisions: the accidental kind, where we'll find out just how true "true enough" is, and the adversarial kind, where someone is actively trying to fool you. After that, how verification and caching work in practice. And finally, what two fifty-six tee deliberately leaves out, and how it compares to its neighbors.
+
+See you in the next one.

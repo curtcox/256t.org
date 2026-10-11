@@ -1,0 +1,3 @@
+Here are three C-I-Ds. Right now they probably look like noise. By the end of this video, you'll be able to read the first one by hand, read the length out of all three, and explain where every number in the format comes from. There's surprisingly little in here that's arbitrary.
+
+And you might already have noticed something odd. Why do they all start with so many capital A's? Keep that question in mind. It has a nice answer.

@@ -1,0 +1,5 @@
+Let's put it together. For an adversary to cause a real problem collision, three things have to line up. They have to find a genuine SHA five-twelve collision, which no one has ever done. They have to be the author of content you're relying on, so they can plant one twin. And they have to be in a position to hand you the other. Without the first, they're just a liar, and verification catches them every time.
+
+And so the spec's advice comes down to two habits. First: always verify. It's one hash computation, and it reduces every cheap attack to the expensive one. Second: reduce adversaries. Be thoughtful about trusting content whose author would benefit from swapping it, and about where you fetch from. If nobody is putting malicious content where you might accept it, you're back to accidents only, and we know how that story ends.
+
+Next time, we'll get concrete about the first habit. What exactly should your code do when bytes arrive? And how does that let you cache them forever?

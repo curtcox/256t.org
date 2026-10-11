@@ -1,0 +1,9 @@
+So what should the recipe be? Let's write down what we want from it. The name should be short, and the same size no matter how big the content is, so it fits in a web address. The same bytes should always give the same name. Different bytes should give different names. And it should be hard for anyone to fake: hard to craft different bytes that produce a name you were expecting.
+
+The laziest possible recipe is to use the content itself as its name. And notice, that's perfect in every way but one. Same bytes, same name. Different bytes, different names, guaranteed. Impossible to fake. The only problem is size. A short word makes a lovely short name, but a movie makes a name that's as long as the movie. So that fails in general. But keep it in the back of your mind, because for very small things, it's hard to beat.
+
+What about the length of the content? Short, fixed size, but obviously lots of different files share a length. What about the first few bytes? Even worse than you'd think. Every P N G image in the world starts with the same eight bytes. What about a simple checksum, like adding up all the bytes? Better spread out, but trivial to fool. Swap two bytes and the sum doesn't even notice.
+
+What we actually want is something that takes any amount of data and scrambles it down to a short, fixed-size output, so thoroughly that changing a single bit anywhere in the input changes about half the bits of the output, in a way no one knows how to predict or steer. That's a cryptographic hash function. We'll spend an entire episode on what that phrase promises, and what it doesn't. For now, think of it as a fingerprint for data.
+
+And that asterisk on "different bytes give different names" is going to be our main character for a couple of episodes. Hold onto it.

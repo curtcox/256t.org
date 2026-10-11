@@ -1,0 +1,3 @@
+So here's how to read any C-I-D. Decode the first eight characters to get the length. If it's sixty-four or less, everything after that is the content itself, so just decode it, and you're done, without touching a network. If it's more than sixty-four, the rest is a fingerprint, and now you need to go find bytes that match it.
+
+Let's run our three mystery names through. The first is one byte, inline: it's the letter A. The second is five bytes, inline: "Hello." The third is fifteen hundred and eleven bytes, so it's a fingerprint, and it happens to be the Gettysburg Address. And even the empty file has a name: eight A's, and nothing after them.

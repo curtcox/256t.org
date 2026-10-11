@@ -1,0 +1,5 @@
+All of this rests on one assumption. For inputs that nobody designed to break it, SHA five-twelve behaves like the ideal coin-flipping ledger. And that's a mild assumption. Similar files don't produce similar fingerprints, so the ordinary structure in real data, like lots of files that start the same way, doesn't help collisions along. And in the more than two decades SHA five-twelve has been in use, nobody has ever found a collision of any kind, accidental or otherwise.
+
+So the spec's position is: "I'm comfortable just ignoring accidental problem collisions." Having done the arithmetic, I think that's not a shrug. It's a conclusion.
+
+But we've been assuming the universe is merely indifferent. What if someone is actively trying to fool you? Adversaries don't roll dice. That's next.

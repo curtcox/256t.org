@@ -1,0 +1,9 @@
+So let's put the whole thing back together.
+
+A web address usually tells you where something is. A two fifty-six tee C-I-D tells you what it is. Eight characters of length, which is where the two hundred fifty-six terabytes and the name come from. Then up to eighty-six characters that are either the content itself, when it's small enough to carry, or its SHA five-twelve fingerprint.
+
+Collisions exist, by simple counting. But accidental ones are so unlikely that a civilization producing a billion files per person per second since the Big Bang would almost certainly never see one. Adversaries have it harder than you might think, because the cheap attack, lying, is defeated completely by one hash computation, and the expensive attack, forging, has never been done against SHA five-twelve.
+
+And once you verify, you can fetch from anyone, and cache forever.
+
+It's a small idea. That's sort of the point. It's small enough to implement in an afternoon, in whatever language you like, and get exactly the same answers as everyone else. If you want to try it, pick a file you care about, and compute its name. Thanks for watching.

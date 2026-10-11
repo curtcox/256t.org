@@ -1,0 +1,3 @@
+There's one more layer of reassurance, and it's where the spec's distinction between existing and problem collisions earns its keep.
+
+Suppose, against all those odds, an accidental collision did exist. Two files somewhere really do share a C-I-D. For that to actually hurt anyone, both files would have to end up somewhere you fetch from, and you would have to ask for one and be handed the other. An existing collision only becomes a problem collision if all of that also happens. Each of those steps makes an already unimaginably unlikely event less likely still.

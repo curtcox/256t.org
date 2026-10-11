@@ -1,0 +1,5 @@
+We've established that collisions in SHA five-twelve must exist. Now let's ask whether you should ever worry about them. And the first step is to notice that the word "collision" is doing too much work.
+
+The two fifty-six tee spec splits it up. A collision can be accidental, purely by chance, or adversarial, meaning someone tried to cause it. And separately, a collision can be merely existing, meaning two different pieces of content have actually produced the same C-I-D somewhere, or it can be a problem, meaning someone used a C-I-D to fetch content, and got the wrong content back.
+
+Those are really two different questions. How did it happen? And did it actually hurt anyone? This episode is about the accidental kind, where nobody is trying to fool anyone. We just want to know: if the whole world keeps making files, will two of them ever land on the same name by chance?

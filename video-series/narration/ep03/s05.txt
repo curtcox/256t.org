@@ -1,0 +1,9 @@
+So how does SHA five-twelve actually scramble things this thoroughly? I won't go through every wire, but the shape of it is worth seeing.
+
+First, the input gets padded, and as part of that padding, SHA five-twelve writes the length of the message into the very end. Then it's chopped into blocks of a thousand and twenty-four bits. Each block gets mixed into a running internal state, and that state is carried forward to the next block. When the last block is done, the final state is the hash.
+
+The mixing itself is made of humble operations. Eight registers of sixty-four bits each. Rotate some bits around. Combine some with exclusive-or. Use one register to choose bits from two others, take a majority vote between three, add things together and let them overflow. Each of these is trivial on its own. Then shift everything over by one, and do it again. Eighty times per block.
+
+Watch what happens to a single flipped input bit. After one round, it's touched almost nothing. A few rounds later, its influence has spread across a chunk of the state. Well before round eighty, every output bit depends on it in a tangled way, and about half of them flip. That's the avalanche we saw at the start.
+
+And here's what I find striking. There is no secret anywhere in this. No key, no hidden ingredient. The algorithm is published, and has been since the early two thousands. Its entire security rests on the fact that, after decades of the world's cryptographers trying, nobody knows how to run it backwards, or to steer its output.

@@ -1,0 +1,5 @@
+Now, if you've been paying attention, something should be bothering you. There are infinitely many possible files, and only finitely many names of ninety-four characters or less. So some different files must share a name. That's not a weakness of the particular recipe. It's just counting.
+
+The two fifty-six tee spec is refreshingly upfront about this. It lists a few statements it says you can treat as "true enough despite being false." That a C-I-D uniquely determines its content. That the content is immutable. That it can be cached forever.
+
+So the real question isn't whether these statements are perfectly true. They aren't. The question is how true is true enough, and for whom. That's what most of this series is about.

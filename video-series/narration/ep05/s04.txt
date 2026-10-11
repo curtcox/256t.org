@@ -1,0 +1,5 @@
+So, is two to the two hundred fifty-six a lot? Let's use the biggest pile of hashing hardware humanity has ever built: the Bitcoin network. As of late 2025 it was doing around a zettahash per second, about ten to the twenty-one hashes every second, which is roughly two to the seventy. It computes a different hash, SHA two-fifty-six, but it gives us a sense of scale for "every specialized hashing machine on Earth."
+
+Point all of that at a SHA five-twelve collision by brute force. Two to the two hundred fifty-six, divided by two to the seventy per second, is two to the one hundred eighty-six seconds. That's around three times ten to the forty-eight years. The universe is about fourteen billion years old. You'd need it to happen again roughly ten to the thirty-eight times over.
+
+And quantum computers? The best known quantum algorithms do lower the exponents for these problems. But even under optimistic assumptions about future hardware, the work for a SHA five-twelve collision stays at numbers like two to the hundred and seventy, which has more than fifty digits. Brute force is simply not how anyone will forge a two fifty-six tee name.

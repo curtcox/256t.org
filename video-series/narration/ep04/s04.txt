@@ -1,0 +1,9 @@
+Now plug in SHA five-twelve. N is two to the five hundred twelve, so the chance of any accidental collision among n files is about n squared, over two to the five hundred thirteen.
+
+The nice thing about writing everything in powers of two is that the arithmetic becomes counting. Every time you double the number of files, the probability goes up by a factor of four, which is two rungs on this ladder.
+
+A trillion files is about two to the forty. Square it: two to the eighty. Divide by two to the five hundred thirteen. So the chance is about one in two to the four hundred thirty-three.
+
+Eighteen quintillion files, two to the sixty-four: one in two to the three hundred eighty-five. Go all the way up to two to the one hundred twenty-eight files, a number with thirty-nine digits: still one in two to the two hundred fifty-seven. You don't get to a coin flip until somewhere around two to the two hundred fifty-six files.
+
+These exponents are so lopsided that it's easy to stop feeling them. So let's try to make one concrete.

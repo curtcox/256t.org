@@ -1,0 +1,9 @@
+This is where that eight-character length prefix pulls its weight.
+
+Before a single byte arrives, you already know exactly how many bytes the right answer contains. For the Gettysburg Address, it's fifteen hundred and eleven. So you can hash the bytes as they stream in, while counting them.
+
+If the stream ends at exactly fifteen hundred and eleven, finish the hash and compare. If the stream ends early, it's wrong, and you know immediately. And here's the important case. If a server keeps sending past fifteen hundred and eleven bytes, it's wrong too. You can hang up on it right then. A malicious server can't make you download a gigabyte of junk, or an endless stream, in order to find out that it's lying. The most it can ever waste is the length you asked for.
+
+Knowing the length up front helps honest transfers, too. You can set aside exactly the right amount of memory, and show an honest progress bar.
+
+There's one limit worth being upfront about. For hashed content, the fingerprint covers the whole file, so you can't be certain the bytes are right until you've seen the last one. You can reject early, but you can only accept at the end. Some other systems make a different trade-off there, and we'll look at that in the final episode.

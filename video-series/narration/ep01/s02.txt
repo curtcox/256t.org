@@ -1,0 +1,7 @@
+Let's look closely at what an ordinary web address actually says.
+
+Every part of it is about location. This part says which computer to contact. This part says which folder on that computer. And this last part says which name to ask for inside that folder. Read it out loud and it's really a set of directions. Go here. Then go here. Then ask for this.
+
+That's a street address. And a street address is a great way to find a house. It's a terrible way to identify one.
+
+If the house is torn down, the address leads you to an empty lot. That's link rot. And if a different house gets built on the same spot, the address still leads you somewhere, quite confidently, just to the wrong thing. That's content drift. The address never promised anything about the house. It only ever promised a place.

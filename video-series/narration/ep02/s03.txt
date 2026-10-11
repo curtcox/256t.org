@@ -1,0 +1,9 @@
+The first eight characters of every C-I-D are the length of the content, in bytes.
+
+Eight characters at six bits each is forty-eight bits. And notice how well that fits our gear. Forty-eight bits is exactly six bytes, which turns the gear exactly twice and produces exactly eight characters, with nothing left over and no padding. So the length always takes up precisely eight characters, and whatever comes after it starts on a clean character boundary. I don't think that's an accident.
+
+You can read the length like an odometer, where each wheel counts in base sixty-four instead of base ten. The empty file has length zero, so its prefix is eight A's, because A is the zero digit. A one-byte file is seven A's and a B. Let's decode the Gettysburg Address. The first six wheels are A, so they're zero. Then X, which is twenty-three, and lowercase n, which is thirty-nine. Twenty-three times sixty-four, plus thirty-nine, is fifteen hundred and eleven. That's exactly how many bytes are in the file.
+
+So how big can the content be? Forty-eight bits can count up to two to the forty-eighth. Split that up as two to the eighth, times two to the tenth, four times. Two to the tenth is roughly a thousand, the "kilo" step, and each further factor is the next step up: kilo, mega, giga, tera. So two to the forty-eight bytes is two hundred and fifty-six terabytes, in the power-of-two sense. Two hundred fifty-six T. That's where the name comes from.
+
+And now the A's make sense. A means zero. Two hundred fifty-six terabytes is enormous compared to almost any real file, so the high wheels of the odometer almost never move. A one-megabyte file is four A's, an E, and three more A's. A gigabyte only gets you two A's, a B, and five more A's. You need a full terabyte before that second character even budges.

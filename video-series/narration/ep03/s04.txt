@@ -1,0 +1,9 @@
+Security people split "can you find a collision?" into three separate games, and they have very different difficulties. Let's use fingerprints of people, because the analogy works well here.
+
+Game one is called finding a preimage. I hand you a fingerprint, just the print, and you have to find any person in the world who has it. For a hash, that's: given an output, find any input that produces it. If the hash behaves like it's supposed to, the best you can do is guess inputs at random until one hits, and with five hundred and twelve bits of output, that takes on the order of two to the five hundred and twelve tries.
+
+Game two is the second preimage. Now I hand you a specific person, call her Alice, and you have to find somebody else whose fingerprint matches hers. For data: here's a file, now find a different file with the same hash. This is also about two to the five hundred and twelve tries, because you're still trying to hit one particular target.
+
+Game three is the collision. I give you nothing at all. You just have to find any two people, anywhere, whose fingerprints match each other. This turns out to be dramatically easier. You don't need to hit a target, you just need any two of your guesses to hit each other, and the number of pairs grows much faster than the number of guesses. The cost drops to about the square root: two to the two hundred and fifty-six. We'll derive exactly why in the next episode. It's the famous birthday paradox.
+
+"Dramatically easier" is relative, though. Two to the two hundred and fifty-six is a number with seventy-eight digits. That's in the same general neighborhood as the number of atoms in the observable universe.

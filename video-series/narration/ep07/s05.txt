@@ -1,0 +1,9 @@
+Fourth, a design choice that's easy to miss: two fifty-six tee hashes the whole file as one piece.
+
+That has a cost. Like we saw last episode, you can reject bad bytes early, but you can't fully accept anything until the very last byte arrives. And if a long download turns out to be wrong, you don't know which part was bad.
+
+Many systems avoid that with a structure called a Merkle tree. Cut the file into chunks. Hash each chunk. Then hash the hashes together in pairs, and pairs of those, all the way up to a single root, and name the file by that root. Now every chunk can be checked on its own the moment it arrives, so you can pull different pieces from different servers, and re-fetch only the piece that went wrong.
+
+So why doesn't two fifty-six tee do that? Because a tree has parameters. How big are the chunks? How wide is the tree? Different choices give the same file different names. In some popular systems, the same file really can end up with several different identifiers depending on settings. two fifty-six tee gives every sequence of bytes exactly one name, and an implementation that fits on a slide. It's choosing simplicity and uniqueness over piecewise verification.
+
+One more limit falls out of the format: the length prefix tops out at just under two hundred fifty-six terabytes. For a single file, that's comfortably more than almost anyone needs.

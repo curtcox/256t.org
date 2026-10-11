@@ -1,0 +1,55 @@
+Here are three C-I-Ds. Right now they probably look like noise. By the end of this video, you'll be able to read the first one by hand, read the length out of all three, and explain where every number in the format comes from. There's surprisingly little in here that's arbitrary.
+
+And you might already have noticed something odd. Why do they all start with so many capital A's? Keep that question in mind. It has a nice answer.
+
+Everything in a C-I-D is made of bytes, and every byte is eight bits. The letter capital A, for instance, is stored as the byte zero one zero zero zero zero zero one, which is the number sixty-five.
+
+But eight-bit bytes are awkward to put in a web address, because most byte values aren't printable characters. So two fifty-six tee uses an encoding called base sixty-four U R L. It has an alphabet of exactly sixty-four characters: the capital letters, the lowercase letters, the ten digits, and then a dash and an underscore. And sixty-four is two to the sixth, so each character carries exactly six bits of information. No more, no less.
+
+Quick aside on that "url" part. Ordinary base sixty-four uses a plus sign and a slash for its last two characters, and those both mean something special inside a web address. The URL-safe variant swaps them for a dash and an underscore. It also drops the equals signs that ordinary base sixty-four tacks on as padding at the end. So everything here can sit in a URL or a filename untouched.
+
+Now here is the little gear that makes the whole format click. Eight and six don't line up evenly. But three bytes is twenty-four bits, and twenty-four bits is exactly four characters of six bits. So base sixty-four works like a gear: every three bytes in, four characters out.
+
+Let's do one by hand. Take the single byte for capital A. Chop off the first six bits: zero one zero zero zero zero. That's sixteen, and position sixteen in the alphabet is the letter Q. We have two bits left over, zero one. Pad them out with zeros to make a full six-bit group, and that's sixteen again. Another Q. So the single byte "A" becomes the two characters "QQ."
+
+Look back at the first C-I-D. It ends in Q Q.
+
+The first eight characters of every C-I-D are the length of the content, in bytes.
+
+Eight characters at six bits each is forty-eight bits. And notice how well that fits our gear. Forty-eight bits is exactly six bytes, which turns the gear exactly twice and produces exactly eight characters, with nothing left over and no padding. So the length always takes up precisely eight characters, and whatever comes after it starts on a clean character boundary. I don't think that's an accident.
+
+You can read the length like an odometer, where each wheel counts in base sixty-four instead of base ten. The empty file has length zero, so its prefix is eight A's, because A is the zero digit. A one-byte file is seven A's and a B. Let's decode the Gettysburg Address. The first six wheels are A, so they're zero. Then X, which is twenty-three, and lowercase n, which is thirty-nine. Twenty-three times sixty-four, plus thirty-nine, is fifteen hundred and eleven. That's exactly how many bytes are in the file.
+
+So how big can the content be? Forty-eight bits can count up to two to the forty-eighth. Split that up as two to the eighth, times two to the tenth, four times. Two to the tenth is roughly a thousand, the "kilo" step, and each further factor is the next step up: kilo, mega, giga, tera. So two to the forty-eight bytes is two hundred and fifty-six terabytes, in the power-of-two sense. Two hundred fifty-six T. That's where the name comes from.
+
+And now the A's make sense. A means zero. Two hundred fifty-six terabytes is enormous compared to almost any real file, so the high wheels of the odometer almost never move. A one-megabyte file is four A's, an E, and three more A's. A gigabyte only gets you two A's, a B, and five more A's. You need a full terabyte before that second character even budges.
+
+Now the rest of the name. For content longer than sixty-four bytes, the next part is the SHA five-twelve hash of the content. We'll look at what that function does in the next episode. For today, all that matters is that it always produces exactly five hundred and twelve bits, which is sixty-four bytes, no matter whether you feed it a sentence or a movie.
+
+How many base sixty-four characters does it take to hold five hundred and twelve bits? Five hundred twelve divided by six is eighty-five and a third. So eighty-five characters isn't quite enough, and we need eighty-six, with a few padding zeros in the last one.
+
+Eight characters of length, plus eighty-six of fingerprint. Ninety-four. That's the maximum length of a C-I-D, and it's the length of nearly every C-I-D you'll ever see.
+
+Remember the sticky note from last episode? Using the content itself as its own name is perfect, except that big content makes a big name. But a fingerprint costs eighty-six characters no matter what. So for tiny content, the fingerprint is actually longer than the thing it's fingerprinting.
+
+Let's plot it. Along the bottom, the length of the content in bytes. Up the side, how many characters we'd need after the length prefix. The hash is a flat line at eighty-six. Writing the content out directly is this staircase, climbing four characters for every three bytes.
+
+The staircase meets the flat line at exactly sixty-four bytes. Sixty-four bytes is five hundred and twelve bits, the same as a SHA five-twelve hash, so it takes the same eighty-six characters. One byte more and it would need eighty-seven, which no longer fits.
+
+So the sixty-four byte threshold isn't a design whim. It's the largest size where the content fits in the space a hash would have taken anyway. At or below it, two fifty-six tee puts the content itself in the name. Above it, the hash. And as a result, every C-I-D for content of sixty-four bytes or more is exactly ninety-four characters long, whichever branch it took.
+
+Inline names have a lovely property. They're not just unlikely to collide. They can't. Two different short contents give two different names, because the names literally contain them. And you don't need a server to look one up. The C-I-D for "Hello" doesn't point to the word "Hello." It is the word "Hello."
+
+Here's a pleasing coincidence that isn't really a coincidence. If you count every possible piece of content from zero up to sixty-four bytes, there are almost exactly two to the five hundred and twelve of them. That's the same as the number of possible SHA five-twelve outputs. Both kinds of suffix are filling up the same eighty-six characters, just in different ways.
+
+So here's how to read any C-I-D. Decode the first eight characters to get the length. If it's sixty-four or less, everything after that is the content itself, so just decode it, and you're done, without touching a network. If it's more than sixty-four, the rest is a fingerprint, and now you need to go find bytes that match it.
+
+Let's run our three mystery names through. The first is one byte, inline: it's the letter A. The second is five bytes, inline: "Hello." The third is fifteen hundred and eleven bytes, so it's a fingerprint, and it happens to be the Gettysburg Address. And even the empty file has a name: eight A's, and nothing after them.
+
+That's the whole format. Here it is as code. Encode the length as six bytes, big end first, then base sixty-four U R L. If the content is sixty-four bytes or less, encode the content. Otherwise, encode its SHA five-twelve hash. Stick them together.
+
+Because it's this small, it's been implemented in more than forty programming languages in the two fifty-six tee repository, from Bash to Zig. And they're all checked against the same set of example files, so they all agree, byte for byte, on every name.
+
+So: eight characters of length, which gives the two fifty-six in the name. Then up to eighty-six characters that are either the content itself or its fingerprint, split at exactly the point where the two cost the same. Ninety-four characters at most.
+
+The only part of this we've treated as a black box is that fingerprint. Next time, we'll open it up, and ask exactly what a hash function promises, and what it doesn't.

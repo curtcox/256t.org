@@ -1,0 +1,5 @@
+The liar's strategy is to serve you something other than what you asked for. Maybe it's malware instead of the installer. Maybe it's an edited version of a document. It costs them nothing, and if you don't check, it works every time.
+
+But we know how to check. The name is computed from the content, so when the bytes arrive, you compute their C-I-D yourself and compare. If the liar sent anything other than the real content, the C-I-D won't match, and you throw it away.
+
+This defense is absolute in a way that's unusual in security. It doesn't depend on how clever the liar is, or how many computers they have. Any bytes other than the right ones produce a different C-I-D, unless the liar has found a genuine collision. And that's the forger's job, not the liar's. So verification takes the cheapest attack there is, and turns it into the most expensive one.

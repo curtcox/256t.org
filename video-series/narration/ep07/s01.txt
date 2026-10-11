@@ -1,0 +1,3 @@
+Over six episodes, we've seen everything two fifty-six tee does. It's a short list. Turn bytes into a name. Turn a name back into a check.
+
+What's striking is the much longer list of things it deliberately doesn't do. The spec even has a section for them, called "beyond the scope of this text." In this final episode, I want to go through those omissions, because each one is a trade-off, and each trade-off buys something. Then we'll meet the neighbors: other systems that made different choices.

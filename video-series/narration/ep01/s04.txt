@@ -1,0 +1,11 @@
+Once names are computed from content, a whole list of nice properties falls out, almost for free.
+
+First: any copy will do. If the name means "these exact bytes," then it stops mattering where the bytes come from. A big server, a library's archive, a friend's laptop, a cache on the other side of the planet. If someone has a copy, they can hand it to you, and it's just as good as the original, because it is the original.
+
+Second, and this is the one I find genuinely remarkable: you can check. When the bytes arrive, you run the recipe yourself. If the name you compute matches the name you asked for, you got the right thing. That's true even if the bytes came from a stranger you have no reason to trust. Trust moves away from the messenger and onto the math.
+
+Third, caching gets easy. The hardest question about any cached copy is, is this still current? With content names, that question disappears. A copy can't be stale, because the name means exactly these bytes, forever.
+
+And fourth, nothing can change underneath its name. If someone edits the file, they haven't changed the file. They've made a new file, with a new name. The old name still means the old bytes. Updates don't overwrite history. They sit beside it.
+
+Now, that last point has a flip side. A content name can never mean "the latest version of the annual report," because the latest version keeps changing, and the name can't. If you want that, you need a separate kind of pointer that you update over time. That's a real and interesting problem. But it's a different problem, built on top of this one. The scheme we're looking at only tries to solve the bottom layer: a name for some bytes that can't break.

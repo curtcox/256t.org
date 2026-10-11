@@ -1,0 +1,59 @@
+We've established that collisions in SHA five-twelve must exist. Now let's ask whether you should ever worry about them. And the first step is to notice that the word "collision" is doing too much work.
+
+The two fifty-six tee spec splits it up. A collision can be accidental, purely by chance, or adversarial, meaning someone tried to cause it. And separately, a collision can be merely existing, meaning two different pieces of content have actually produced the same C-I-D somewhere, or it can be a problem, meaning someone used a C-I-D to fetch content, and got the wrong content back.
+
+Those are really two different questions. How did it happen? And did it actually hurt anyone? This episode is about the accidental kind, where nobody is trying to fool anyone. We just want to know: if the whole world keeps making files, will two of them ever land on the same name by chance?
+
+Before we compute anything, let's shrink the battlefield.
+
+First, anything sixty-four bytes or smaller stores itself inline, so two different small files can never share a C-I-D. That whole region is collision-free.
+
+Second, the length is part of the name. So two files of different lengths can never collide either, no matter what their fingerprints are. A collision only counts if two files have exactly the same length, and exactly the same SHA five-twelve hash.
+
+So the real question lives inside one of these bins. Pick a length, say fifteen hundred and eleven bytes. Inside that bin are two to the five hundred and twelve possible fingerprints. If we drop files in at random, how many can we drop before two of them are likely to land on the same one?
+
+This is the birthday problem, and it's one of those results that feels wrong the first time you see it. How many people do you need in a room before there's a fifty-fifty chance that two of them share a birthday? The answer is just twenty-three.
+
+The intuition that fails is thinking about you. The chance that someone shares your birthday is small. But a shared birthday doesn't have to involve you. It can be any pair of people in the room. And the number of pairs grows much faster than the number of people.
+
+With twenty-three people there are twenty-three times twenty-two over two pairs. Two hundred and fifty-three of them. Each pair has a one-in-three-sixty-five chance of matching. So you expect about two hundred fifty-three over three hundred sixty-five matches, around zero point seven, and that makes the chance of at least one match roughly a half.
+
+Now let's make that general. Instead of three hundred sixty-five days, say there are N possible values. With n items, there are about n squared over two pairs. Each pair matches with probability one over N. So as long as the answer is small, the chance of any collision at all is about n squared, over two N.
+
+The key thing to notice is that n is squared. Collisions start becoming likely once n gets to about the square root of N. That square root is exactly why, last episode, the cost of finding a collision dropped from two to the five hundred twelve to two to the two hundred fifty-six. It's the same birthday effect.
+
+Now plug in SHA five-twelve. N is two to the five hundred twelve, so the chance of any accidental collision among n files is about n squared, over two to the five hundred thirteen.
+
+The nice thing about writing everything in powers of two is that the arithmetic becomes counting. Every time you double the number of files, the probability goes up by a factor of four, which is two rungs on this ladder.
+
+A trillion files is about two to the forty. Square it: two to the eighty. Divide by two to the five hundred thirteen. So the chance is about one in two to the four hundred thirty-three.
+
+Eighteen quintillion files, two to the sixty-four: one in two to the three hundred eighty-five. Go all the way up to two to the one hundred twenty-eight files, a number with thirty-nine digits: still one in two to the two hundred fifty-seven. You don't get to a coin flip until somewhere around two to the two hundred fifty-six files.
+
+These exponents are so lopsided that it's easy to stop feeling them. So let's try to make one concrete.
+
+Let's be absurdly generous. Imagine every one of the eight billion people alive today producing a billion new files every second. And imagine they've been doing it since the Big Bang, thirteen point eight billion years ago.
+
+That's eight billion, times a billion, times about four times ten to the seventeen seconds. Roughly three and a half times ten to the thirty-six files, which is about two to the one hundred twenty-one.
+
+Square that, and you get two to the two hundred forty-two. Divide by two to the five hundred thirteen. The chance that any two of those files, anywhere, ever, accidentally share a SHA five-twelve hash, is about one in two to the two hundred seventy-one.
+
+For comparison, there are roughly ten to the eighty atoms in the observable universe, which is about two to the two hundred sixty-six. So picture one particular atom, somewhere out there in all of it. Now pick an atom at random from the entire universe. Your chance of picking that exact one is better, by a factor of about thirty, than the chance of a single accidental collision in our imaginary civilization's entire history.
+
+And that's with an unfair simplification in favor of collisions. We lumped every file together in one bin, when, remember, a collision only counts between files of exactly the same length.
+
+This is the right way to think about numbers like these. Not "is the risk zero?" It isn't. But "how does this risk compare to the other things that can go wrong?"
+
+Every real system has failure modes. Software has bugs. Disks and networks corrupt data. Every so often a stray cosmic ray flips a bit in a computer's memory. Every one of those is enormously more likely than an accidental SHA five-twelve collision. If the machine checking a C-I-D is going to give you the wrong answer, it will be because the machine broke, not because the math did.
+
+So any engineering effort spent defending against accidental collisions is effort that could have gone toward risks that actually happen.
+
+There's one more layer of reassurance, and it's where the spec's distinction between existing and problem collisions earns its keep.
+
+Suppose, against all those odds, an accidental collision did exist. Two files somewhere really do share a C-I-D. For that to actually hurt anyone, both files would have to end up somewhere you fetch from, and you would have to ask for one and be handed the other. An existing collision only becomes a problem collision if all of that also happens. Each of those steps makes an already unimaginably unlikely event less likely still.
+
+All of this rests on one assumption. For inputs that nobody designed to break it, SHA five-twelve behaves like the ideal coin-flipping ledger. And that's a mild assumption. Similar files don't produce similar fingerprints, so the ordinary structure in real data, like lots of files that start the same way, doesn't help collisions along. And in the more than two decades SHA five-twelve has been in use, nobody has ever found a collision of any kind, accidental or otherwise.
+
+So the spec's position is: "I'm comfortable just ignoring accidental problem collisions." Having done the arithmetic, I think that's not a shrug. It's a conclusion.
+
+But we've been assuming the universe is merely indifferent. What if someone is actively trying to fool you? Adversaries don't roll dice. That's next.

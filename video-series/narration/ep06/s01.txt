@@ -1,0 +1,3 @@
+Say you've got a C-I-D, and you've found some server you've never heard of that claims to have it. You ask, and bytes start flowing back.
+
+In the last episode, the advice was "always verify." That sounds simple, and it mostly is. But it's worth getting precise about, because there are a few small decisions that separate a check that's airtight from one that only looks airtight. And once verification is solid, it unlocks something very nice: permission to cache forever.

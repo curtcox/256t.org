@@ -1,0 +1,9 @@
+So which of these three games does two fifty-six tee actually care about?
+
+Not the first one, it turns out. A C-I-D isn't trying to keep anything secret. For short content, the C-I-D literally contains the content, so recovering the input is trivial, and that's fine. Which leads to a practical warning: a C-I-D is a name, not a lock. Don't treat the C-I-D of something secret as if it hides that secret. If the secret is short, it's sitting right there in the name. And even if it's long, anyone who can guess the possibilities can just compute the C-I-D of each guess and see which one matches.
+
+What two fifty-six tee does rely on is the second and third games. It needs that nobody can take content you already have and produce different content with the same name. And it needs that nobody can produce two different pieces of content that share a name. Those are the properties that make "this C-I-D means these bytes" true enough.
+
+So two fifty-six tee's design really comes down to one sentence. Where it can be perfect, it is: the identity function for small content, with no collisions at all. And where it can't be perfect, it uses a function whose collisions are everywhere, but which no one has ever been able to find.
+
+Which raises the next question. If collisions exist, what are the odds you'll ever run into one by accident? That's next time.

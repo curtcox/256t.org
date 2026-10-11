@@ -1,0 +1,9 @@
+Let's be absurdly generous. Imagine every one of the eight billion people alive today producing a billion new files every second. And imagine they've been doing it since the Big Bang, thirteen point eight billion years ago.
+
+That's eight billion, times a billion, times about four times ten to the seventeen seconds. Roughly three and a half times ten to the thirty-six files, which is about two to the one hundred twenty-one.
+
+Square that, and you get two to the two hundred forty-two. Divide by two to the five hundred thirteen. The chance that any two of those files, anywhere, ever, accidentally share a SHA five-twelve hash, is about one in two to the two hundred seventy-one.
+
+For comparison, there are roughly ten to the eighty atoms in the observable universe, which is about two to the two hundred sixty-six. So picture one particular atom, somewhere out there in all of it. Now pick an atom at random from the entire universe. Your chance of picking that exact one is better, by a factor of about thirty, than the chance of a single accidental collision in our imaginary civilization's entire history.
+
+And that's with an unfair simplification in favor of collisions. We lumped every file together in one bin, when, remember, a collision only counts between files of exactly the same length.

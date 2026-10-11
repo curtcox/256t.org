@@ -1,0 +1,9 @@
+Here's the leak. Consider just the files that are exactly sixty-five bytes long, one byte too long to be stored inline. How many are there? Each byte has two hundred fifty-six possibilities, which is eight bits' worth, so there are two to the five hundred and twenty of them.
+
+And how many possible SHA five-twelve outputs are there? Two to the five hundred and twelve.
+
+More files than fingerprints. So by pure counting, the pigeonhole principle, lots of different files must share a fingerprint. In fact, on average, every possible SHA five-twelve output is shared by two hundred and fifty-six different sixty-five byte files. And that's just the sixty-five byte files. Collisions don't merely exist. They're everywhere.
+
+So when people say SHA five-twelve is "collision resistant," they cannot mean there are no collisions. What they mean is something much more interesting. They mean that, although collisions are everywhere, nobody knows how to find even one.
+
+Notice, by the way, that this argument says nothing about inline C-I-Ds. For content of sixty-four bytes or less, there's no hashing, and so no pigeonholes. That part of the name space is collision free by construction.

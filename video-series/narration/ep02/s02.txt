@@ -1,0 +1,11 @@
+Everything in a C-I-D is made of bytes, and every byte is eight bits. The letter capital A, for instance, is stored as the byte zero one zero zero zero zero zero one, which is the number sixty-five.
+
+But eight-bit bytes are awkward to put in a web address, because most byte values aren't printable characters. So two fifty-six tee uses an encoding called base sixty-four U R L. It has an alphabet of exactly sixty-four characters: the capital letters, the lowercase letters, the ten digits, and then a dash and an underscore. And sixty-four is two to the sixth, so each character carries exactly six bits of information. No more, no less.
+
+Quick aside on that "url" part. Ordinary base sixty-four uses a plus sign and a slash for its last two characters, and those both mean something special inside a web address. The URL-safe variant swaps them for a dash and an underscore. It also drops the equals signs that ordinary base sixty-four tacks on as padding at the end. So everything here can sit in a URL or a filename untouched.
+
+Now here is the little gear that makes the whole format click. Eight and six don't line up evenly. But three bytes is twenty-four bits, and twenty-four bits is exactly four characters of six bits. So base sixty-four works like a gear: every three bytes in, four characters out.
+
+Let's do one by hand. Take the single byte for capital A. Chop off the first six bits: zero one zero zero zero zero. That's sixteen, and position sixteen in the alphabet is the letter Q. We have two bits left over, zero one. Pad them out with zeros to make a full six-bit group, and that's sixteen again. Another Q. So the single byte "A" becomes the two characters "QQ."
+
+Look back at the first C-I-D. It ends in Q Q.

@@ -1,0 +1,3 @@
+So here's the payoff. Once your code verifies every C-I-D it receives, it stops mattering who hands you the bytes. A big data center, a library, a friend's phone, a stranger's mirror. The trust lives in the name you started with, and the math that checks it.
+
+Next time, in the last episode, we'll look at what two fifty-six tee deliberately doesn't do, and how it compares to its neighbors.

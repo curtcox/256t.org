@@ -1,0 +1,7 @@
+Here is a sentence you have seen a hundred times. Page not found.
+
+In 2024, Pew Research went back to a large sample of web pages that existed in 2013, and tried to load them again. About thirty-eight percent were simply gone. A decade earlier, a team at Harvard Law School looked at the web links cited in United States Supreme Court opinions, documents that are supposed to last for centuries, and found that about half of them no longer led to the material the Justices had cited.
+
+And there is a quieter failure that is arguably worse. Sometimes the link still works. It just doesn't show you what it used to. The page was edited. The file was replaced. The dataset was quietly updated. Nothing warns you. Same address, different content.
+
+This series is about a small, almost stubbornly simple idea for fixing both problems at once. It's written up at a site called two fifty-six tee dot org. But before we get to its specifics, I want to spend this first episode on the idea underneath it, because once you see that idea clearly, most of the design choices we'll look at later will feel less like choices and more like consequences.

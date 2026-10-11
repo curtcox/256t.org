@@ -1,0 +1,9 @@
+This is the birthday problem, and it's one of those results that feels wrong the first time you see it. How many people do you need in a room before there's a fifty-fifty chance that two of them share a birthday? The answer is just twenty-three.
+
+The intuition that fails is thinking about you. The chance that someone shares your birthday is small. But a shared birthday doesn't have to involve you. It can be any pair of people in the room. And the number of pairs grows much faster than the number of people.
+
+With twenty-three people there are twenty-three times twenty-two over two pairs. Two hundred and fifty-three of them. Each pair has a one-in-three-sixty-five chance of matching. So you expect about two hundred fifty-three over three hundred sixty-five matches, around zero point seven, and that makes the chance of at least one match roughly a half.
+
+Now let's make that general. Instead of three hundred sixty-five days, say there are N possible values. With n items, there are about n squared over two pairs. Each pair matches with probability one over N. So as long as the answer is small, the chance of any collision at all is about n squared, over two N.
+
+The key thing to notice is that n is squared. Collisions start becoming likely once n gets to about the square root of N. That square root is exactly why, last episode, the cost of finding a collision dropped from two to the five hundred twelve to two to the two hundred fifty-six. It's the same birthday effect.

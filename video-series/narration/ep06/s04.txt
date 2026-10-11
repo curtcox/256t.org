@@ -1,0 +1,3 @@
+And for small content, the story is even simpler. If the length is sixty-four bytes or less, there's nothing to fetch. The content is in the name. You don't need a server, you don't need a network, and there is nothing to trust.
+
+Well, almost nothing. There's one subtle trap here, and it's a good one.

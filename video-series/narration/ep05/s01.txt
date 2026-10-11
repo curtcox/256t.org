@@ -1,0 +1,3 @@
+Last time we found that accidental collisions are so unlikely you can stop thinking about them. But an adversary is not an accident. An adversary gets to choose their inputs. They can study the algorithm, rent warehouses of computers, and wait.
+
+The two fifty-six tee spec has a line about this that I really like. "It is easier to just lie than engineer a collision." That one sentence contains the whole structure of this episode, because there are really two kinds of adversary. There's the liar, who simply hands you the wrong bytes. And there's the forger, who tries to make wrong bytes that genuinely have the right name. Let's take them in order of how much effort they're willing to spend.
