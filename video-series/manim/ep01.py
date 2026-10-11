@@ -102,10 +102,21 @@ class S01ColdOpen(NarratedScene):
         stats = VGroup(group1, group2).arrange(DOWN, buff=0.5).to_edge(LEFT, buff=0.8)
         self.play_at("In 2024, Pew Research", card404.animate.scale(0.6).to_edge(RIGHT, buff=1.0),
                      FadeIn(group1, shift=RIGHT))
-        self.play_at("A decade earlier", FadeIn(group2, shift=RIGHT))
+        # A field of 50 "links": 38% go dark for Pew, then 50% for the Supreme Court study.
+        links = VGroup(*[RoundedRectangle(corner_radius=0.04, width=0.32, height=0.14, stroke_width=0,
+                                          fill_color=BLUE, fill_opacity=0.9) for _ in range(50)])
+        links.arrange_in_grid(5, 10, buff=0.12).next_to(card404, DOWN, buff=0.5)
+        self.play(FadeIn(links, lag_ratio=0.02), run_time=0.8)
+        order = list(np.random.default_rng(4).permutation(50))
+        self.play_at("About thirty-eight percent were simply gone",
+                     LaggedStart(*[links[i].animate.set_fill(GREY_D, 0.5) for i in order[:19]], lag_ratio=0.05))
+        self.play_at("A decade earlier", FadeIn(group2, shift=RIGHT), links.animate.set_fill(BLUE, 0.9))
+        self.play_at("documents that are supposed to last for centuries", Indicate(stat2, color=YELLOW, scale_factor=1.05))
+        self.play_at("about half of them no longer led",
+                     LaggedStart(*[links[i].animate.set_fill(RED, 0.8) for i in order[:25]], lag_ratio=0.04))
 
         # Rewind: the link works again, but the page's words quietly change.
-        self.play_at("And there is a quieter failure", FadeOut(stats), FadeOut(card404))
+        self.play_at("And there is a quieter failure", FadeOut(stats), FadeOut(card404), FadeOut(links))
         lines, link = page_lines()
         lines.move_to(UP * 0.3)
         self.play(FadeIn(lines), run_time=0.6)
@@ -123,10 +134,17 @@ class S01ColdOpen(NarratedScene):
         self.play_at("Same address, different content", FadeIn(tag, shift=UP))
 
         self.play_at("This series is about", FadeOut(lines), FadeOut(tag))
-        title = title_card("Where vs. What", "Names that can't break")
-        site = mono("256t.org", 30, LENGTH_COLOR).next_to(title, DOWN, buff=0.6)
+        title = title_card("Where vs. What", "Names that can't break").move_to(UP * 1.6)
+        site = mono("256t.org", 30, LENGTH_COLOR).next_to(title, DOWN, buff=0.5)
         self.play(Write(title[0]), FadeIn(title[1], shift=UP * 0.2))
         self.play_at("It's written up at a site called 256t.org", FadeIn(site, shift=UP * 0.2))
+        pin = map_pin().scale(0.7).next_to(site, DOWN, buff=0.5)
+        self.play_at("the idea underneath it", FadeIn(pin, shift=DOWN * 0.2))
+        self.play(ReplacementTransform(pin, FingerprintIcon(size=0.9).move_to(pin)), run_time=1.0)
+        choices = label("choices", 34, GREY_B).to_edge(DOWN, buff=0.6)
+        self.play_at("feel less like choices", FadeIn(choices))
+        self.play_at("more like consequences",
+                     Transform(choices, label("consequences", 34, YELLOW).move_to(choices)))
 
 
 class S02WhatAURLSays(NarratedScene):
@@ -262,14 +280,15 @@ class S04WhatYouGetForFree(NarratedScene):
         # 1. Any copy will do.
         p = panels[0]
         tag = mono("AAAAAAXnpY8K…", 20, HASH_COLOR).move_to(p[0].get_center() + UP * 0.35)
-        holders = VGroup(ServerRack(height=0.7), ServerRack(height=0.7),
-                         label("laptop", 18), label("USB stick", 18), label("cache", 18))
+        holders = VGroup(ServerRack(height=0.7), label("archive", 18),
+                         label("laptop", 18), label("far cache", 18), label("USB stick", 18))
         holders.arrange(RIGHT, buff=0.35).move_to(p[0].get_center() + DOWN * 0.85)
         arrows = VGroup(*[Arrow(tag.get_bottom(), h.get_top(), buff=0.08, stroke_width=2,
                                 max_tip_length_to_length_ratio=0.15, color=GREY_B) for h in holders])
         self.play_at("First: any copy will do", FadeIn(p), FadeIn(tag))
-        self.play(LaggedStart(*[GrowArrow(a) for a in arrows], lag_ratio=0.15),
-                  LaggedStart(*[FadeIn(h) for h in holders], lag_ratio=0.15))
+        for k, phrase in enumerate(["A big server", "a library's archive", "a friend's laptop",
+                                    "a cache on the other side", "If someone has a copy"]):
+            self.play_at(phrase, GrowArrow(arrows[k]), FadeIn(holders[k]), run_time=0.5)
         self.play_at("because it is the original", Indicate(holders, color=GREEN))
 
         # 2. You can check.

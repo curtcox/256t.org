@@ -65,7 +65,14 @@ class S02SixBitCharacters(NarratedScene):
         eq = label('= 65 = "A"', 36).next_to(byte, RIGHT, buff=0.4)
         group = VGroup(byte, eq).move_to(UP * 0.5)
         self.play(FadeIn(byte, lag_ratio=0.1))
+        eight = Brace(byte, DOWN, color=GREY_B)
+        eight_label = label("8 bits = 1 byte", 26, GREY_B)
+        eight.put_at_tip(eight_label)
+        self.play_at("every byte is eight bits", GrowFromCenter(eight), FadeIn(eight_label))
+        self.play_at("The letter capital A", LaggedStart(*[Indicate(cell, color=YELLOW, scale_factor=1.25)
+                                                            for cell in byte], lag_ratio=0.15, run_time=2.0))
         self.play_at("which is the number sixty-five", FadeIn(eq))
+        group.add(eight, eight_label)
 
         self.play_at("But eight-bit bytes are awkward", FadeOut(group))
         table = alphabet_table().move_to(UP * 0.6)
@@ -239,6 +246,10 @@ class S04Fingerprint(NarratedScene):
         block = label("64 bytes = 512 bits", 28, HASH_COLOR).next_to(machine, RIGHT, buff=0.5)
         self.play(FadeIn(ribbon), FadeIn(machine))
         self.play_at("the next part is the SHA-512 hash", feed_through(machine, ribbon, block))
+        later = tag_box("what it does inside: Episode 3", GREY_B, 22).next_to(machine, DOWN, buff=0.5)
+        self.play_at("We'll look at what that function does", FadeIn(later, shift=UP * 0.2))
+        self.play_at("it always produces exactly five hundred and twelve bits",
+                     FadeOut(later), Circumscribe(block, color=HASH_COLOR))
         tiny = ByteRibbon.text(b"Hi", cell_size=0.34).move_to(LEFT * 4.2 + UP * 2)
         movie = ByteRibbon.text(b"A movie, many gigabytes long", cell_size=0.34, max_cells=12)
         movie.move_to(LEFT * 4.2 + UP * 2)
@@ -294,7 +305,19 @@ class S05SmallThings(NarratedScene):
         note[1].move_to(note[0])
         note.rotate(0.08).to_corner(UR, buff=0.4)
         self.play(FadeIn(note, shift=DOWN))
-        self.play_at("Let's plot it", Create(axes), FadeIn(xl), FadeIn(yl), FadeIn(xt), FadeIn(yt))
+        big = VGroup(label("a movie", 24, GREY_B),
+                     ByteRibbon.text(b"...a very long movie file...", cell_size=0.3)).arrange(RIGHT, buff=0.3)
+        big.move_to(UP * 1.6)
+        self.play_at("big content makes a big name", FadeIn(big, shift=RIGHT))
+        hi_hash = fit_width(mono(sha512_b64(b"Hi"), 22, HASH_COLOR), FRAME_W - 1.5)
+        hi_inline = mono("SGk", 30, INLINE_COLOR)
+        compare = VGroup(VGroup(label('"Hi" as a fingerprint: 86 characters', 22, HASH_COLOR), hi_hash).arrange(DOWN, buff=0.12),
+                         VGroup(label('"Hi" as itself: 3 characters', 22, INLINE_COLOR), hi_inline).arrange(DOWN, buff=0.12))
+        compare.arrange(DOWN, buff=0.4).move_to(DOWN * 0.8)
+        self.play_at("But a fingerprint costs eighty-six characters", FadeOut(big), FadeIn(compare[0]))
+        self.play_at("the fingerprint is actually longer", FadeIn(compare[1]))
+        self.play_at("Let's plot it", FadeOut(compare), run_time=0.4)
+        self.play(Create(axes), FadeIn(xl), FadeIn(yl), FadeIn(xt), FadeIn(yt))
 
         flat = axes.plot(lambda x: 86, x_range=[0, 80], color=HASH_COLOR)
         flat_label = label("hash: always 86", 22, HASH_COLOR).next_to(axes.c2p(80, 86), UP, buff=0.12).shift(LEFT * 0.8)
@@ -343,9 +366,19 @@ class S05SmallThings(NarratedScene):
                      FadeOut(VGroup(axes, xl, yl, xt, yt, flat, flat_label, stairs, stair_label, meet, meet_label,
                                     over, over_dot, over_label, green, gold, rows)))
         self.play(FadeIn(hello_card[0]))
+        lower = CIDText(compute_cid(b"hello"), size=60).next_to(hello_card[0], DOWN, buff=0.3)
+        differ = SurroundingRectangle(VGroup(hello_card[0].chars(8, 9), lower.chars(8, 9)), color=YELLOW, buff=0.06)
+        self.play_at("Two different short contents", FadeIn(lower))
+        self.play(Create(differ))
+        no_server = VGroup(ServerRack(height=1.0), label("not needed", 22, GREY_B)).arrange(DOWN, buff=0.1)
+        no_server.to_edge(RIGHT, buff=1.0)
+        strike = Line(no_server[0].get_corner(UL), no_server[0].get_corner(DR), color=RED, stroke_width=6)
+        self.play_at("you don't need a server", FadeIn(no_server), Create(strike))
+        self.play_at("doesn't point to the word", FadeOut(VGroup(lower, differ)))
         self.play_at("It is the word", FadeIn(hello_card[1]))
 
-        self.play_at("Here's a pleasing coincidence", hello_card.animate.scale(0.6).to_edge(UP))
+        self.play_at("Here's a pleasing coincidence", hello_card.animate.scale(0.6).to_edge(UP),
+                     FadeOut(VGroup(no_server, strike)))
         left = VGroup(label("contents of 0–64 bytes", 28, INLINE_COLOR),
                       label("(256⁶⁵ − 1)/255 ≈ 1.004 × 2⁵¹²", 30)).arrange(DOWN, buff=0.25)
         right = VGroup(label("SHA-512 outputs", 28, HASH_COLOR), label("2⁵¹²", 30)).arrange(DOWN, buff=0.25)

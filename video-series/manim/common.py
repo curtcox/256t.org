@@ -256,22 +256,35 @@ def _probe_duration(path: Path) -> float:
     return float(result.stdout.strip())
 
 
-class NarratedScene(Scene):
+class NarratedScene(MovingCameraScene):
     """A Scene paced by its narration clip.
 
     Subclasses set `episode` and `number`. Use `self.cue("phrase")` to wait
     until the narrator reaches a phrase (written as it appears in the script),
     and `self.play_at("phrase", *animations)` as a shortcut. When construct()
     returns, the scene holds until the narration ends, plus `tail` seconds.
+
+    Two rules keep the picture alive while the narrator talks:
+    - an empty (all-black) screen never waits for a cue; the next visual comes
+      in immediately, slightly ahead of the words;
+    - any hold of `drift_after` seconds or more becomes a slow camera push-in
+      (at most `max_drift`), which eases back out with the next animation.
+      Only the camera moves, so layout is unaffected.
     """
 
     episode: int = 0
     number: int = 0
-    tail: float = 0.75
+    tail: float = 0.4
+    drift_after: float = 3.0
+    drift_per_second: float = 0.005
+    max_drift: float = 0.05
 
     def setup(self):
+        super().setup()
         self.narration = Narration(self.episode, self.number)
         self.late_cues: list[tuple[str, float]] = []
+        self._zoom = 1.0
+        self._drifting = False
         if self.narration.audio:
             self.add_sound(str(self.narration.audio))
 
@@ -279,11 +292,47 @@ class NarratedScene(Scene):
     def now(self) -> float:
         return self.renderer.time
 
+    def _anything_visible(self) -> bool:
+        for mob in self.mobjects:
+            for part in mob.get_family():
+                if isinstance(part, ImageMobject):
+                    return True
+                if not isinstance(part, VMobject) or not part.has_points():
+                    continue
+                if part.get_fill_opacity() > 0.02:
+                    return True
+                if part.get_stroke_width() > 0 and part.get_stroke_opacity() > 0.02:
+                    return True
+        return False
+
+    def play(self, *animations, **kwargs):
+        restoring = (self._zoom != 1.0 and not self._drifting
+                     and not all(isinstance(a, Wait) for a in animations))
+        if restoring:
+            animations = (*animations, self.camera.frame.animate.scale(1 / self._zoom).move_to(ORIGIN))
+            self._zoom = 1.0
+        super().play(*animations, **kwargs)
+
+    def hold(self, seconds: float):
+        """Wait, drifting the camera in slowly if the hold is long and something is on screen."""
+        target = max(1 - self.max_drift, self._zoom - self.drift_per_second * seconds)
+        if seconds >= self.drift_after and target < self._zoom and self._anything_visible():
+            self._drifting = True
+            self.play(self.camera.frame.animate.scale(target / self._zoom), run_time=seconds, rate_func=smooth)
+            self._drifting = False
+            self._zoom = target
+        else:
+            self.wait(seconds)
+
     def cue(self, phrase: str, offset: float = 0.0):
         target = self.narration.time_of(phrase) + offset
         delay = target - self.now
+        if not self._anything_visible():
+            # Never sit on an empty black screen waiting for a phrase: bring the
+            # next visual in now, slightly ahead of the words.
+            delay = min(delay, 0.2)
         if delay > 1 / config.frame_rate:
-            self.wait(delay)
+            self.hold(delay)
         elif delay < -0.5:
             self.late_cues.append((phrase, -delay))
 
@@ -298,7 +347,7 @@ class NarratedScene(Scene):
     def tear_down(self):
         remaining = self.narration.duration + self.tail - self.now
         if remaining > 0:
-            self.wait(remaining)
+            self.hold(remaining)
         for phrase, late in self.late_cues:
             print(f"[timing] {type(self).__name__}: animations ran {late:.1f}s past cue {phrase!r}")
         if self.now > self.narration.duration + self.tail + 0.5:
