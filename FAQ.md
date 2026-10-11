@@ -128,7 +128,7 @@ SHA-512 provides a higher collision resistance and the additional length (64 byt
 
 ### What happens with content exactly 64 bytes long?
 
-Content of exactly 64 bytes can be stored inline (base64url encodes to ≤ 86 characters) or hashed. The specification allows both, though inline storage is preferred for efficiency.
+It is always stored inline. 64 bytes base64url-encode to exactly 86 characters, the same length as a SHA-512 hash, so the content fits in the space a hash would take. The rule is: 64 bytes or fewer, inline; more than 64 bytes, hashed. Every piece of content therefore has exactly one CID. A 64-byte CID that contains a hash instead of the content is not valid.
 
 ### Why is the length prefix 8 characters?
 
