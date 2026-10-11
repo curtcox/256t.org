@@ -49,8 +49,10 @@ def speakable(text: str) -> str:
     for pattern, spoken in PRONUNCIATIONS:
         text = re.sub(rf"(?<![\w-]){pattern}(?![\w])", spoken, text)
     # A replacement can land at the start of a sentence; keep it capitalized.
-    return re.sub(r'(^|[.!?]"?\s+)([a-z])',
-                  lambda m: m.group(1) + m.group(2).upper(), text)
+    for _, spoken in PRONUNCIATIONS:
+        text = re.sub(rf"(^|[.!?]\s+){re.escape(spoken)}",
+                      lambda m: m.group(1) + spoken[0].upper() + spoken[1:], text)
+    return text
 
 
 def update_header(script: Path, words: int) -> None:
