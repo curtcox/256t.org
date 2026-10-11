@@ -92,6 +92,11 @@ class S02TheLiar(NarratedScene):
         self.play(LaggedStart(*[FadeIn(f) for f in fakes], lag_ratio=0.2))
         crosses = VGroup(*[XMark(0.25).next_to(f, RIGHT, buff=0.15) for f in fakes])
         self.play_at("how many computers they have", LaggedStart(*[GrowFromCenter(x) for x in crosses], lag_ratio=0.2))
+        forger = MaskedFigure("forger").scale(0.5).move_to(LEFT * 1.6 + UP * 0.4)
+        forger_note = label("unless it's a genuine collision:\nthat's the Forger's job", 22, ADVERSARY_COLOR)
+        forger_note.next_to(forger, RIGHT, buff=0.3)
+        self.play_at("unless the liar has found a genuine collision", FadeIn(forger, shift=LEFT), FadeIn(forger_note))
+        self.play_at("And that's the forger's job", Indicate(forger, color=ADVERSARY_COLOR))
         stat = caption("cost to defend: one hash computation · success rate of lying: 0%", 28, YELLOW)
         self.play_at("turns it into the most expensive one", FadeIn(stat))
 
@@ -103,6 +108,11 @@ class S03TwoJobs(NarratedScene):
         forger = MaskedFigure("forger").scale(0.7).to_edge(UP, buff=0.3)
         question = label("who made the original?", 36, YELLOW).next_to(forger, DOWN, buff=0.3)
         self.play(FadeIn(forger))
+        games = VGroup(*[tag_box(t, GREY_B, 26) for t in ("1. preimage", "2. second preimage", "3. collision")])
+        games.arrange(RIGHT, buff=0.4).move_to(UP * 0.3)
+        self.play_at("Remember the three games", LaggedStart(*[FadeIn(g) for g in games], lag_ratio=0.3))
+        self.play_at("one of the last two", games[0].animate.set_opacity(0.2),
+                     *[g[0].animate.set_stroke(YELLOW) for g in games[1:]])
         self.play_at("Who made the original", Write(question))
 
         left_title = label("someone else made it", 26).move_to(LEFT * 3.6 + UP * 1.0)
@@ -114,7 +124,7 @@ class S03TwoJobs(NarratedScene):
         left.next_to(left_title, DOWN, buff=0.3)
         left_cost = VGroup(label("second preimage", 24, GREY_A), label("~2⁵¹²", 40, YELLOW)).arrange(DOWN, buff=0.1)
         left_cost.next_to(left, DOWN, buff=0.25)
-        self.play_at("Suppose the original was made by someone else", FadeIn(left_title), FadeIn(left[0]))
+        self.play_at("Suppose the original was made by someone else", FadeOut(games), FadeIn(left_title), FadeIn(left[0]))
         self.play_at("the forger has to find a second preimage", FadeIn(blank))
         self.play_at("two to the five hundred twelve tries", FadeIn(left_cost))
         nope = label("not happening", 24, GREY_B).next_to(left_cost, RIGHT, buff=0.3)
@@ -151,6 +161,13 @@ class S03TwoJobs(NarratedScene):
         self.play_at("both twins genuinely have that name", FadeIn(uneasy))
         crack = caption("verification defeats the liar, not a true collision", 30, YELLOW).to_edge(UP, buff=0.4)
         self.play_at("So verification defeats the liar completely", FadeIn(crack))
+        quote = label('"a CID uniquely determines its content"', 28).move_to(UP * 2.4)
+        fracture = VMobject(color=RED, stroke_width=4).set_points_as_corners(
+            [quote.get_left() + RIGHT * 2 + UP * 0.3, quote.get_center() + LEFT * 0.4,
+             quote.get_center() + RIGHT * 0.3 + UP * 0.1, quote.get_right() + LEFT * 2 + DOWN * 0.3])
+        self.play_at("That's the honest crack", FadeOut(crack), FadeIn(quote), Create(fracture))
+        wide = label("how wide?", 30, YELLOW).next_to(quote, DOWN, buff=0.15)
+        self.play_at("how wide the crack is", FadeIn(wide, shift=UP * 0.1))
 
 
 class S04HowBig(NarratedScene):
@@ -232,6 +249,14 @@ class S05HowHashesDie(NarratedScene):
             ev = event(year, md5_heights[k], text, ORANGE)
             self.play_at(phrase, FadeIn(ev, shift=DOWN * 0.1), run_time=0.6)
         flame = label("the twins scenario, in the wild", 22, RED).move_to(RIGHT * 4.4 + UP * 3.4)
+        cert = VGroup(RoundedRectangle(corner_radius=0.08, width=2.2, height=1.2, color=RED, fill_color=GREY_E, fill_opacity=1),
+                      label("Microsoft\ncode-signing cert", 18), label("forged via MD5", 16, RED))
+        cert[1].move_to(cert[0]).shift(UP * 0.12)
+        cert[2].next_to(cert[1], DOWN, buff=0.06)
+        update = tag_box("update ✓ (really Flame)", RED, 18)
+        flame_art = VGroup(cert, update).arrange(DOWN, buff=0.2).move_to(RIGHT * 5.2 + UP * 1.75)
+        self.play_at("to forge a Microsoft code-signing certificate", FadeIn(cert, shift=LEFT * 0.2))
+        self.play_at("disguised as a legitimate software update", FadeIn(update, shift=UP * 0.2))
         self.play_at("That's the twins scenario", FadeIn(flame))
         self.play(FadeIn(sha1_name))
         pdfs = VGroup(doc_icon("PDF 1", WHITE), doc_icon("PDF 2", BLUE_B)).arrange(RIGHT, buff=0.2).scale(0.5)
@@ -242,6 +267,17 @@ class S05HowHashesDie(NarratedScene):
             self.play_at(phrase, FadeIn(ev, shift=UP * 0.1), run_time=0.6)
             if year == 2017:
                 self.play_at("produced two different PDF files", FadeIn(pdfs), FadeIn(same))
+            if year == 2005:
+                self.play(FadeOut(flame_art), run_time=0.4)
+            if year == 2020:
+                docs = VGroup(*[VGroup(doc_icon(t, c), Rectangle(width=1.1, height=0.3, stroke_width=0, fill_color=GREY_B,
+                                                                     fill_opacity=0.6))
+                                .arrange(DOWN, buff=0.04) for t, c in (("cert: Alice", WHITE), ("cert: Mallory", RED))])
+                docs.arrange(RIGHT, buff=0.3).scale(0.75).move_to(RIGHT * 5.3 + UP * 2.2)
+                gib = label("+ gibberish → same SHA-1", 18, RED).next_to(docs, DOWN, buff=0.1)
+                self.play_at("where both documents can say whatever", FadeIn(docs), FadeIn(gib))
+                cost = tag_box("~$45k (est., 2020)", YELLOW, 20).next_to(gib, DOWN, buff=0.15)
+                self.play_at("tens of thousands of dollars", FadeIn(cost))
 
         lessons = VGroup(*[tag_box(t, YELLOW, 24) for t in (
             "1. broken by shortcuts, not brute force",
@@ -273,7 +309,7 @@ class S06SHA512Today(NarratedScene):
         p27 = Rectangle(width=27 * unit, height=0.7, stroke_width=0, fill_color=ORANGE, fill_opacity=0.7)
         p27.align_to(bar, LEFT).align_to(bar, UP)
         p39 = Rectangle(width=39 * unit, height=0.35, stroke_width=0, fill_color=PURPLE, fill_opacity=0.7)
-        p39.align_to(bar, LEFT).next_to(bar, DOWN, buff=0.1)
+        p39.next_to(bar, DOWN, buff=0.1).align_to(bar, LEFT)
         l27 = label("27 / 80: best practical collision (reduced rounds)", 22, ORANGE).next_to(bar, UP, buff=0.15).align_to(bar, LEFT)
         l39 = label("39 / 80: semi-free-start (attacker also picks the starting state)", 22, PURPLE)
         l39.next_to(p39, DOWN, buff=0.15).align_to(bar, LEFT)
@@ -282,8 +318,12 @@ class S06SHA512Today(NarratedScene):
         self.play_at("reach twenty-seven of its eighty steps", GrowFromEdge(p27, LEFT), FadeIn(l27))
         self.play_at("they reach thirty-nine steps", GrowFromEdge(p39, LEFT), FadeIn(l39))
         self.play_at("That's a meaningful distance", FadeIn(full))
+        bound = label("generic collision cost: 2²⁵⁶", 30, HASH_COLOR).next_to(full, DOWN, buff=0.3)
+        self.play_at("And its birthday bound starts at", FadeIn(bound, shift=UP * 0.2))
+        chunk = label("e.g. a 2⁸⁰-fold shortcut would still leave 2¹⁷⁶", 30, YELLOW).move_to(bound)
+        self.play_at("knocked off a huge chunk", Transform(bound, chunk))
         warn = caption("if history is a guide: years of warning", 28, YELLOW)
-        self.play_at("we'd see the cracks coming years ahead", FadeIn(warn))
+        self.play_at("we'd see the cracks coming years ahead", FadeOut(bound), FadeIn(warn))
 
 
 class S07WhatStructureBuys(NarratedScene):
