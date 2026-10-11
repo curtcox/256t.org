@@ -106,25 +106,41 @@ applied, so you write "CID" rather than "C-I-D"). The time comes from:
 - otherwise, the phrase's position in the text, scaled to the clip's length (or to the estimate).
 
 Two rules keep the picture from going stale while the narrator talks. An empty (all-black) screen
-never waits for a cue, so the next visual comes in immediately. Any hold of 3 seconds or more becomes a
-slow camera push-in (at most 5%) that eases back out with the next animation. Only the camera moves, so
-layout is unaffected.
+never waits for a cue, so the next visual comes in immediately. And animations are slowed down to fill
+the pause before the next one, instead of finishing quickly and leaving a still picture. The camera
+never zooms.
 
-The drift is a fallback, not a fix. When narration runs over a still picture, first add illustration:
-a new beat cued to the words being spoken (a label, a highlight, a small diagram, a step of the
-argument appearing). Use the drift only where there's nothing more worth drawing. To find those
-places, render with the drift off and run the hold finder. It prints each static or black stretch
-along with the words being spoken during it:
+The slowing works in two passes, both automatic. A planning pass runs the scene with animations
+skipped, which takes a second or two, and records when every animation starts. The real render then
+stretches each drawing, fading, or moving animation so it ends about 0.3 seconds before the next one
+begins, up to 4 times its written run time or 4 seconds, whichever is longer. Some cases differ:
+
+- Brief emphasis (Indicate, Circumscribe, Flash, Wiggle, ApplyWave) slows less, to 2.5 times or 2.5
+  seconds, because a very slow pulse reads as sluggish.
+- A fade-in that would take more than 1.5 seconds is drawn on with Write instead (in place, without any
+  slide), because a long fade looks finished well before it ends.
+- Fading the whole screen out is never slowed, so the picture doesn't linger half-faded.
+- Anything slowed while coming in from black arrives quickly and then settles slowly, so scenes don't
+  open on a long dim fade.
+
+Later waits shrink to absorb the extra time, so every cue still lands on its word. Plans are cached in
+`manim/media/plans/` and redone whenever the episode file, `common.py`, the narration, or the alignment
+changes. Set `SERIES_NO_STRETCH=1` to render at the written run times.
+
+Slowing only goes so far. When narration runs over a still picture for long, add illustration: a new
+beat cued to the words being spoken (a label, a highlight, a small diagram, a step of the argument
+appearing). To find those places, run the hold finder after rendering. It prints each static or black
+stretch along with the words being spoken during it:
 
 ```bash
-SERIES_NO_DRIFT=1 python3 video-series/manim/render.py 1 2 3 4 5 6 7
+python3 video-series/manim/render.py 1 2 3 4 5 6 7
 ```
 
 ```bash
-python3 video-series/manim/find_holds.py 1 2 3 4 5 6 7 --min 6
+python3 video-series/manim/find_holds.py 1 2 3 4 5 6 7 --min 3
 ```
 
-As of the last pass, no static stretch runs longer than about 6 seconds with the drift off.
+As of the last pass, no static stretch runs longer than about 4.5 seconds, and the camera never moves.
 
 When `construct()` finishes, the scene holds until the narration ends, plus a short tail. If animations
 fall behind the voice, the render prints a `[timing]` line naming the cue and how late it was. If a cue

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import inspect
 import json
 import math
 import os
@@ -257,6 +258,18 @@ def _probe_duration(path: Path) -> float:
     return float(result.stdout.strip())
 
 
+PLAN_DIR = Path(__file__).resolve().parent / "media" / "plans"
+
+# Brief emphasis animations slow less; a very slow pulse reads as sluggish.
+_EMPHASIS = (Indicate, Circumscribe, Flash, Wiggle, ApplyWave, FocusOn, ShowPassingFlash, Wait)
+
+
+def _is_emphasis(anim: Animation) -> bool:
+    if isinstance(anim, AnimationGroup):
+        return all(_is_emphasis(a) for a in anim.animations)
+    return isinstance(anim, _EMPHASIS)
+
+
 class NarratedScene(MovingCameraScene):
     """A Scene paced by its narration clip.
 
@@ -268,26 +281,83 @@ class NarratedScene(MovingCameraScene):
     Two rules keep the picture alive while the narrator talks:
     - an empty (all-black) screen never waits for a cue; the next visual comes
       in immediately, slightly ahead of the words;
-    - any hold of `drift_after` seconds or more becomes a slow camera push-in
-      (at most `max_drift`), which eases back out with the next animation.
-      Only the camera moves, so layout is unaffected.
+    - animations are slowed down to fill the pause before the next one. A quick
+      planning pass (the scene run with animations skipped) records when every
+      animation starts; the real render then stretches each drawing, fading or
+      moving animation (up to `max_stretch` times its written run time, or
+      `max_stretch_time` seconds if that's longer) so it
+      finishes `stretch_margin` seconds before the next one begins. Emphasis
+      (Indicate, Circumscribe, Flash, ...) slows less: to `max_emphasis_stretch`
+      times or `max_emphasis_time` seconds. Fading the whole screen out is never slowed, and anything slowed
+      while coming in from black arrives quickly and then settles slowly. Later waits shrink to absorb the extra time, so every cue
+      still lands on its word.
+      A FadeIn slowed past `draw_after` seconds becomes a Write, since a
+      long fade looks finished well before it ends.
+      Set SERIES_NO_STRETCH=1 to render at the written run times.
     """
 
     episode: int = 0
     number: int = 0
     tail: float = 0.4
-    drift_after: float = 3.0
-    drift_per_second: float = 0.005
-    max_drift: float = 0.05
+    max_stretch: float = 4.0
+    max_stretch_time: float = 4.0
+    max_emphasis_stretch: float = 2.5
+    max_emphasis_time: float = 2.5
+    draw_after: float = 1.5
+    stretch_margin: float = 0.3
 
     def setup(self):
         super().setup()
         self.narration = Narration(self.episode, self.number)
         self.late_cues: list[tuple[str, float]] = []
-        self._zoom = 1.0
-        self._drifting = False
+        self._plays: list[list] = []  # [start, end, line] of each animation (not waits), in order
+        self._planning = bool(os.environ.get("SERIES_PLAN_OUT"))
+        self._plan = None if self._planning or os.environ.get("SERIES_NO_STRETCH") else self._load_plan()
         if self.narration.audio:
             self.add_sound(str(self.narration.audio))
+
+    # -- planning -----------------------------------------------------------
+
+    def _plan_key(self) -> str:
+        """Changes whenever anything that could move an animation changes."""
+        digest = hashlib.sha256()
+        stem = f"ep{self.episode:02d}/s{self.number:02d}"
+        for path in (Path(inspect.getfile(type(self))), Path(__file__),
+                     NARRATION_DIR / f"{stem}.txt", AUDIO_DIR / f"{stem}.json"):
+            if path.exists():
+                digest.update(path.read_bytes())
+        digest.update(f"{self.narration.duration:.4f}".encode())
+        return digest.hexdigest()
+
+    def _load_plan(self) -> list[list] | None:
+        module = Path(inspect.getfile(type(self)))
+        path = PLAN_DIR / module.stem / f"{type(self).__name__}.json"
+        key = self._plan_key()
+        plan = json.loads(path.read_text()) if path.exists() else None
+        if not plan or plan.get("key") != key:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            env = {**os.environ, "SERIES_PLAN_OUT": str(path)}
+            result = subprocess.run(
+                [sys.executable, "-m", "manim", "-s", "-ql", "--disable_caching",
+                 "--media_dir", str(PLAN_DIR / "scratch"), str(module), type(self).__name__],
+                env=env, capture_output=True, text=True)
+            if result.returncode != 0 or not path.exists():
+                print(f"[timing] {type(self).__name__}: planning pass failed; rendering unstretched\n"
+                      + result.stderr[-2000:])
+                return None
+            plan = json.loads(path.read_text())
+            if plan.get("key") != key:
+                return None
+        return plan["plays"] + [[plan["end"], plan["end"]]]
+
+    def _next_start(self) -> float | None:
+        """When, in the plan, the animation after the current one begins."""
+        index = len(self._plays) + 1
+        if self._plan is None or index >= len(self._plan):
+            return None
+        return self._plan[index][0]
+
+    # -- pacing -------------------------------------------------------------
 
     @property
     def now(self) -> float:
@@ -307,24 +377,71 @@ class NarratedScene(MovingCameraScene):
         return False
 
     def play(self, *animations, **kwargs):
-        restoring = (self._zoom != 1.0 and not self._drifting
-                     and not all(isinstance(a, Wait) for a in animations))
-        if restoring:
-            animations = (*animations, self.camera.frame.animate.scale(1 / self._zoom).move_to(ORIGIN))
-            self._zoom = 1.0
-        super().play(*animations, **kwargs)
+        anims = self.compile_animations(*animations, **kwargs)
+        if all(isinstance(a, Wait) for a in anims):
+            if self._plan is not None:
+                # Absorb time that earlier stretching borrowed from this pause.
+                next_start = self._plan[len(self._plays)][0] if len(self._plays) < len(self._plan) else None
+                if next_start is not None:
+                    room = max(0.0, next_start - self.now)
+                    for a in anims:
+                        a.run_time = min(a.run_time, room)
+                    if max(a.run_time for a in anims) < 1 / config.frame_rate:
+                        return
+            super().play(*anims)
+            return
+        next_start = self._next_start()
+        # A full clear-out stays brisk, so the screen never lingers half-faded.
+        if next_start is not None and not self._clears_screen(anims):
+            room = next_start - self.stretch_margin - self.now
+            drawn = [a for a in anims if not _is_emphasis(a)]
+            if self._stretch(drawn, room, self.max_stretch, self.max_stretch_time) and not self._anything_visible():
+                # Coming in from black: arrive quickly, then settle slowly.
+                for a in drawn:
+                    a.rate_func = rush_from
+            anims = [self._as_drawing(a) for a in anims]
+            self._stretch([a for a in anims if _is_emphasis(a) and not isinstance(a, Wait)],
+                          room, self.max_emphasis_stretch, self.max_emphasis_time)
+        start = self.now
+        super().play(*anims)
+        self._plays.append([round(start, 4), round(self.now, 4), self._caller_line()])
+
+    def _caller_line(self) -> int:
+        """The episode-file line that asked for the current animation (recorded in plans)."""
+        source = inspect.getfile(type(self))
+        frame = inspect.currentframe()
+        while frame and frame.f_code.co_filename != source:
+            frame = frame.f_back
+        return frame.f_lineno if frame else 0
+
+    @staticmethod
+    def _stretch(anims: list[Animation], room: float, cap: float, at_least: float) -> bool:
+        """Slow `anims` to fill `room` seconds, up to `cap` times their run time
+        (or `at_least` seconds, for quick ones)."""
+        base = max((a.run_time for a in anims), default=0.0)
+        factor = min(max(cap, at_least / base), room / base) if base > 0 else 1.0
+        if factor <= 1.05:
+            return False
+        for a in anims:
+            a.run_time *= factor
+        return True
+
+    def _as_drawing(self, anim: Animation) -> Animation:
+        """A plain fade-in slowed past `draw_after` seconds looks finished long before
+        it is; draw the shapes on instead, so the motion lasts as long as the time."""
+        if (type(anim) is FadeIn and anim.run_time >= self.draw_after
+                and all(isinstance(m, VMobject) for m in anim.mobject.get_family())):
+            return Write(anim.mobject, run_time=anim.run_time)
+        return anim
+
+    def _clears_screen(self, anims: list[Animation]) -> bool:
+        if not all(isinstance(a, FadeOut) for a in anims):
+            return False
+        faded = {id(m) for a in anims for m in a.mobject.get_family()}
+        return all(id(m) in faded for m in self.mobjects)
 
     def hold(self, seconds: float):
-        """Wait, drifting the camera in slowly if the hold is long and something is on screen."""
-        target = max(1 - self.max_drift, self._zoom - self.drift_per_second * seconds)
-        drift_enabled = not os.environ.get("SERIES_NO_DRIFT")  # set it to measure holds with find_holds.py
-        if drift_enabled and seconds >= self.drift_after and target < self._zoom and self._anything_visible():
-            self._drifting = True
-            self.play(self.camera.frame.animate.scale(target / self._zoom), run_time=seconds, rate_func=smooth)
-            self._drifting = False
-            self._zoom = target
-        else:
-            self.wait(seconds)
+        self.wait(seconds)
 
     def cue(self, phrase: str, offset: float = 0.0):
         target = self.narration.time_of(phrase) + offset
@@ -347,12 +464,17 @@ class NarratedScene(MovingCameraScene):
             self.play(*[FadeOut(m) for m in self.mobjects], run_time=run_time)
 
     def tear_down(self):
-        remaining = self.narration.duration + self.tail - self.now
+        end = self.narration.duration + self.tail
+        remaining = end - self.now
         if remaining > 0:
             self.hold(remaining)
+        if self._planning:
+            Path(os.environ["SERIES_PLAN_OUT"]).write_text(json.dumps(
+                {"key": self._plan_key(), "end": round(end, 4), "plays": self._plays}))
+            return
         for phrase, late in self.late_cues:
             print(f"[timing] {type(self).__name__}: animations ran {late:.1f}s past cue {phrase!r}")
-        if self.now > self.narration.duration + self.tail + 0.5:
+        if self.now > end + 0.5:
             print(f"[timing] {type(self).__name__}: scene runs {self.now:.1f}s, "
                   f"narration is {self.narration.duration:.1f}s")
 

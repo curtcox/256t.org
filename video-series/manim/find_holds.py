@@ -7,10 +7,9 @@
 For every scene video under media/, reports each stretch where the picture
 doesn't change for at least --min seconds, or is entirely black for at least
 --black seconds, together with the narration spoken during it (from the
-ElevenLabs alignment when present). Render the episodes first with render.py,
-with the camera drift switched off so it doesn't mask static holds:
+ElevenLabs alignment when present). Render the episodes first with render.py:
 
-    SERIES_NO_DRIFT=1 python3 video-series/manim/render.py 1 2 3 4 5 6 7
+    python3 video-series/manim/render.py 1 2 3 4 5 6 7
 """
 
 from __future__ import annotations
