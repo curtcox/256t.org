@@ -1,4 +1,4 @@
-Now plug in SHA five-twelve. N is two to the five hundred twelve, so the chance of any accidental collision among n files is about n squared, over two to the five hundred thirteen.
+Now plug in Shaw five-twelve. N is two to the five hundred twelve, so the chance of any accidental collision among n files is about n squared, over two to the five hundred thirteen.
 
 The nice thing about writing everything in powers of two is that the arithmetic becomes counting. Every time you double the number of files, the probability goes up by a factor of four, which is two rungs on this ladder.
 

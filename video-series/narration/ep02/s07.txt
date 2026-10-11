@@ -1,3 +1,3 @@
-That's the whole format. Here it is as code. Encode the length as six bytes, big end first, then base sixty-four U R L. If the content is sixty-four bytes or less, encode the content. Otherwise, encode its SHA five-twelve hash. Stick them together.
+That's the whole format. Here it is as code. Encode the length as six bytes, big end first, then base sixty-four U R L. If the content is sixty-four bytes or less, encode the content. Otherwise, encode its Shaw five-twelve hash. Stick them together.
 
 Because it's this small, it's been implemented in more than forty programming languages in the two fifty-six tee repository, from Bash to Zig. And they're all checked against the same set of example files, so they all agree, byte for byte, on every name.

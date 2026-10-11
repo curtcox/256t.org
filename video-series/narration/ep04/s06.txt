@@ -1,5 +1,5 @@
 This is the right way to think about numbers like these. Not "is the risk zero?" It isn't. But "how does this risk compare to the other things that can go wrong?"
 
-Every real system has failure modes. Software has bugs. Disks and networks corrupt data. Every so often a stray cosmic ray flips a bit in a computer's memory. Every one of those is enormously more likely than an accidental SHA five-twelve collision. If the machine checking a C-I-D is going to give you the wrong answer, it will be because the machine broke, not because the math did.
+Every real system has failure modes. Software has bugs. Disks and networks corrupt data. Every so often a stray cosmic ray flips a bit in a computer's memory. Every one of those is enormously more likely than an accidental Shaw five-twelve collision. If the machine checking a C-I-D is going to give you the wrong answer, it will be because the machine broke, not because the math did.
 
 So any engineering effort spent defending against accidental collisions is effort that could have gone toward risks that actually happen.

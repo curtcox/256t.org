@@ -1,4 +1,4 @@
-Now the rest of the name. For content longer than sixty-four bytes, the next part is the SHA five-twelve hash of the content. We'll look at what that function does in the next episode. For today, all that matters is that it always produces exactly five hundred and twelve bits, which is sixty-four bytes, no matter whether you feed it a sentence or a movie.
+Now the rest of the name. For content longer than sixty-four bytes, the next part is the Shaw five-twelve hash of the content. We'll look at what that function does in the next episode. For today, all that matters is that it always produces exactly five hundred and twelve bits, which is sixty-four bytes, no matter whether you feed it a sentence or a movie.
 
 How many base sixty-four characters does it take to hold five hundred and twelve bits? Five hundred twelve divided by six is eighty-five and a third. So eighty-five characters isn't quite enough, and we need eighty-six, with a few padding zeros in the last one.
 

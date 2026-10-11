@@ -1,4 +1,4 @@
-A hash function is a recipe that takes any amount of data, from nothing at all to an enormous file, and produces an output of a fixed size. For SHA five-twelve, that's always five hundred and twelve bits. It's deterministic: the same input always gives exactly the same output, on any computer, forever. And it's fast. Your laptop can hash hundreds of megabytes a second.
+A hash function is a recipe that takes any amount of data, from nothing at all to an enormous file, and produces an output of a fixed size. For Shaw five-twelve, that's always five hundred and twelve bits. It's deterministic: the same input always gives exactly the same output, on any computer, forever. And it's fast. Your laptop can hash hundreds of megabytes a second.
 
 The usual metaphor is a fingerprint. It's a small thing that stands in for a big thing, and you can compare two fingerprints much more easily than you can compare two whole people.
 

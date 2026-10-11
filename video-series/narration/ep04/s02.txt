@@ -2,6 +2,6 @@ Before we compute anything, let's shrink the battlefield.
 
 First, anything sixty-four bytes or smaller stores itself inline, so two different small files can never share a C-I-D. That whole region is collision-free.
 
-Second, the length is part of the name. So two files of different lengths can never collide either, no matter what their fingerprints are. A collision only counts if two files have exactly the same length, and exactly the same SHA five-twelve hash.
+Second, the length is part of the name. So two files of different lengths can never collide either, no matter what their fingerprints are. A collision only counts if two files have exactly the same length, and exactly the same Shaw five-twelve hash.
 
 So the real question lives inside one of these bins. Pick a length, say fifteen hundred and eleven bytes. Inside that bin are two to the five hundred and twelve possible fingerprints. If we drop files in at random, how many can we drop before two of them are likely to land on the same one?

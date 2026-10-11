@@ -4,7 +4,7 @@ At one extreme are data U-R-Is. They put the entire content directly inside the 
 
 Subresource Integrity is the web's way of saying "load this script from this location, but refuse it unless its hash matches this." It's verification bolted onto an ordinary address. It solves the content-drift problem, but if the location disappears, you're stuck, because the fingerprint isn't used to find anything.
 
-Git names every file's contents by a hash. And in a nice bit of convergent design, the thing Git hashes starts with the word "blob" and the file's length, before the content. Length plus fingerprint. Git has used SHA one, which is part of why the SHA one collisions we saw caused real concern, and it has been moving toward SHA two-fifty-six.
+Git names every file's contents by a hash. And in a nice bit of convergent design, the thing Git hashes starts with the word "blob" and the file's length, before the content. Length plus fingerprint. Git has used Shaw one, which is part of why the Shaw one collisions we saw caused real concern, and it has been moving toward Shaw two-fifty-six.
 
 There's even an internet standard for names like these, called "Naming Things with Hashes." Its links start with the letters n i, and they label which hash algorithm was used. Two fifty-six tee's draft link scheme considered it, but its format has no room for the length prefix, or for carrying small content inline.
 

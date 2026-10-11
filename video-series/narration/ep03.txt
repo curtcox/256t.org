@@ -1,10 +1,10 @@
 Here are two words that differ in a single letter: Hello with a capital H, and hello with a lowercase one. Their inline C-I-Ds differ in a single character, which makes sense. The C-I-D is just the word, re-encoded.
 
-Now here are their SHA five-twelve fingerprints. Not one family resemblance. Line up the bits and count, and two hundred and thirty-nine of the five hundred and twelve bits are different. Very close to half. Which is exactly what you'd expect if the two outputs were completely unrelated random numbers.
+Now here are their Shaw five-twelve fingerprints. Not one family resemblance. Line up the bits and count, and two hundred and thirty-nine of the five hundred and twelve bits are different. Very close to half. Which is exactly what you'd expect if the two outputs were completely unrelated random numbers.
 
 That's not a quirk of this example. It's the whole design goal. Last time we treated this fingerprint as a black box. Today we open the box, at least a little, and ask a precise question: what exactly is it promising?
 
-A hash function is a recipe that takes any amount of data, from nothing at all to an enormous file, and produces an output of a fixed size. For SHA five-twelve, that's always five hundred and twelve bits. It's deterministic: the same input always gives exactly the same output, on any computer, forever. And it's fast. Your laptop can hash hundreds of megabytes a second.
+A hash function is a recipe that takes any amount of data, from nothing at all to an enormous file, and produces an output of a fixed size. For Shaw five-twelve, that's always five hundred and twelve bits. It's deterministic: the same input always gives exactly the same output, on any computer, forever. And it's fast. Your laptop can hash hundreds of megabytes a second.
 
 The usual metaphor is a fingerprint. It's a small thing that stands in for a big thing, and you can compare two fingerprints much more easily than you can compare two whole people.
 
@@ -12,11 +12,11 @@ But metaphors leak, and this one leaks in an important place. So let's find the 
 
 Here's the leak. Consider just the files that are exactly sixty-five bytes long, one byte too long to be stored inline. How many are there? Each byte has two hundred fifty-six possibilities, which is eight bits' worth, so there are two to the five hundred and twenty of them.
 
-And how many possible SHA five-twelve outputs are there? Two to the five hundred and twelve.
+And how many possible Shaw five-twelve outputs are there? Two to the five hundred and twelve.
 
-More files than fingerprints. So by pure counting, the pigeonhole principle, lots of different files must share a fingerprint. In fact, on average, every possible SHA five-twelve output is shared by two hundred and fifty-six different sixty-five byte files. And that's just the sixty-five byte files. Collisions don't merely exist. They're everywhere.
+More files than fingerprints. So by pure counting, the pigeonhole principle, lots of different files must share a fingerprint. In fact, on average, every possible Shaw five-twelve output is shared by two hundred and fifty-six different sixty-five byte files. And that's just the sixty-five byte files. Collisions don't merely exist. They're everywhere.
 
-So when people say SHA five-twelve is "collision resistant," they cannot mean there are no collisions. What they mean is something much more interesting. They mean that, although collisions are everywhere, nobody knows how to find even one.
+So when people say Shaw five-twelve is "collision resistant," they cannot mean there are no collisions. What they mean is something much more interesting. They mean that, although collisions are everywhere, nobody knows how to find even one.
 
 Notice, by the way, that this argument says nothing about inline C-I-Ds. For content of sixty-four bytes or less, there's no hashing, and so no pigeonholes. That part of the name space is collision free by construction.
 
@@ -30,9 +30,9 @@ Game three is the collision. I give you nothing at all. You just have to find an
 
 "Dramatically easier" is relative, though. Two to the two hundred and fifty-six is a number with seventy-eight digits. That's in the same general neighborhood as the number of atoms in the observable universe.
 
-So how does SHA five-twelve actually scramble things this thoroughly? I won't go through every wire, but the shape of it is worth seeing.
+So how does Shaw five-twelve actually scramble things this thoroughly? I won't go through every wire, but the shape of it is worth seeing.
 
-First, the input gets padded, and as part of that padding, SHA five-twelve writes the length of the message into the very end. Then it's chopped into blocks of a thousand and twenty-four bits. Each block gets mixed into a running internal state, and that state is carried forward to the next block. When the last block is done, the final state is the hash.
+First, the input gets padded, and as part of that padding, Shaw five-twelve writes the length of the message into the very end. Then it's chopped into blocks of a thousand and twenty-four bits. Each block gets mixed into a running internal state, and that state is carried forward to the next block. When the last block is done, the final state is the hash.
 
 The mixing itself is made of humble operations. Eight registers of sixty-four bits each. Rotate some bits around. Combine some with exclusive-or. Use one register to choose bits from two others, take a majority vote between three, add things together and let them overflow. Each of these is trivial on its own. Then shift everything over by one, and do it again. Eighty times per block.
 
@@ -42,7 +42,7 @@ And here's what I find striking. There is no secret anywhere in this. No key, no
 
 Cryptographers have a yardstick for this. Imagine an ideal hash: a gigantic ledger. Whenever a new input shows up, you flip five hundred and twelve fair coins and write the result down next to it. If the same input ever comes back, you look up what you wrote before. Perfectly unpredictable, and perfectly consistent.
 
-No real function can be that ledger. But a good hash is supposed to be indistinguishable from it, for every practical purpose. The costs I quoted for the three games are what the ideal ledger would give you. When real hash functions have failed, it's because someone found a way to tell them apart from the ledger, a shortcut that made one of those games cheaper. That's what happened to the older functions M D five and SHA one, and we'll look at those stories in the episode on adversaries.
+No real function can be that ledger. But a good hash is supposed to be indistinguishable from it, for every practical purpose. The costs I quoted for the three games are what the ideal ledger would give you. When real hash functions have failed, it's because someone found a way to tell them apart from the ledger, a shortcut that made one of those games cheaper. That's what happened to the older functions M D five and Shaw one, and we'll look at those stories in the episode on adversaries.
 
 So which of these three games does two fifty-six tee actually care about?
 

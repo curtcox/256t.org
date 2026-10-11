@@ -150,7 +150,11 @@ def main() -> int:
     pending, characters = 0, 0
     for episode, number, text, previous, following in scenes(args.episodes, args.scene):
         stem = AUDIO / f"ep{episode:02d}" / f"s{number:02d}"
-        digest = text_hash(text, voice, args.model)
+        scene_voice = voice
+        if not scene_voice and stem.with_suffix(".json").exists():
+            # A dry run doesn't look the voice up; compare against the voice the clip was made with.
+            scene_voice = json.loads(stem.with_suffix(".json").read_text()).get("voice_id", "")
+        digest = text_hash(text, scene_voice, args.model)
         if not args.force and up_to_date(stem.with_suffix(".json"), digest):
             continue
         pending += 1

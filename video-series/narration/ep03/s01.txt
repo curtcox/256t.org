@@ -1,5 +1,5 @@
 Here are two words that differ in a single letter: Hello with a capital H, and hello with a lowercase one. Their inline C-I-Ds differ in a single character, which makes sense. The C-I-D is just the word, re-encoded.
 
-Now here are their SHA five-twelve fingerprints. Not one family resemblance. Line up the bits and count, and two hundred and thirty-nine of the five hundred and twelve bits are different. Very close to half. Which is exactly what you'd expect if the two outputs were completely unrelated random numbers.
+Now here are their Shaw five-twelve fingerprints. Not one family resemblance. Line up the bits and count, and two hundred and thirty-nine of the five hundred and twelve bits are different. Very close to half. Which is exactly what you'd expect if the two outputs were completely unrelated random numbers.
 
 That's not a quirk of this example. It's the whole design goal. Last time we treated this fingerprint as a black box. Today we open the box, at least a little, and ask a precise question: what exactly is it promising?

@@ -2,10 +2,10 @@ Remember the sticky note from last episode? Using the content itself as its own 
 
 Let's plot it. Along the bottom, the length of the content in bytes. Up the side, how many characters we'd need after the length prefix. The hash is a flat line at eighty-six. Writing the content out directly is this staircase, climbing four characters for every three bytes.
 
-The staircase meets the flat line at exactly sixty-four bytes. Sixty-four bytes is five hundred and twelve bits, the same as a SHA five-twelve hash, so it takes the same eighty-six characters. One byte more and it would need eighty-seven, which no longer fits.
+The staircase meets the flat line at exactly sixty-four bytes. Sixty-four bytes is five hundred and twelve bits, the same as a Shaw five-twelve hash, so it takes the same eighty-six characters. One byte more and it would need eighty-seven, which no longer fits.
 
 So the sixty-four byte threshold isn't a design whim. It's the largest size where the content fits in the space a hash would have taken anyway. At or below it, two fifty-six tee puts the content itself in the name. Above it, the hash. And as a result, every C-I-D for content of sixty-four bytes or more is exactly ninety-four characters long, whichever branch it took.
 
 Inline names have a lovely property. They're not just unlikely to collide. They can't. Two different short contents give two different names, because the names literally contain them. And you don't need a server to look one up. The C-I-D for "Hello" doesn't point to the word "Hello." It is the word "Hello."
 
-Here's a pleasing coincidence that isn't really a coincidence. If you count every possible piece of content from zero up to sixty-four bytes, there are almost exactly two to the five hundred and twelve of them. That's the same as the number of possible SHA five-twelve outputs. Both kinds of suffix are filling up the same eighty-six characters, just in different ways.
+Here's a pleasing coincidence that isn't really a coincidence. If you count every possible piece of content from zero up to sixty-four bytes, there are almost exactly two to the five hundred and twelve of them. That's the same as the number of possible Shaw five-twelve outputs. Both kinds of suffix are filling up the same eighty-six characters, just in different ways.

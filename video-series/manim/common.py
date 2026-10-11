@@ -53,7 +53,34 @@ FRAME_W = config.frame_width
 FRAME_H = config.frame_height
 
 
+_SUPERSCRIPT_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺"
+_PLAIN_DIGITS = "0123456789−+"
+
+
+def _superscript_markup(text: str) -> str:
+    """Rewrite Unicode superscripts (2⁻²⁷¹) as Pango <sup> markup (2<sup>−271</sup>).
+
+    Most fonts only carry ¹ ² ³ as superscript glyphs, so Pango would draw the rest
+    in a fallback font and an exponent would mix two typefaces. <sup> raises
+    ordinary digits from the same font instead.
+    """
+    out, run = [], []
+    for ch in text:
+        if ch in _SUPERSCRIPT_DIGITS:
+            run.append(_PLAIN_DIGITS[_SUPERSCRIPT_DIGITS.index(ch)])
+            continue
+        if run:
+            out.append("<sup>" + "".join(run) + "</sup>")
+            run = []
+        out.append({"&": "&amp;", "<": "&lt;", ">": "&gt;"}.get(ch, ch))
+    if run:
+        out.append("<sup>" + "".join(run) + "</sup>")
+    return "".join(out)
+
+
 def label(text: str, size: float = 28, color=WHITE, **kwargs) -> Text:
+    if any(ch in _SUPERSCRIPT_DIGITS for ch in text):
+        return MarkupText(_superscript_markup(text), font=SANS, font_size=size, color=color, **kwargs)
     return Text(text, font=SANS, font_size=size, color=color, **kwargs)
 
 

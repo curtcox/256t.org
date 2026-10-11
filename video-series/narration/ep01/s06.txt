@@ -4,6 +4,6 @@ The name it produces is called a C-I-D, short for content identifier. A C-I-D is
 
 Here's a real one. This is the C-I-D of the Gettysburg Address, fifteen hundred and eleven bytes of text. Put it after two fifty-six tee dot org and you have a link to those exact bytes.
 
-A C-I-D has two parts. The first eight characters encode the length of the content. The rest is a SHA five-twelve fingerprint of the content. Or, and here's that sticky note coming back, if the content is sixty-four bytes or less, the rest is just the content itself. Here's the C-I-D for the word "Hello." It's short enough that its name simply contains it.
+A C-I-D has two parts. The first eight characters encode the length of the content. The rest is a Shaw five-twelve fingerprint of the content. Or, and here's that sticky note coming back, if the content is sixty-four bytes or less, the rest is just the content itself. Here's the C-I-D for the word "Hello." It's short enough that its name simply contains it.
 
 And the rule for a server is just as minimal. Ask for a C-I-D, and you either get back bytes that match it, or you get "not found." That's the whole contract.

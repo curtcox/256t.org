@@ -140,7 +140,7 @@ One scene maps to one Manim `Scene` class (`manim/epNN.py`, class `SMM…`) and 
   |---|---|
   | 256t / 256t.org | "two fifty-six tee" / "… dot org" |
   | t256 (URI scheme) | "tee two fifty-six" |
-  | SHA-512, SHA-256, SHA-1 | "SHA five-twelve", "SHA two-fifty-six", "SHA one" |
+  | SHA-512, SHA-256, SHA-1 | "Shaw five-twelve", "Shaw two-fifty-six", "Shaw one" |
   | MD5 | "M D five" |
   | base64 / base64url | "base sixty-four" / "base sixty-four U R L" |
   | CID / CIDs | "C-I-D" / "C-I-Ds" |

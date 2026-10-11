@@ -1,6 +1,6 @@
 The forger wants something harder: different bytes that really do have the right name. Remember the three games from episode three? The forger is playing one of the last two, and which one depends on a question that's easy to skip past. Who made the original?
 
-Suppose the original was made by someone else. It's your file, or a document published by somebody honest. Then the forger has to find a second preimage, different content with the same C-I-D as content they had no part in creating. With SHA five-twelve, the generic cost of that is around two to the five hundred twelve tries. That's not happening.
+Suppose the original was made by someone else. It's your file, or a document published by somebody honest. Then the forger has to find a second preimage, different content with the same C-I-D as content they had no part in creating. With Shaw five-twelve, the generic cost of that is around two to the five hundred twelve tries. That's not happening.
 
 But now suppose the forger made the original. Then they get to play the easier game. They don't need to hit your target. They just need any two documents of their own design with matching names. One harmless, one harmful. That's a collision, and thanks to the birthday effect, the generic cost drops to about two to the two hundred fifty-six.
 
