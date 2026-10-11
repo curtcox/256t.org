@@ -42,3 +42,7 @@ Thumbs.db
 # C# build artifacts
 **/obj/
 **/bin/
+
+# Manim renders (video series)
+video-series/manim/media/
+video-series/manim/output/
