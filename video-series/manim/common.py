@@ -495,6 +495,7 @@ class LengthOdometer(VGroup):
                              stroke_color=LENGTH_COLOR, fill_color=GREY_E, fill_opacity=1)
             for _ in range(8)]).arrange(RIGHT, buff=0.08)
         self.digits = self._digits(n)
+        self.value = length_prefix(n)
         self.add(self.frames, self.digits)
 
     def _digits(self, n: int) -> VGroup:
@@ -504,10 +505,10 @@ class LengthOdometer(VGroup):
 
     def roll_to(self, n: int, run_time: float = 0.8) -> AnimationGroup:
         new = self._digits(n)
-        anims = []
-        for old, fresh in zip(self.digits, new):
-            if old.text != fresh.text:
-                anims.append(Transform(old, fresh, path_arc=-PI / 3))
+        target = length_prefix(n)
+        anims = [Transform(old, fresh, path_arc=-PI / 3)
+                 for old, fresh, a, b in zip(self.digits, new, self.value, target) if a != b]
+        self.value = target
         return AnimationGroup(*anims, run_time=run_time) if anims else Wait(run_time)
 
 
