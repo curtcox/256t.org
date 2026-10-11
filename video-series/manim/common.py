@@ -16,6 +16,7 @@ import base64
 import hashlib
 import json
 import math
+import os
 import re
 import subprocess
 import sys
@@ -316,7 +317,8 @@ class NarratedScene(MovingCameraScene):
     def hold(self, seconds: float):
         """Wait, drifting the camera in slowly if the hold is long and something is on screen."""
         target = max(1 - self.max_drift, self._zoom - self.drift_per_second * seconds)
-        if seconds >= self.drift_after and target < self._zoom and self._anything_visible():
+        drift_enabled = not os.environ.get("SERIES_NO_DRIFT")  # set it to measure holds with find_holds.py
+        if drift_enabled and seconds >= self.drift_after and target < self._zoom and self._anything_visible():
             self._drifting = True
             self.play(self.camera.frame.animate.scale(target / self._zoom), run_time=seconds, rate_func=smooth)
             self._drifting = False

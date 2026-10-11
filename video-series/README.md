@@ -84,9 +84,10 @@ python3 video-series/manim/render.py 1 2 3 4 5 6 7 -q h
    so intonation carries across clips, and it skips scenes whose text hasn't changed. `--dry-run`
    sends nothing and prints the character count (about 56,000 for the whole series), which is what
    ElevenLabs bills on. The voice reads at roughly 160 words per minute.
-3. **Render.** `manim/render.py` renders each scene class in order, gives every clip a uniform audio
-   track (silence where there's no narration yet), and concatenates them into
-   `manim/output/epNN.mp4`. Use `-q l` for fast previews and `-q h` for 1080p60. `--sheet` also writes a
+3. **Render.** `manim/render.py` renders each scene class in order. It builds one continuous audio
+   track, with each scene's narration padded to exactly that scene's length (silence where there's no
+   narration yet). It encodes the episode once, putting the index at the front of the file
+   (`+faststart`) so playback starts smoothly, and writes `manim/output/epNN.mp4`. Use `-q l` for fast previews and `-q h` for 1080p60. `--sheet` also writes a
    4×3 contact sheet per scene, which is a quick way to review a whole episode at a glance.
    `--scene S05SmallThings` renders a single scene.
 
@@ -103,6 +104,21 @@ applied, so you write "CID" rather than "C-I-D"). The time comes from:
 
 - the ElevenLabs character alignment, if `audio/epNN/sMM.json` exists, so it's exact;
 - otherwise, the phrase's position in the text, scaled to the clip's length (or to the estimate).
+
+Two rules keep the picture from going stale while the narrator talks. An empty (all-black) screen
+never waits for a cue, so the next visual comes in immediately. Any hold of 3 seconds or more becomes a
+slow camera push-in (at most 5%) that eases back out with the next animation. Only the camera moves, so
+layout is unaffected. To find the places where narration still runs over a static picture, render with
+the drift off and run the hold finder. It prints each long static or black stretch along with the
+words being spoken during it:
+
+```bash
+SERIES_NO_DRIFT=1 python3 video-series/manim/render.py 1 2 3 4 5 6 7
+```
+
+```bash
+python3 video-series/manim/find_holds.py 1 2 3 4 5 6 7 --min 8
+```
 
 When `construct()` finishes, the scene holds until the narration ends, plus a short tail. If animations
 fall behind the voice, the render prints a `[timing]` line naming the cue and how late it was. If a cue
