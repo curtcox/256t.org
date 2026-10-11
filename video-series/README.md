@@ -108,17 +108,23 @@ applied, so you write "CID" rather than "C-I-D"). The time comes from:
 Two rules keep the picture from going stale while the narrator talks. An empty (all-black) screen
 never waits for a cue, so the next visual comes in immediately. Any hold of 3 seconds or more becomes a
 slow camera push-in (at most 5%) that eases back out with the next animation. Only the camera moves, so
-layout is unaffected. To find the places where narration still runs over a static picture, render with
-the drift off and run the hold finder. It prints each long static or black stretch along with the
-words being spoken during it:
+layout is unaffected.
+
+The drift is a fallback, not a fix. When narration runs over a still picture, first add illustration:
+a new beat cued to the words being spoken (a label, a highlight, a small diagram, a step of the
+argument appearing). Use the drift only where there's nothing more worth drawing. To find those
+places, render with the drift off and run the hold finder. It prints each static or black stretch
+along with the words being spoken during it:
 
 ```bash
 SERIES_NO_DRIFT=1 python3 video-series/manim/render.py 1 2 3 4 5 6 7
 ```
 
 ```bash
-python3 video-series/manim/find_holds.py 1 2 3 4 5 6 7 --min 8
+python3 video-series/manim/find_holds.py 1 2 3 4 5 6 7 --min 6
 ```
+
+As of the last pass, no static stretch runs longer than about 6 seconds with the drift off.
 
 When `construct()` finishes, the scene holds until the narration ends, plus a short tail. If animations
 fall behind the voice, the render prints a `[timing]` line naming the cue and how late it was. If a cue

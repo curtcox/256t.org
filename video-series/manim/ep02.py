@@ -46,7 +46,11 @@ class S01ThreeNames(NarratedScene):
         self.play_at("read the first one by hand", Indicate(rows[0], color=YELLOW))
         self.play_at("read the length out of all three",
                      *[r.prefix.animate.set_color(LENGTH_COLOR) for r in rows])
-        self.play_at("And you might already have noticed",
+        numbers = VGroup(*[label(n, 36, YELLOW) for n in ("8", "64", "86", "94", "256")]).arrange(RIGHT, buff=0.8)
+        numbers.to_edge(DOWN, buff=0.8)
+        self.play_at("explain where every number", LaggedStart(*[FadeIn(n, shift=UP * 0.2) for n in numbers], lag_ratio=0.2))
+        self.play_at("surprisingly little in here", LaggedStart(*[Indicate(n) for n in numbers], lag_ratio=0.15))
+        self.play_at("And you might already have noticed", FadeOut(numbers),
                      *[r.prefix.animate.set_color(WHITE) for r in rows])
         a_runs = VGroup()
         for r in rows:
@@ -74,11 +78,16 @@ class S02SixBitCharacters(NarratedScene):
         self.play_at("which is the number sixty-five", FadeIn(eq))
         group.add(eight, eight_label)
 
-        self.play_at("But eight-bit bytes are awkward", FadeOut(group))
+        raw = ByteRibbon.hex(bytes([0x00, 0x1F, 0x7F, 0xFF]), cell_size=0.6)
+        address = VGroup(mono("https://example.com/", 32, GREY_B), raw).arrange(RIGHT, buff=0.15).move_to(UP * 0.5)
+        self.play_at("But eight-bit bytes are awkward", FadeOut(group), FadeIn(address))
+        unprintable = label("most byte values aren't printable characters", 28, RED).next_to(address, DOWN, buff=0.5)
+        self.play_at("most byte values aren't printable", raw.animate.tint(range(4), RED), FadeIn(unprintable))
         table = alphabet_table().move_to(UP * 0.6)
         name = label("base64url (RFC 4648 §5)", 32).to_edge(UP, buff=0.3)
-        self.play_at("So 256t uses an encoding called base64url", FadeIn(name),
+        self.play_at("So 256t uses an encoding called base64url", FadeOut(VGroup(address, unprintable)), FadeIn(name),
                      LaggedStart(*[FadeIn(c) for c in table], lag_ratio=0.01, run_time=1.5))
+        self.play_at("an alphabet of exactly sixty-four characters", Circumscribe(table, color=YELLOW))
         bands = [("A–Z → 0–25", 0, 26), ("a–z → 26–51", 26, 52), ("0–9 → 52–61", 52, 62), ("- _ → 62, 63", 62, 64)]
         for (text, lo, hi), phrase in zip(bands, ["the capital letters", "the lowercase letters",
                                                   "the ten digits", "a dash and an underscore"]):
@@ -95,6 +104,8 @@ class S02SixBitCharacters(NarratedScene):
         circles = VGroup(*[Circle(0.5, color=RED).move_to(m) for m in pair])
         std = label("standard base64", 26, GREY_B).next_to(pair, DOWN, buff=0.6)
         self.play(FadeIn(pair), FadeIn(std))
+        self.play_at("uses a plus sign", Indicate(plus, color=YELLOW, scale_factor=1.4))
+        self.play_at("and a slash", Indicate(slash, color=YELLOW, scale_factor=1.4))
         self.play_at("those both mean something special", Create(circles))
         safe = VGroup(dash, under).arrange(RIGHT, buff=1.2).move_to(pair)
         self.play_at("The URL-safe variant swaps them",
@@ -106,9 +117,12 @@ class S02SixBitCharacters(NarratedScene):
         self.play_at("It also drops the equals signs", FadeIn(pad), FadeIn(bin_))
         self.play(pad.animate.move_to(bin_[0]).scale(0.6), run_time=0.8)
         self.play(FadeOut(pad))
+        places = VGroup(tag_box("in a URL ✓", GREEN, 24), tag_box("in a filename ✓", GREEN, 24)).arrange(RIGHT, buff=0.4)
+        places.move_to(LEFT * 2 + DOWN * 2.6)
+        self.play_at("can sit in a URL or a filename", LaggedStart(*[FadeIn(pl, shift=UP * 0.15) for pl in places], lag_ratio=0.3))
 
         # The gear: 3 bytes = 24 bits = 4 characters.
-        self.play_at("Now here is the little gear", FadeOut(VGroup(safe, std, bin_)))
+        self.play_at("Now here is the little gear", FadeOut(VGroup(safe, std, bin_, places)))
         three = BitStrip(bits_of(b"Man"), cell=0.42).move_to(UP * 0.8)
         byte_marks = VGroup(*[SurroundingRectangle(three[i:i + 8], buff=0.02, color=WHITE, stroke_width=2)
                               for i in (0, 8, 16)])
@@ -188,6 +202,13 @@ class S03LengthPrefix(NarratedScene):
             else:
                 self.play(*anims)
 
+        places = VGroup(*[label(f"64{sup(7 - k)}", 18, GREY_B).next_to(frame, UP, buff=0.12)
+                          for k, frame in enumerate(odo.frames)])
+        self.play_at("each wheel counts in base sixty-four", LaggedStart(*[FadeIn(pl, shift=DOWN * 0.1) for pl in places],
+                                                                         lag_ratio=0.1))
+        self.play_at("The empty file has length zero", Indicate(readout, color=YELLOW))
+        self.play_at("because A is the zero digit", LaggedStart(*[Indicate(d, color=YELLOW, scale_factor=1.3) for d in odo.digits],
+                                                                lag_ratio=0.08))
         roll(1, "1 byte", "A one-byte file is seven A's and a B")
         roll(1511, "1,511 bytes · Gettysburg Address", "Let's decode the Gettysburg Address")
         work = VGroup(
@@ -200,7 +221,7 @@ class S03LengthPrefix(NarratedScene):
         self.play_at("Twenty-three times sixty-four", Write(work[2]))
 
         # 2^48 = 256 TiB.
-        self.play_at("So how big can the content be", FadeOut(work), FadeOut(readout), odo.animate.to_edge(UP))
+        self.play_at("So how big can the content be", FadeOut(VGroup(work, readout, places)), odo.animate.to_edge(UP))
         chain = VGroup(
             pow2(48, size=48),
             label("=", 48),
@@ -221,6 +242,15 @@ class S03LengthPrefix(NarratedScene):
 
         # Why all the A's.
         self.play_at("And now the A's make sense", FadeOut(VGroup(chain, unit_labels, logo)))
+        self.play_at("A means zero", LaggedStart(*[Indicate(d, color=YELLOW, scale_factor=1.3) for d in odo.digits], lag_ratio=0.08))
+        tiny = VGroup(label("a 1 MiB file is 1/268,435,456", 30), label("of the largest possible length", 30)).arrange(DOWN, buff=0.15)
+        tiny.move_to(DOWN * 0.4)
+        self.play_at("enormous compared to almost any real file", FadeIn(tiny, shift=UP * 0.1))
+        high = Brace(odo.frames[:4], DOWN, color=YELLOW)
+        high_label = label("high wheels: almost never move", 24, YELLOW)
+        high.put_at_tip(high_label)
+        self.play_at("the high wheels of the odometer", GrowFromCenter(high), FadeIn(high_label), tiny.animate.shift(DOWN * 0.5))
+        self.play_at("A one-megabyte file", FadeOut(VGroup(tiny, high, high_label)), run_time=0.4)
         readout = label("", 32).next_to(odo, DOWN, buff=0.5)
         self.add(readout)
         for n, text, phrase in [(1_048_576, "1 MiB", "A one-megabyte file"),
@@ -287,6 +317,10 @@ class S04Fingerprint(NarratedScene):
         self.play(FadeIn(ruler))
         total = label("8 + 86 = 94", 44, YELLOW).move_to(DOWN * 1.8)
         self.play_at("Ninety-four", Write(total))
+        self.play_at("the maximum length of a CID", Indicate(ruler[2], color=YELLOW, scale_factor=1.6))
+        others = VGroup(*[mono(compute_cid(t), 16, GREY_B) for t in (b"x" * 100, GETTYSBURG[:500], b"y" * 4096)])
+        fit_width(others.arrange(DOWN, buff=0.12), FRAME_W - 1.0).next_to(total, DOWN, buff=0.35)
+        self.play_at("nearly every CID you'll ever see", LaggedStart(*[FadeIn(o, shift=UP * 0.1) for o in others], lag_ratio=0.3))
 
 
 class S05SmallThings(NarratedScene):
@@ -317,7 +351,9 @@ class S05SmallThings(NarratedScene):
         self.play_at("But a fingerprint costs eighty-six characters", FadeOut(big), FadeIn(compare[0]))
         self.play_at("the fingerprint is actually longer", FadeIn(compare[1]))
         self.play_at("Let's plot it", FadeOut(compare), run_time=0.4)
-        self.play(Create(axes), FadeIn(xl), FadeIn(yl), FadeIn(xt), FadeIn(yt))
+        self.play(Create(axes))
+        self.play_at("Along the bottom", FadeIn(xl), FadeIn(xt))
+        self.play_at("Up the side", FadeIn(yl), FadeIn(yt))
 
         flat = axes.plot(lambda x: 86, x_range=[0, 80], color=HASH_COLOR)
         flat_label = label("hash: always 86", 22, HASH_COLOR).next_to(axes.c2p(80, 86), UP, buff=0.12).shift(LEFT * 0.8)
@@ -334,15 +370,23 @@ class S05SmallThings(NarratedScene):
         meet = Dot(axes.c2p(64, 86), color=YELLOW, radius=0.09)
         meet_label = label("64 bytes → 86 characters", 22, YELLOW).next_to(meet, DOWN + LEFT, buff=0.15)
         self.play_at("The staircase meets the flat line", FadeIn(meet, scale=2), FadeIn(meet_label))
+        bits = label("64 bytes × 8 = 512 bits", 22, YELLOW).next_to(axes.c2p(66, 70), RIGHT, buff=0.1)
+        self.play_at("Sixty-four bytes is five hundred and twelve bits", FadeIn(bits, shift=UP * 0.1))
+        self.play_at("the same as a SHA-512 hash", Indicate(flat_label, color=HASH_COLOR))
+        self.play_at("the same eighty-six characters", Flash(meet, color=YELLOW))
         over = DashedLine(axes.c2p(65, 86), axes.c2p(65, 87), color=RED)
         over_dot = Dot(axes.c2p(65, 87), color=RED, radius=0.07)
         over_label = label("65 → 87 ✗", 20, RED).next_to(over_dot, RIGHT, buff=0.1)
-        self.play_at("One byte more and it would need eighty-seven", FadeIn(over), FadeIn(over_dot), FadeIn(over_label))
+        self.play_at("One byte more and it would need eighty-seven", FadeOut(bits), FadeIn(over), FadeIn(over_dot), FadeIn(over_label))
 
         green = Polygon(axes.c2p(0, 0), axes.c2p(64, 0), axes.c2p(64, 110), axes.c2p(0, 110),
                         stroke_width=0, fill_color=INLINE_COLOR, fill_opacity=0.12)
         gold = Polygon(axes.c2p(64, 0), axes.c2p(80, 0), axes.c2p(80, 110), axes.c2p(64, 110),
                        stroke_width=0, fill_color=HASH_COLOR, fill_opacity=0.12)
+        threshold = DashedLine(axes.c2p(64, 0), axes.c2p(64, 110), color=YELLOW)
+        self.play_at("the sixty-four byte threshold", Create(threshold))
+        self.play_at("the largest size where the content fits", Indicate(stairs, color=INLINE_COLOR))
+        self.play_at("a hash would have taken anyway", Indicate(flat, color=HASH_COLOR))
         self.play_at("At or below it", FadeIn(green))
         self.play_at("Above it, the hash", FadeIn(gold))
 
@@ -364,7 +408,7 @@ class S05SmallThings(NarratedScene):
         hello_card = VGroup(hello, label('is the word "Hello"', 30, INLINE_COLOR).next_to(hello, DOWN, buff=0.3))
         self.play_at("Inline names have a lovely property",
                      FadeOut(VGroup(axes, xl, yl, xt, yt, flat, flat_label, stairs, stair_label, meet, meet_label,
-                                    over, over_dot, over_label, green, gold, rows)))
+                                    over, over_dot, over_label, green, gold, rows, threshold)))
         self.play(FadeIn(hello_card[0]))
         lower = CIDText(compute_cid(b"hello"), size=60).next_to(hello_card[0], DOWN, buff=0.3)
         differ = SurroundingRectangle(VGroup(hello_card[0].chars(8, 9), lower.chars(8, 9)), color=YELLOW, buff=0.06)
@@ -383,7 +427,11 @@ class S05SmallThings(NarratedScene):
                       label("(256⁶⁵ − 1)/255 ≈ 1.004 × 2⁵¹²", 30)).arrange(DOWN, buff=0.25)
         right = VGroup(label("SHA-512 outputs", 28, HASH_COLOR), label("2⁵¹²", 30)).arrange(DOWN, buff=0.25)
         both = VGroup(left, right).arrange(RIGHT, buff=1.5).move_to(DOWN * 0.3)
-        self.play(FadeIn(left))
+        hmm = label("a coincidence?", 34, YELLOW).move_to(DOWN * 0.3)
+        self.play(FadeIn(hmm))
+        self.play_at("isn't really a coincidence", Transform(hmm, label("…not really", 34, YELLOW).move_to(hmm)))
+        self.play_at("If you count every possible piece of content", FadeOut(hmm), FadeIn(left[0]))
+        self.play_at("almost exactly two to the five hundred and twelve", FadeIn(left[1], shift=UP * 0.1))
         self.play_at("That's the same as the number", FadeIn(right))
         fill = caption("both fill exactly 86 characters", 32, YELLOW)
         self.play_at("filling up the same eighty-six characters", FadeIn(fill))
@@ -473,8 +521,12 @@ class S07WholeRecipe(NarratedScene):
                      FadeOut(box), ReplacementTransform(code, tiles[IMPLEMENTATIONS.index("python")]),
                      LaggedStart(*[FadeIn(t) for t in tiles], lag_ratio=0.02, run_time=2))
         self.play(FadeIn(count))
+        ends = [tiles[IMPLEMENTATIONS.index(n)] for n in ("bash", "zig")]
+        self.play_at("from Bash to Zig", *[Indicate(t, color=YELLOW, scale_factor=1.3) for t in ends])
+        examples = tag_box("all checked against the same example files", GREY_B, 24).to_edge(DOWN, buff=0.4)
+        self.play_at("checked against the same set of example files", FadeIn(examples, shift=UP * 0.15))
         target = CIDText(GETTYSBURG_CID, size=24, max_width=FRAME_W - 1).to_edge(DOWN, buff=0.4)
-        self.play_at("they all agree, byte for byte", FadeIn(target))
+        self.play_at("they all agree, byte for byte", FadeOut(examples), FadeIn(target))
         outlines = VGroup(*[t[0].copy().set_fill(opacity=0).set_stroke(OK_COLOR, width=3) for t in tiles])
         self.play(LaggedStart(*[Create(o) for o in outlines], lag_ratio=0.02, run_time=1.5))
 
@@ -497,6 +549,9 @@ class S08Recap(NarratedScene):
         rows.arrange(DOWN, aligned_edge=LEFT, buff=0.6).move_to(UP * 0.3)
         self.play_at("eight characters of length", FadeIn(rows[0], shift=RIGHT))
         self.play_at("Then up to eighty-six characters", FadeIn(rows[1], shift=RIGHT))
+        self.play_at("either the content itself", Indicate(rows[1][1][0], color=INLINE_COLOR))
+        self.play_at("or its fingerprint", Indicate(rows[1][1][1], color=HASH_COLOR))
+        self.play_at("where the two cost the same", Indicate(rows[1][0], color=YELLOW))
         self.play_at("Ninety-four characters at most", FadeIn(rows[2], shift=RIGHT))
         fp = FingerprintIcon(size=1.6).move_to(DOWN * 2.6)
         self.play_at("The only part of this we've treated as a black box",

@@ -49,14 +49,23 @@ class S01CheapestAttack(NarratedScene):
         self.play(quote.animate.to_edge(UP, buff=0.4))
         liar = MaskedFigure("liar").move_to(LEFT * 3.5 + DOWN * 1.2)
         forger = MaskedFigure("forger").move_to(RIGHT * 3.5 + DOWN * 1.2)
+        self.play_at("That one sentence contains the whole structure", Indicate(quote, color=YELLOW, scale_factor=1.03))
+        slots = VGroup(*[VGroup(DashedVMobject(Circle(0.9, color=GREY_B), num_dashes=30), label("?", 48, GREY_B))
+                         for _ in range(2)])
+        for slot, fig in zip(slots, (liar, forger)):
+            slot.move_to(fig)
+        self.play_at("two kinds of adversary", LaggedStart(*[FadeIn(sl, scale=0.8) for sl in slots], lag_ratio=0.4))
         liar_name = label("the Liar", 30, ADVERSARY_COLOR).next_to(liar, UP, buff=0.25)
         forger_name = label("the Forger", 30, ADVERSARY_COLOR).next_to(forger, UP, buff=0.25)
-        self.play_at("There's the liar", FadeIn(liar, shift=RIGHT), FadeIn(liar_name))
+        self.play_at("There's the liar", FadeOut(slots[0]), FadeIn(liar, shift=RIGHT), FadeIn(liar_name))
         liar_does = label("hands you the wrong bytes", 22, GREY_A).next_to(liar, DOWN, buff=0.25)
         self.play(FadeIn(liar_does))
-        self.play_at("And there's the forger", FadeIn(forger, shift=LEFT), FadeIn(forger_name))
+        self.play_at("And there's the forger", FadeOut(slots[1]), FadeIn(forger, shift=LEFT), FadeIn(forger_name))
         forger_does = label("makes wrong bytes with the right name", 22, GREY_A).next_to(forger, DOWN, buff=0.25)
         self.play(FadeIn(forger_does))
+        effort = Arrow(LEFT * 1.6, RIGHT * 1.6, color=YELLOW, buff=0).move_to(DOWN * 1.2)
+        effort_label = label("more effort", 24, YELLOW).next_to(effort, UP, buff=0.15)
+        self.play_at("in order of how much effort", GrowArrow(effort), FadeIn(effort_label))
 
 
 class S02TheLiar(NarratedScene):
@@ -76,9 +85,14 @@ class S02TheLiar(NarratedScene):
         fake.next_to(rack, LEFT, buff=0.3).shift(DOWN * 0.3)
         self.play_at("Maybe it's malware instead of the installer", FadeIn(fake))
         self.play(fake.animate.next_to(client, RIGHT, buff=0.3).shift(DOWN * 0.5), run_time=1.2)
+        edited = ByteRibbon.text(b"edited.pdf", cell_size=0.3).tint(range(10), RED).move_to(fake, aligned_edge=LEFT)
+        self.play_at("an edited version of a document", Transform(fake, edited))
+        free = tag_box("cost to the liar: $0", RED, 22).next_to(liar, LEFT, buff=0.4)
+        self.play_at("It costs them nothing", FadeIn(free, shift=LEFT * 0.2))
+        self.play_at("it works every time", Indicate(fake, color=RED, scale_factor=1.1))
 
         loop = VerifierLoop(width=10).move_to(DOWN * 1.6)
-        self.play_at("But we know how to check", FadeIn(loop))
+        self.play_at("But we know how to check", FadeOut(free), FadeIn(loop))
         computed = mono("computed: CID B", 22, RED).next_to(loop.stations[2], UP, buff=0.25)
         self.play_at("you compute their CID yourself", loop.run(ok=False))
         self.play(FadeIn(computed))
@@ -126,6 +140,9 @@ class S03TwoJobs(NarratedScene):
         left_cost.next_to(left, DOWN, buff=0.25)
         self.play_at("Suppose the original was made by someone else", FadeOut(games), FadeIn(left_title), FadeIn(left[0]))
         self.play_at("the forger has to find a second preimage", FadeIn(blank))
+        wire = DashedLine(blank.get_right(), target_tag.get_bottom(), color=HASH_COLOR)
+        self.play_at("with the same CID as content", Create(wire))
+        self.play_at("they had no part in creating", Indicate(yours, color=GREEN))
         self.play_at("two to the five hundred twelve tries", FadeIn(left_cost))
         nope = label("not happening", 24, GREY_B).next_to(left_cost, RIGHT, buff=0.3)
         self.play_at("That's not happening", FadeIn(nope))
@@ -181,15 +198,26 @@ class S04HowBig(NarratedScene):
         rate = label("Bitcoin network ≈ 10²¹ hashes per second ≈ 2⁷⁰ / s", 32).next_to(warehouses, DOWN, buff=0.3)
         foot = label("(SHA-256, not SHA-512 — used here only as a scale; late-2025 figure)", 20, GREY_B)
         foot.next_to(rate, DOWN, buff=0.12)
-        self.play_at("the Bitcoin network", FadeIn(warehouses, lag_ratio=0.05))
+        ask = VGroup(pow2(256, size=80), label("a lot?", 48)).arrange(RIGHT, buff=0.4)
+        self.play(FadeIn(ask))
+        self.play_at("the biggest pile of hashing hardware", ask.animate.scale(0.4).to_corner(DR, buff=0.4),
+                     FadeIn(warehouses, lag_ratio=0.05))
+        self.play_at("the Bitcoin network", LaggedStart(*[Indicate(w, color=YELLOW, scale_factor=1.05) for w in warehouses],
+                                                        lag_ratio=0.2))
         self.play_at("around a zettahash per second", FadeIn(rate))
         self.play_at("It computes a different hash", FadeIn(foot))
+        scale = label('a stand-in for "every specialized hashing machine on Earth"', 24, YELLOW).next_to(foot, DOWN, buff=0.35)
+        self.play_at("a sense of scale", FadeIn(scale, shift=UP * 0.1))
 
         math_ = VGroup(
-            label("2²⁵⁶ / 2⁷⁰ per second = 2¹⁸⁶ seconds", 34),
+            VGroup(label("2²⁵⁶", 34), label("/ 2⁷⁰ per second", 34), label("= 2¹⁸⁶ seconds", 34)).arrange(RIGHT, buff=0.2),
             label(f"≈ {ATTACK_YEARS / 1e48:.0f} × 10⁴⁸ years", 34, YELLOW),
         ).arrange(DOWN, buff=0.25).move_to(DOWN * 0.8)
-        self.play_at("Point all of that at a SHA-512 collision", Write(math_[0]))
+        target = tag_box("target: one SHA-512 collision", HASH_COLOR, 24).move_to(UP * 0.55)
+        self.play_at("Point all of that at a SHA-512 collision", FadeOut(scale), FadeIn(target, shift=DOWN * 0.2))
+        for part, phrase in zip(math_[0], ["Two to the two hundred fifty-six, divided", "divided by two to the seventy",
+                                           "is two to the one hundred eighty-six seconds"]):
+            self.play_at(phrase, FadeIn(part, shift=UP * 0.1), run_time=0.5)
         self.play_at("three times ten to the forty-eight years", FadeIn(math_[1]))
 
         bar = Line(LEFT * 6.5, RIGHT * 7.5, color=RED, stroke_width=10).to_edge(DOWN, buff=0.9)
@@ -210,6 +238,12 @@ class S04HowBig(NarratedScene):
         tag = label("…but leave numbers like 2¹⁷⁰ (52 digits)", 30, YELLOW).next_to(big, DOWN, buff=0.3)
         self.play(FadeIn(chip))
         self.play_at("do lower the exponents", FadeIn(q))
+        future = VGroup(*[chip.copy().scale(0.45) for _ in range(4)])
+        for f, d in zip(future, (LEFT * 2.4 + UP * 0.5, LEFT * 2.4 + DOWN * 0.5, RIGHT * 2.4 + UP * 0.5, RIGHT * 2.4 + DOWN * 0.5)):
+            f.move_to(chip.get_center() + d)
+        self.play_at("optimistic assumptions about future hardware", LaggedStart(*[FadeIn(f, scale=0.5) for f in future],
+                                                                                 lag_ratio=0.2))
+        self.play_at("the work for a SHA-512 collision", Indicate(q, color=YELLOW, scale_factor=1.03))
         self.play_at("numbers like two to the hundred and seventy", AddTextLetterByLetter(big), run_time=1.5)
         self.play(FadeIn(tag))
         verdict = caption("brute force is not how anyone will forge a 256t name", 30, GREEN)
@@ -245,9 +279,24 @@ class S05HowHashesDie(NarratedScene):
                 (2017, "SHAttered: two PDFs,\n~2⁶³ work, ~100 GPU-years", "In 2017, researchers from Google"),
                 (2020, "chosen-prefix collision,\n~tens of thousands of $", "And by 2020")]
         self.play(FadeIn(md5_name))
+        events = {}
+        shortcut = VGroup(tag_box("more inputs (brute force)", GREY_B, 20), tag_box("structure shortcut", ORANGE, 20))
+        shortcut.arrange(DOWN, buff=0.25).move_to(RIGHT * 4.9 + UP * 2.2)
+        brute_strike = Line(shortcut[0].get_left(), shortcut[0].get_right(), color=RED, stroke_width=4)
         for k, (year, text, phrase) in enumerate(md5):
             ev = event(year, md5_heights[k], text, ORANGE)
-            self.play_at(phrase, FadeIn(ev, shift=DOWN * 0.1), run_time=0.6)
+            events[year] = ev
+            if year == 2008:
+                self.play_at(phrase, FadeIn(ev, shift=DOWN * 0.1), FadeOut(VGroup(shortcut, brute_strike)), run_time=0.6)
+            else:
+                self.play_at(phrase, FadeIn(ev, shift=DOWN * 0.1), run_time=0.6)
+            if year == 2004:
+                self.play_at("not by trying more inputs", FadeIn(shortcut[0]))
+                self.play(Create(brute_strike))
+                self.play_at("exploiting structure", FadeIn(shortcut[1], shift=UP * 0.1))
+                self.play_at("mixes its bits", Indicate(shortcut[1], color=ORANGE))
+            if year == 2012:
+                self.play_at("called Flame", Indicate(ev[2], color=RED))
         flame = label("the twins scenario, in the wild", 22, RED).move_to(RIGHT * 4.4 + UP * 3.4)
         cert = VGroup(RoundedRectangle(corner_radius=0.08, width=2.2, height=1.2, color=RED, fill_color=GREY_E, fill_opacity=1),
                       label("Microsoft\ncode-signing cert", 18), label("forged via MD5", 16, RED))
@@ -267,8 +316,16 @@ class S05HowHashesDie(NarratedScene):
             self.play_at(phrase, FadeIn(ev, shift=UP * 0.1), run_time=0.6)
             if year == 2017:
                 self.play_at("produced two different PDF files", FadeIn(pdfs), FadeIn(same))
+                self.play_at("two to the sixty-three computations", Indicate(ev[2], color=YELLOW))
+                gpus = VGroup(*[Rectangle(width=0.16, height=0.1, stroke_width=0, fill_color=TEAL, fill_opacity=0.8)
+                                for _ in range(100)]).arrange_in_grid(5, 20, buff=0.03)
+                gpus.move_to(RIGHT * 2.9 + DOWN * 3.35)
+                gpu_note = label("~100 GPU-years", 16, TEAL).next_to(gpus, UP, buff=0.08)
+                self.play_at("a hundred GPU-years", FadeIn(gpus, lag_ratio=0.01), FadeIn(gpu_note))
             if year == 2005:
                 self.play(FadeOut(flame_art), run_time=0.4)
+            if year == 2020:
+                self.play(FadeOut(VGroup(gpus, gpu_note)), run_time=0.3)
             if year == 2020:
                 docs = VGroup(*[VGroup(doc_icon(t, c), Rectangle(width=1.1, height=0.3, stroke_width=0, fill_color=GREY_B,
                                                                      fill_opacity=0.6))
@@ -285,10 +342,26 @@ class S05HowHashesDie(NarratedScene):
             "3. small outputs: 2⁶⁴ and 2⁸⁰ birthday bounds")]).arrange(DOWN, buff=0.25, aligned_edge=LEFT)
         bg = BackgroundRectangle(lessons, fill_opacity=0.92, buff=0.3)
         VGroup(bg, lessons).move_to(ORIGIN)
-        self.play_at("Three lessons", FadeIn(bg))
+        backdrop = [m for m in self.mobjects]
+        self.play_at("Three lessons", FadeIn(bg), *[m.animate.set_opacity(0.15) for m in backdrop])
         for item, phrase in zip(lessons, ["First, these functions died from shortcuts", "Second, there were years of warning",
                                           "And third, their outputs were small"]):
             self.play_at(phrase, FadeIn(item, shift=UP * 0.15), run_time=0.5)
+        unit = 9.0 / 256
+        margins = VGroup()
+        for name, bits, color in (("MD5", 64, ORANGE), ("SHA-1", 80, TEAL), ("SHA-512", 256, HASH_COLOR)):
+            bar = Rectangle(width=bits * unit, height=0.3, stroke_width=0, fill_color=color, fill_opacity=0.85)
+            tag = label(f"{name}: 2{sup(bits)}", 20, color)
+            margins.add(VGroup(tag, bar).arrange(RIGHT, buff=0.2))
+        margins.arrange(DOWN, aligned_edge=LEFT, buff=0.12)
+        for m in margins:
+            m[1].align_to(margins, LEFT).shift(RIGHT * 2.0)
+        margins_bg = BackgroundRectangle(margins, fill_opacity=0.92, buff=0.2)
+        VGroup(margins_bg, margins).next_to(bg, DOWN, buff=0.15)
+        self.play_at("birthday bound was only two to the sixty-four", FadeIn(margins_bg), FadeIn(margins[0][0]),
+                     GrowFromEdge(margins[0][1], LEFT))
+        self.play_at("two to the eighty", FadeIn(margins[1][0]), GrowFromEdge(margins[1][1], LEFT))
+        self.play_at("much margin to lose", FadeIn(margins[2][0]), GrowFromEdge(margins[2][1], LEFT))
 
 
 class S06SHA512Today(NarratedScene):
@@ -301,6 +374,10 @@ class S06SHA512Today(NarratedScene):
         start = Dot(track.n2p(2001.5), color=HASH_COLOR)
         empty = label("no collision ever found", 26, GREEN).next_to(track, UP, buff=0.15).shift(RIGHT * 1.5)
         self.play_at("So where does SHA-512 stand", FadeIn(title), Create(track), FadeIn(years), FadeIn(start))
+        lifetime = Line(track.n2p(2001.5), track.n2p(2025.8), color=HASH_COLOR, stroke_width=6)
+        self.play_at("over two decades", Create(lifetime, run_time=1.2))
+        studied = label("one of the most studied functions in cryptography", 22, GREY_A).next_to(years, DOWN, buff=0.25)
+        self.play_at("most studied functions", FadeIn(studied))
         self.play_at("no collision for it has ever been found", FadeIn(empty))
 
         bar = Rectangle(width=11, height=0.7, color=GREY_B).move_to(DOWN * 1.0)
@@ -316,14 +393,27 @@ class S06SHA512Today(NarratedScene):
         full = label("the full function: untouched", 26, GREEN).next_to(l39, DOWN, buff=0.4)
         self.play_at("They attack weakened versions", Create(bar), FadeIn(steps_label))
         self.play_at("reach twenty-seven of its eighty steps", GrowFromEdge(p27, LEFT), FadeIn(l27))
-        self.play_at("they reach thirty-nine steps", GrowFromEdge(p39, LEFT), FadeIn(l39))
+        regs = VGroup(*[Square(0.4, color=PURPLE, fill_color=PURPLE, fill_opacity=0.3) for _ in range(8)]).arrange(RIGHT, buff=0.06)
+        cant = VGroup(XMark(0.3), label("real attacks start from the fixed, published state", 20, RED)).arrange(RIGHT, buff=0.15)
+        cant.next_to(regs, RIGHT, buff=0.3)
+        fit_width(VGroup(regs, cant), FRAME_W - 1).move_to(UP * 0.35)
+        regs_label = label("starting state, chosen by the attacker", 22, PURPLE).next_to(regs, UP, buff=0.12)
+        start_state = VGroup(regs, regs_label)
+        self.play_at("choose the internal starting state", FadeIn(start_state, shift=DOWN * 0.1))
+        self.play_at("which a real attacker can't", FadeIn(cant))
+        self.play_at("they reach thirty-nine steps", FadeOut(VGroup(start_state, cant)), GrowFromEdge(p39, LEFT), FadeIn(l39))
         self.play_at("That's a meaningful distance", FadeIn(full))
         bound = label("generic collision cost: 2²⁵⁶", 30, HASH_COLOR).next_to(full, DOWN, buff=0.3)
         self.play_at("And its birthday bound starts at", FadeIn(bound, shift=UP * 0.2))
         chunk = label("e.g. a 2⁸⁰-fold shortcut would still leave 2¹⁷⁶", 30, YELLOW).move_to(bound)
         self.play_at("knocked off a huge chunk", Transform(bound, chunk))
+        self.play_at("an astronomical number behind", Indicate(bound, color=YELLOW))
+        maybe = caption("could that change someday?", 28, GREY_A)
+        self.play_at("Could that change someday", FadeOut(bound), FadeIn(maybe))
+        self.play_at("In principle", Indicate(maybe, color=GREY_A))
+        self.play_at("if history is a guide", Indicate(empty, color=GREEN))
         warn = caption("if history is a guide: years of warning", 28, YELLOW)
-        self.play_at("we'd see the cracks coming years ahead", FadeOut(bound), FadeIn(warn))
+        self.play_at("we'd see the cracks coming years ahead", ReplacementTransform(maybe, warn))
 
 
 class S07WhatStructureBuys(NarratedScene):
@@ -338,11 +428,18 @@ class S07WhatStructureBuys(NarratedScene):
             card("everything else", "exactly as strong as SHA-512's\ncollision resistance", HASH_COLOR,
                  width=4.2, height=2.6, icon=FingerprintIcon()),
         ).arrange(RIGHT, buff=0.3)
+        question = label("does 256t's structure add anything?", 34).to_edge(UP, buff=0.6)
+        self.play(FadeIn(question))
+        partly = label("partly.", 34, YELLOW).next_to(question, RIGHT, buff=0.3)
+        self.play_at("Partly", FadeIn(partly, shift=LEFT * 0.1))
         self.play_at("Inline CIDs can't be forged", FadeIn(cards[0], shift=UP * 0.2))
+        self.play_at("since the content is the name", Indicate(cards[0], color=INLINE_COLOR, scale_factor=1.05))
         self.play_at("The length prefix, honestly", FadeIn(cards[1], shift=UP * 0.2))
         hint = label("(it shines against the Liar — next episode)", 22, LENGTH_COLOR).next_to(cards[1], DOWN, buff=0.3)
         self.play_at("It helps a lot against a different kind", FadeIn(hint))
         self.play_at("For everything else", FadeIn(cards[2], shift=UP * 0.2))
+        strength = label("generic collision cost: 2²⁵⁶", 22, HASH_COLOR).next_to(cards[2], DOWN, buff=0.3)
+        self.play_at("exactly as strong as", Indicate(cards[2], color=HASH_COLOR, scale_factor=1.05), FadeIn(strength))
 
 
 class S08TwoDefenses(NarratedScene):
@@ -379,8 +476,19 @@ class S08TwoDefenses(NarratedScene):
                              YELLOW, width=6.0, height=2.4)).arrange(RIGHT, buff=0.4)
         self.play_at("First: always verify", FadeIn(habits[0], shift=UP * 0.2))
         self.play_at("Second: reduce adversaries", FadeIn(habits[1], shift=UP * 0.2))
+        who = VGroup(mask_icon(ADVERSARY_COLOR, 0.5), label("who authored it — would they gain from a swap?", 22)).arrange(RIGHT, buff=0.25)
+        where = VGroup(ServerRack(height=0.6), label("where are you fetching from?", 22)).arrange(RIGHT, buff=0.25)
+        questions = VGroup(who, where).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(habits, DOWN, buff=0.5)
+        self.play_at("whose author would benefit", FadeIn(who, shift=UP * 0.1))
+        self.play_at("about where you fetch from", FadeIn(where, shift=UP * 0.1))
         dice = dice_icon(GREY_B, 0.8).next_to(habits, DOWN, buff=0.6)
         back = label("back to accidents only", 24, GREY_B).next_to(dice, RIGHT, buff=0.3)
-        self.play_at("you're back to accidents only", FadeIn(dice), FadeIn(back))
+        self.play_at("you're back to accidents only", FadeOut(questions), FadeIn(dice), FadeIn(back))
         nxt = caption("next: what should your code do when bytes arrive?", 28, YELLOW)
-        self.play_at("Next time", FadeIn(nxt))
+        self.play_at("Next time", FadeOut(VGroup(dice, back)), FadeIn(nxt))
+        self.play_at("the first habit", Indicate(habits[0], color=GREEN, scale_factor=1.05), habits[1].animate.set_opacity(0.3))
+        stream = ByteRibbon.text(b"bytes arriving", cell_size=0.3).move_to(LEFT * 3 + DOWN * 1.8)
+        cache = CacheBox(size=1.0).move_to(RIGHT * 3.5 + DOWN * 1.8)
+        to_cache = Arrow(stream.get_right(), cache.get_left(), buff=0.3, color=GREY_B)
+        self.play_at("when bytes arrive", FadeIn(stream, shift=RIGHT * 0.5))
+        self.play_at("cache them forever", GrowArrow(to_cache), FadeIn(cache, scale=0.6))

@@ -6,6 +6,7 @@ Scenes follow video-series/ep03-what-a-hash-promises.md. Render with:
 
 from common import *
 from sha512_rounds import changed_bits, round_states
+from ep01 import person
 
 HELLO_UPPER, HELLO_LOWER = b"Hello", b"hello"
 BALLOT = b"Board ballot #2026-117. Member vote recorded as follows. Final answer: "
@@ -35,6 +36,8 @@ class S01OneLetterTwoWorlds(NarratedScene):
                         VGroup(words[1], lower).arrange(RIGHT, buff=0.6)).arrange(DOWN, buff=0.4)
         inline.move_to(UP * 0.5)
         self.play_at("Here are two words", FadeIn(words))
+        self.play_at("with a capital H", Indicate(words[0][0], color=YELLOW, scale_factor=1.6))
+        self.play_at("with a lowercase one", Indicate(words[1][0], color=YELLOW, scale_factor=1.6))
         self.play_at("Their inline CIDs", FadeIn(upper), FadeIn(lower))
         diff = VGroup(SurroundingRectangle(upper.chars(8, 9), color=YELLOW, buff=0.05),
                       SurroundingRectangle(lower.chars(8, 9), color=YELLOW, buff=0.05))
@@ -59,6 +62,7 @@ class S01OneLetterTwoWorlds(NarratedScene):
         box = RecipeMachine("SHA-512", icon=FingerprintIcon(), width=3.0, height=2.0)
         self.play_at("Last time we treated this fingerprint", FadeOut(VGroup(grid, count, hashes)),
                      FadeIn(box))
+        self.play_at("Today we open the box", Indicate(box, color=HASH_COLOR, scale_factor=1.08))
         q = label("what exactly is it promising?", 36, YELLOW).next_to(box, DOWN, buff=0.5)
         self.play_at("what exactly is it promising", Write(q))
 
@@ -96,6 +100,13 @@ class S02WhatAHashIs(NarratedScene):
         fp = FingerprintIcon(size=1.8).move_to(RIGHT * 4.6 + UP * 0.8)
         cap = label("a fingerprint for data", 32).next_to(tags, DOWN, buff=0.6)
         self.play_at("The usual metaphor is a fingerprint", FadeIn(fp, scale=0.5), Write(cap))
+        prints = VGroup(FingerprintIcon(size=0.9), label("=?", 30, GREY_A), FingerprintIcon(size=0.9)).arrange(RIGHT, buff=0.25)
+        prints.move_to(LEFT * 4.8 + UP * 0.8)
+        easy = label("easy", 24, GREEN).next_to(prints, UP, buff=0.2)
+        self.play_at("compare two fingerprints", FadeIn(prints), FadeIn(easy))
+        people = VGroup(person(TEAL).scale(1.4), label("=?", 30, GREY_A), person(PINK).scale(1.4)).arrange(RIGHT, buff=0.25)
+        people.move_to(prints)
+        self.play_at("two whole people", Transform(prints, people), Transform(easy, label("hard", 24, RED).move_to(easy)))
         star = label("*", 44, RED).next_to(cap, RIGHT, buff=0.05).shift(UP * 0.1)
         self.play_at("But metaphors leak", FadeIn(star, scale=2))
         self.play_at("So let's find the leak", Indicate(star, color=RED, scale_factor=1.6))
@@ -144,18 +155,29 @@ class S03CollisionsMustExist(NarratedScene):
         self.play(*[h.animate.set_fill(RED, opacity=0.35).set_stroke(RED) for h in holes])
         avg = label("2⁵²⁰ / 2⁵¹² = 2⁸ = 256\nper fingerprint, on average", 30, YELLOW).move_to(UP * 1.4)
         self.play_at("on average, every possible SHA-512 output", Write(avg))
+        self.play_at("shared by two hundred and fifty-six", *[Indicate(h, color=RED) for h in holes])
+        more = VGroup(*[left[0].copy().set_opacity(0.25) for _ in range(3)])
+        for k, m in enumerate(more):
+            m.shift((RIGHT * 0.15 + UP * 0.15) * (k + 1))
+        more_label = label("+ 66-byte, 67-byte, … files", 22, GREY_A).next_to(lcount, DOWN, buff=0.12)
+        self.play_at("that's just the sixty-five byte files", FadeIn(more, lag_ratio=0.3), FadeIn(more_label))
         stamp = label("guaranteed to exist", 34, RED).rotate(0.12).move_to(right[0])
         self.play_at("Collisions don't merely exist", FadeIn(stamp, scale=1.6))
 
         resistant = label('"collision resistant"', 26).move_to(DOWN * 0.9)
-        self.play_at('So when people say SHA-512 is "collision resistant"', FadeIn(resistant))
+        self.play_at('So when people say SHA-512 is "collision resistant"', FadeOut(VGroup(more, more_label)), FadeIn(resistant))
         not_none = VGroup(resistant.copy(), label("≠  no collisions", 26, RED)).arrange(DOWN, buff=0.15).move_to(DOWN * 1.1)
         self.play_at("they cannot mean there are no collisions", Transform(resistant, not_none))
+        self.play_at("although collisions are everywhere", Indicate(stamp, color=RED, scale_factor=1.15))
         q = caption("the question is whether anyone can FIND one", 32, YELLOW).to_edge(DOWN, buff=0.25)
         self.play_at("nobody knows how to find even one", FadeIn(q, shift=UP))
 
         inline = tag_box("≤ 64 bytes:\nno hashing,\nso no pigeonholes", INLINE_COLOR, 26).move_to(DOWN * 0.6)
         self.play_at("Notice, by the way", FadeOut(resistant), FadeIn(inline))
+        hi = VGroup(mono('"Hi"', 28), Arrow(LEFT * 0.4, RIGHT * 0.4, color=GREY_B), mono(compute_cid(b"Hi"), 28, INLINE_COLOR))
+        hi.arrange(RIGHT, buff=0.25).next_to(inline, DOWN, buff=0.4)
+        self.play_at("For content of sixty-four bytes or less", FadeIn(hi, shift=UP * 0.1))
+        self.play_at("no hashing, and so no pigeonholes", Indicate(hi[2], color=INLINE_COLOR, scale_factor=1.2))
         self.play_at("collision free by construction", Indicate(inline, color=INLINE_COLOR))
 
 
@@ -176,7 +198,20 @@ class S04ThreeGames(NarratedScene):
         data_lines = VGroup(*[fit_width(label(t, 22, GREY_A), 4.1).next_to(c, DOWN, buff=0.15)
                               for t, c in zip(data, cards)])
         self.play_at("Security people split", FadeIn(label("three games", 36).to_edge(UP, buff=0.2)))
+        slots = VGroup(*[VGroup(DashedVMobject(c[0].copy().set_fill(opacity=0), num_dashes=40),
+                                label(str(k + 1), 60, GREY_B).move_to(c)) for k, c in enumerate(cards)])
+        self.play_at("into three separate games", LaggedStart(*[FadeIn(sl) for sl in slots], lag_ratio=0.3))
+        self.play_at("very different difficulties", *[Indicate(sl[1], color=YELLOW) for sl in slots])
+        analogy = VGroup(person(GREY_A), FingerprintIcon(size=0.5)).arrange(RIGHT, buff=0.15).to_corner(UR, buff=0.3)
+        self.play_at("fingerprints of people", FadeIn(analogy, shift=LEFT * 0.2))
         costs = [c[1][2][1] for c in cards]
+        given = [c[1][1][1] for c in cards]
+        goal = [c[1][1][3] for c in cards]
+        pre = [[("I hand you a fingerprint", lambda: Indicate(given[0], color=YELLOW)),
+                ("find any person in the world", lambda: Indicate(goal[0], color=YELLOW))],
+               [("call her Alice", lambda: Indicate(given[1], color=YELLOW)),
+                ("find somebody else", lambda: Indicate(goal[1], color=YELLOW))],
+               [("I give you nothing at all", lambda: Indicate(given[2], color=YELLOW))]]
         beats = [
             ("Game one is called finding a preimage", "given an output, find any input",
              [("the best you can do is guess inputs at random", lambda: Circumscribe(cards[0], color=YELLOW)),
@@ -189,8 +224,10 @@ class S04ThreeGames(NarratedScene):
              [("This turns out to be dramatically easier",
                lambda: Indicate(costs[2], color=YELLOW, scale_factor=1.4))]),
         ]
-        for card_, line, (phrase, data_phrase, extras) in zip(cards, data_lines, beats):
-            self.play_at(phrase, FadeIn(card_, shift=UP * 0.2))
+        for card_, slot, line, before, (phrase, data_phrase, extras) in zip(cards, slots, data_lines, pre, beats):
+            self.play_at(phrase, FadeOut(slot), FadeIn(card_, shift=UP * 0.2))
+            for pre_phrase, make in before:
+                self.play_at(pre_phrase, make())
             self.play_at(data_phrase, FadeIn(line))
             for extra_phrase, make in extras:
                 self.play_at(extra_phrase, make())
@@ -200,10 +237,11 @@ class S04ThreeGames(NarratedScene):
         root = label("√(2⁵¹²) = 2²⁵⁶", 28, YELLOW).next_to(web_note, LEFT, buff=0.6)
         self.play_at("The cost drops to about the square root", FadeIn(root))
         cake = label("birthday effect — Episode 4", 22, YELLOW).next_to(cards[2], UP, buff=0.15)
+        self.play_at("We'll derive exactly why", Indicate(root, color=YELLOW))
         self.play_at("It's the famous birthday paradox", FadeIn(cake))
 
         # Scale: 2^256 is halfway to 2^512 in exponent, and near the atom count.
-        self.play_at('"Dramatically easier" is relative', FadeOut(VGroup(cards, data_lines, cake, web, web_note, root)))
+        self.play_at('"Dramatically easier" is relative', FadeOut(VGroup(cards, data_lines, cake, web, web_note, root, analogy)))
         bar = NumberLine(x_range=[0, 512, 64], length=11, include_numbers=False, color=GREY_B).move_to(UP * 1.2)
         ticks = VGroup(*[label(power_text(v) if v else "1", 18, GREY_B).next_to(bar.n2p(v), DOWN, buff=0.15)
                          for v in (0, 128, 256, 384, 512)])
@@ -238,7 +276,18 @@ class S05InsideTheBlender(NarratedScene):
                         label("message length (128 bits)", 18, LENGTH_COLOR))
         length[1].move_to(length[0])
         padded = VGroup(msg, one, zeros, length).arrange(RIGHT, buff=0).move_to(UP * 2.2)
-        self.play_at("First, the input gets padded", FadeIn(msg))
+        box = RecipeMachine("SHA-512", width=3.6, height=2.2).move_to(UP * 0.3)
+        how = label("how does it scramble so thoroughly?", 32, YELLOW).next_to(box, DOWN, buff=0.5)
+        self.play(FadeIn(box), FadeIn(how))
+        rng = np.random.default_rng(9)
+        body = box.body
+        wires = VGroup(*[Line(body.get_left() + RIGHT * 0.2 + UP * rng.uniform(-0.8, 0.8),
+                              body.get_right() + LEFT * 0.2 + UP * rng.uniform(-0.8, 0.8),
+                              color=interpolate_color(TEAL, PURPLE, rng.uniform()), stroke_width=1.5)
+                         for _ in range(18)])
+        self.play_at("I won't go through every wire", Create(wires, lag_ratio=0.1, run_time=1.5))
+        self.play_at("the shape of it is worth seeing", wires.animate.set_opacity(0.25), box.turn())
+        self.play_at("First, the input gets padded", FadeOut(VGroup(box, wires, how)), FadeIn(msg))
         self.play(FadeIn(one), FadeIn(zeros))
         self.play_at("writes the length of the message", FadeIn(length, shift=LEFT * 0.3))
         block_brace = Brace(padded, DOWN, color=GREY_B)
@@ -285,7 +334,7 @@ class S05InsideTheBlender(NarratedScene):
                      *[regs[i][1].animate.move_to(regs[i + 1][0]) for i in range(7)],
                      regs[7][1].animate.set_opacity(0))
         times = label("× 80 rounds per block", 32, YELLOW).to_edge(DOWN, buff=0.8)
-        self.play_at("Eighty times per block", Write(times))
+        self.play_at("Eighty times per block", Write(times), run_time=0.6)
 
         # Real diffusion: "Hello" vs "hello", round by round.
         self.play_at("Watch what happens", FadeOut(VGroup(regs, bits64, ops, feeds, times)))
@@ -302,14 +351,23 @@ class S05InsideTheBlender(NarratedScene):
             new.next_to(grid, DOWN, buff=0.3)
             if phrase:
                 self.cue(phrase)
-            self.play(grid.show_mask(mask, run_time=0.7), Transform(readout, new))
-            self.wait(0.4)
+                self.play(grid.show_mask(mask, run_time=0.7), Transform(readout, new))
+                self.wait(0.3)
+            else:
+                self.play(grid.show_mask(mask, run_time=0.5), Transform(readout, new), run_time=0.5)
+        self.play_at("about half of them flip", Indicate(readout, color=YELLOW))
+        self.play_at("the avalanche we saw at the start", Indicate(grid, color=YELLOW, scale_factor=1.02))
 
         self.play_at("There is no secret anywhere in this", FadeOut(VGroup(grid, title, readout)))
         no_key = VGroup(label("no secret key", 48), label("everything is public", 34, GREY_B)).arrange(DOWN, buff=0.3)
         self.play(FadeIn(no_key))
         public = tag_box("FIPS 180-4 · public since the early 2000s", GREY_B, 24).to_edge(DOWN, buff=0.7)
         self.play_at("The algorithm is published", FadeIn(public, shift=UP * 0.2))
+        crowd = VGroup(*[Dot(radius=0.07, color=TEAL) for _ in range(40)]).arrange_in_grid(4, 10, buff=0.15)
+        crowd_label = label("decades of cryptographers", 20, TEAL).next_to(crowd, DOWN, buff=0.12)
+        VGroup(crowd, crowd_label).to_corner(UR, buff=0.5)
+        self.play_at("Its entire security rests", Indicate(no_key, color=YELLOW, scale_factor=1.05))
+        self.play_at("decades of the world's cryptographers", FadeIn(crowd, lag_ratio=0.03), FadeIn(crowd_label))
         backwards = label("security = nobody knows how to run it backwards, or steer it", 28, YELLOW)
         backwards.next_to(no_key, DOWN, buff=0.6)
         self.play_at("nobody knows how to run it backwards", Write(backwards))
@@ -334,8 +392,9 @@ class S06IdealLedger(NarratedScene):
             rows.add(row)
         self.play(FadeIn(title), FadeIn(header))
         self.play_at("Whenever a new input shows up", FadeIn(rows[0][0]))
-        coin = Circle(0.35, color=YELLOW, fill_color=YELLOW_E, fill_opacity=1).next_to(rows[0][1], RIGHT, buff=0.5)
-        self.play(Rotate(coin, angle=4 * PI, axis=UP, run_time=1.0), FadeIn(coin))
+        coin = Circle(0.35, color=YELLOW, fill_color=YELLOW_E, fill_opacity=1).move_to(rows[0][1].get_left() + RIGHT * 0.5)
+        self.play(FadeIn(coin), run_time=0.3)
+        self.play(Rotate(coin, angle=4 * PI, axis=UP), run_time=1.0)
         self.play(FadeIn(rows[0][1], lag_ratio=0.1), FadeOut(coin))
         self.play(LaggedStart(*[FadeIn(r) for r in rows[1:]], lag_ratio=0.3))
         repeat = mono("Hello", 24, YELLOW).next_to(rows, DOWN, buff=0.6).align_to(rows[0][0], LEFT)
@@ -350,6 +409,12 @@ class S06IdealLedger(NarratedScene):
         eq = DashedLine(ledger.get_right() + RIGHT * 0.2, sha.get_left() + LEFT * 0.2, color=GREY_B)
         eq_label = label("indistinguishable\n(as far as anyone knows)", 22, GREY_B).next_to(eq, DOWN, buff=0.2)
         self.play_at("indistinguishable from it", FadeIn(sha), Create(eq), FadeIn(eq_label))
+        quoted = VGroup(*[tag_box(t, YELLOW, 22) for t in ("preimage ~2⁵¹²", "second preimage ~2⁵¹²", "collision ~2²⁵⁶")])
+        quoted.arrange(RIGHT, buff=0.3).move_to(DOWN * 1.7)
+        self.play_at("The costs I quoted for the three games", LaggedStart(*[FadeIn(t, shift=UP * 0.1) for t in quoted],
+                                                                           lag_ratio=0.25))
+        self.play_at("what the ideal ledger would give you", Indicate(ledger, color=YELLOW, scale_factor=1.03))
+        self.play_at("When real hash functions have failed", FadeOut(quoted))
 
         olds = VGroup(*[RecipeMachine(n, width=2.0, height=1.1) for n in ("MD5", "SHA-1")]).arrange(RIGHT, buff=0.6)
         olds.to_edge(DOWN, buff=0.6)
@@ -362,6 +427,9 @@ class S06IdealLedger(NarratedScene):
         ep5 = label("Episode 5", 22, RED).next_to(olds, RIGHT, buff=0.4)
         self.play_at("someone found a way to tell them apart", FadeIn(olds))
         self.play_at("That's what happened to the older functions", Create(cracks), FadeIn(ep5))
+        self.play_at("MD5 and SHA-1", LaggedStart(*[Indicate(m, color=RED) for m in olds], lag_ratio=0.4))
+        masked = mask_icon(ADVERSARY_COLOR, 0.5).next_to(ep5, RIGHT, buff=0.2)
+        self.play_at("the episode on adversaries", FadeIn(masked, scale=0.5), Indicate(ep5, color=RED))
 
 
 class S07WhatTwoFiftySixNeeds(NarratedScene):
@@ -412,9 +480,15 @@ class S07WhatTwoFiftySixNeeds(NarratedScene):
                                                                   target_row, template, guesses)))
         needed = VGroup(*[label("needed ✓", 24, HASH_COLOR).next_to(c, DOWN, buff=0.2) for c in cards[1:]])
         self.play(FadeIn(needed[0]))
+        self.play_at("the second and third games", *[Indicate(c, color=HASH_COLOR, scale_factor=1.03) for c in cards[1:]])
+        self.play_at("take content you already have", Indicate(cards[1], color=YELLOW, scale_factor=1.05))
         self.play_at("And it needs that nobody can produce two", FadeIn(needed[1]))
+        self.play_at("produce two different pieces of content", Indicate(cards[2], color=YELLOW, scale_factor=1.05))
+        true_enough = caption('these make "this CID means these bytes" true enough', 28, YELLOW)
+        self.play_at("Those are the properties", FadeIn(true_enough))
+        self.play_at("true enough", Indicate(true_enough, color=YELLOW, scale_factor=1.05))
 
-        self.play_at("comes down to one sentence", FadeOut(VGroup(cards, needed, not_needed)))
+        self.play_at("comes down to one sentence", FadeOut(VGroup(cards, needed, not_needed, true_enough)))
         left = VGroup(label("identity function", 34, INLINE_COLOR), label("≤ 64 bytes", 26, GREY_B),
                       label("perfect where possible", 28)).arrange(DOWN, buff=0.25)
         right = VGroup(label("SHA-512", 34, HASH_COLOR), label("> 64 bytes", 26, GREY_B),
@@ -422,5 +496,12 @@ class S07WhatTwoFiftySixNeeds(NarratedScene):
         VGroup(left, right).arrange(RIGHT, buff=1.4)
         self.play_at("Where it can be perfect", FadeIn(left))
         self.play_at("And where it can't be perfect", FadeIn(right))
+        facts = VGroup(label("collisions: everywhere", 24, GREY_A), label("ever found: none", 24, GREEN)).arrange(DOWN, buff=0.15)
+        facts.next_to(right, DOWN, buff=0.35)
+        self.play_at("whose collisions are everywhere", FadeIn(facts[0], shift=UP * 0.1))
+        self.play_at("no one has ever been able to find", FadeIn(facts[1], shift=UP * 0.1))
+        die = dice_icon(YELLOW, 0.7).to_edge(DOWN, buff=1.5)
+        self.play_at("Which raises the next question", FadeIn(die), run_time=0.3)
+        self.play(Rotate(die, angle=TAU), run_time=1.0)
         dice = label("next: what are the odds of an accident?", 30, YELLOW).to_edge(DOWN, buff=0.6)
         self.play_at("what are the odds", FadeIn(dice))

@@ -34,13 +34,21 @@ class S01FourKinds(NarratedScene):
 
     def construct(self):
         word = label('"collision"', 64, YELLOW)
-        self.play(FadeIn(word))
+        recap = label("collisions in SHA-512: guaranteed to exist", 34).move_to(UP * 0.5)
+        worry = label("…but should you ever worry about them?", 34, YELLOW).next_to(recap, DOWN, buff=0.4)
+        self.play(FadeIn(recap))
+        self.play_at("whether you should ever worry", FadeIn(worry, shift=UP * 0.1))
+        self.play_at("notice that the word", FadeOut(VGroup(recap, worry)), FadeIn(word))
         self.play_at("is doing too much work", word.animate.scale(1.25).set_color(RED), rate_func=there_and_back)
         grid = TaxonomyGrid().scale(0.85)
         self.play_at("The 256t spec splits it up", FadeOut(word))
         for name, phrase in [("accidental", "A collision can be accidental"), ("adversarial", "or adversarial"),
                              ("existing", "a collision can be merely existing"), ("problem", "or it can be a problem")]:
             self.play_at(phrase, FadeIn(grid.cards[name], scale=0.9), run_time=0.6)
+            if name == "existing":
+                self.play_at("have actually produced the same", Indicate(grid.cards[name][1][0], color=YELLOW, scale_factor=1.4))
+            if name == "problem":
+                self.play_at("got the wrong content back", Indicate(grid.cards[name][1][0], color=RED, scale_factor=1.4))
         self.play_at("Those are really two different questions", GrowArrow(grid.h_axis), FadeIn(grid.h_label))
         self.play_at("And did it actually hurt anyone", GrowArrow(grid.v_axis), FadeIn(grid.v_label))
         focus = SurroundingRectangle(grid.cards["accidental"], color=YELLOW, buff=0.1)
@@ -75,6 +83,17 @@ class S02ShrinkTheBattlefield(NarratedScene):
         inline_bins = VGroup(*bins[:5])
         free = label("inline: no collisions possible", 24, INLINE_COLOR).next_to(inline_bins, UP, buff=0.3)
         self.play_at("anything sixty-four bytes or smaller", FadeIn(free), Indicate(inline_bins, color=INLINE_COLOR))
+        smalls = VGroup()
+        for word in (b"Hi", b"Ho"):
+            smalls.add(VGroup(mono(f'"{word.decode()}"', 24, GREY_A), mono(compute_cid(word), 24, INLINE_COLOR)).arrange(RIGHT, buff=0.3))
+        smalls.arrange(DOWN, buff=0.2, aligned_edge=LEFT).move_to(LEFT * 3.4 + DOWN * 2.0)
+        differ = label("≠", 40, INLINE_COLOR).next_to(smalls, RIGHT, buff=0.3)
+        self.play_at("two different small files can never share", FadeIn(smalls, lag_ratio=0.3), FadeIn(differ))
+        self.play_at("That whole region is collision-free",
+                     *[b[0].animate.set_fill(INLINE_COLOR, opacity=0.4) for b in inline_bins if len(b) == 2])
+        self.play_at("the length is part of the name", FadeOut(VGroup(smalls, differ)),
+                     LaggedStart(*[Indicate(b[1], color=LENGTH_COLOR, scale_factor=1.3) for b in bins if len(b) == 2],
+                                 lag_ratio=0.05))
 
         b1000, b1001 = bins[7][0], bins[8][0]
         wall = Line(b1000.get_corner(UR) + RIGHT * 0.06, b1000.get_corner(DR) + RIGHT * 0.06,
@@ -87,6 +106,11 @@ class S02ShrinkTheBattlefield(NarratedScene):
         self.play(FadeIn(wall_label), FadeOut(spark))
         rule = caption("a collision needs the same length AND the same SHA-512", 30, YELLOW)
         self.play_at("A collision only counts if", FadeIn(rule))
+        self.play_at("exactly the same length", Indicate(wall_label, color=LENGTH_COLOR))
+        self.play_at("exactly the same SHA-512 hash", Indicate(rule, color=YELLOW, scale_factor=1.05))
+        hashed = [b for b in bins[5:] if len(b) == 2]
+        self.play_at("the real question lives inside one of these bins",
+                     LaggedStart(*[Indicate(b, color=HASH_COLOR) for b in hashed], lag_ratio=0.2))
 
         target = bins[10][0]
         self.play_at("Pick a length", Indicate(bins[10], color=YELLOW))
@@ -140,6 +164,10 @@ class S03BirthdayParadox(NarratedScene):
         twins = [i for i, d in enumerate(days) if days.count(d) > 1]
         self.play_at("The intuition that fails is thinking about you",
                      Indicate(dots[0], color=WHITE, scale_factor=2))
+        yours = VGroup(*[Line(dots[0].get_center(), d.get_center(), stroke_width=2.5, color=WHITE) for d in dots[1:]])
+        your_count = label("pairs with you: 22", 26, WHITE).next_to(pairs, DOWN, buff=0.3, aligned_edge=LEFT)
+        self.play_at("someone shares your birthday", Create(yours, lag_ratio=0.05), FadeIn(your_count))
+        self.play_at("doesn't have to involve you", FadeOut(yours), FadeOut(your_count))
         self.play_at("It can be any pair of people", *[dots[i].animate.set_color(RED).scale(1.8) for i in twins])
 
         work = VGroup(
@@ -151,10 +179,12 @@ class S03BirthdayParadox(NarratedScene):
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.25).move_to(RIGHT * 3.3 + DOWN * 0.6)
         fit_width(work, 6.3)
         for line, phrase in zip(work, ["With twenty-three people", "Each pair has a one-in",
-                                       "So you expect about", "roughly a half", None]):
+                                       "So you expect about", "the chance of at least one match", None]):
             if phrase:
                 self.cue(phrase)
             self.play(FadeIn(line, shift=LEFT * 0.2), run_time=0.5)
+            if line is work[2]:
+                self.play_at("around zero point seven", Indicate(line, color=YELLOW))
 
         self.play_at("Now let's make that general",
                      FadeOut(VGroup(ring, ticks, title, dots, lines, people, pairs, work)))
@@ -175,6 +205,11 @@ class S03BirthdayParadox(NarratedScene):
         self.play_at("about the square root of N", FadeIn(sq))
         link = label("√(2⁵¹²) = 2²⁵⁶  — the collision cost from Episode 3", 28, HASH_COLOR).to_edge(DOWN, buff=0.4)
         self.play_at("That square root is exactly why", FadeIn(link))
+        drop = VGroup(pow2(512, size=48, color=GREY_A), Arrow(LEFT * 0.8, RIGHT * 0.8, color=YELLOW), pow2(256, size=48, color=HASH_COLOR))
+        drop.arrange(RIGHT, buff=0.4).move_to(general)
+        self.play_at("dropped from two to the five hundred twelve", FadeOut(general), FadeIn(drop[0]))
+        self.play_at("to two to the two hundred fifty-six", GrowArrow(drop[1]), FadeIn(drop[2], shift=LEFT * 0.2))
+        self.play_at("the same birthday effect", Indicate(formula, color=YELLOW), Circumscribe(box, color=YELLOW))
 
 
 class S04ScalingUp(NarratedScene):
@@ -185,6 +220,7 @@ class S04ScalingUp(NarratedScene):
         self.play_at("Now plug in SHA-512", Write(formula))
         n_is = label("N = 2⁵¹²", 40, HASH_COLOR).next_to(formula, DOWN, buff=0.4)
         self.play_at("N is two to the five hundred twelve", FadeIn(n_is, shift=UP * 0.2))
+        self.play_at("any accidental collision among n files", Circumscribe(formula, color=HASH_COLOR))
         self.play_at("over two to the five hundred thirteen",
                      Transform(formula, label("P ≈ n² / 2⁵¹³", 48, YELLOW).move_to(formula)), FadeOut(n_is))
 
@@ -215,15 +251,32 @@ class S04ScalingUp(NarratedScene):
         markers = VGroup()
         cues = ["A trillion files", "Eighteen quintillion files", None, "Go all the way up to two to the one hundred twenty-eight",
                 "You don't get to a coin flip"]
+        aside = VGroup()
         for row, (exp, _), phrase in zip(table[1:], rows, cues):
             if phrase:
                 self.cue(phrase)
             p = 2 * exp - 513
             mark = Dot(ladder.n2p(p), color=RED if p >= -1 else YELLOW, radius=0.09)
             markers.add(mark)
-            self.play(FadeIn(row, shift=UP * 0.15), FadeIn(mark, scale=2), run_time=0.6)
+            self.play(FadeIn(row, shift=UP * 0.15), FadeIn(mark, scale=2), *([FadeOut(aside)] if len(aside) else []),
+                      run_time=0.6)
+            aside = VGroup()
+            if exp == 40:
+                aside = VGroup(label("(2⁴⁰)² = 2⁸⁰", 30), label("2⁸⁰ / 2⁵¹³ = 2⁻⁴³³", 30, YELLOW)).arrange(RIGHT, buff=0.8)
+                aside.move_to(LEFT * 2.6 + DOWN * 3.0)
+                self.play_at("Square it", FadeIn(aside[0], shift=UP * 0.1))
+                self.play_at("Divide by two to the five hundred thirteen", FadeIn(aside[1], shift=UP * 0.1))
+                self.play_at("one in two to the four hundred thirty-three", Indicate(row[2], color=YELLOW), Flash(mark, color=YELLOW))
+            if exp == 128:
+                aside = VGroup(label("2¹²⁸ =", 24, GREY_A), mono(f"{2 ** 128:,}", 22, GREY_A)).arrange(RIGHT, buff=0.2)
+                fit_width(aside, 8.0).move_to(LEFT * 2.4 + DOWN * 3.0)
+                self.play_at("a number with thirty-nine digits", FadeIn(aside, shift=UP * 0.1))
+                self.play_at("still one in two to the two hundred fifty-seven", Indicate(row[2], color=YELLOW),
+                             Flash(mark, color=YELLOW))
         note = label("this many files is not a thing that happens", 22, RED).next_to(table[-1], DOWN, buff=0.2)
         self.play(FadeIn(note))
+        self.play_at("These exponents are so lopsided", LaggedStart(*[Indicate(m, scale_factor=1.8) for m in markers], lag_ratio=0.2),
+                     Indicate(ladder_labels, color=YELLOW))
         self.play_at("So let's try to make one concrete", Indicate(table[1:4], color=YELLOW, scale_factor=1.02))
 
 
@@ -261,9 +314,16 @@ class S05GenerousCivilization(NarratedScene):
             label("P ≈ 2²⁴² / 2⁵¹³", 30),
             label("= 2⁻²⁷¹", 44, YELLOW),
         ).arrange(DOWN, buff=0.25, aligned_edge=LEFT).move_to(RIGHT * 2.7 + DOWN * 1.0)
+        pair_a = Dot(globe.get_center() + LEFT * 0.6 + UP * 0.4, color=YELLOW, radius=0.08)
+        pair_b = Dot(globe.get_center() + RIGHT * 0.5 + DOWN * 0.5, color=YELLOW, radius=0.08)
+        pair_line = DashedLine(pair_a.get_center(), pair_b.get_center(), color=YELLOW)
+        pair_q = label("same hash?", 20, YELLOW).next_to(globe, UP, buff=0.15)
         for line, phrase in zip(math_lines, ["That's eight billion, times a billion", "Roughly three and a half",
                                              "Square that", "Divide by two to the five hundred thirteen",
                                              "is about one in two to the two hundred seventy-one"]):
+            if line is math_lines[4]:
+                self.play_at("any two of those files", FadeIn(pair_a, scale=2), FadeIn(pair_b, scale=2))
+                self.play_at("accidentally share a SHA-512 hash", Create(pair_line), FadeIn(pair_q))
             self.play_at(phrase, FadeIn(line, shift=UP * 0.15), run_time=0.6)
 
         # Pick one atom out of the observable universe.
@@ -273,6 +333,7 @@ class S05GenerousCivilization(NarratedScene):
         atoms = label("atoms in the observable universe ≈ 10⁸⁰ ≈ 2²⁶⁶", 30).to_edge(UP, buff=0.3)
         bg = BackgroundRectangle(atoms, fill_opacity=0.8, buff=0.15)
         self.play(FadeIn(web, lag_ratio=0.001), FadeIn(bg), FadeIn(atoms))
+        self.play_at("about two to the two hundred sixty-six", Indicate(atoms, color=YELLOW, scale_factor=1.05))
         chosen = web[417]
         ring = Circle(0.2, color=YELLOW).move_to(chosen)
         self.play_at("picture one particular atom", chosen.animate.set_color(YELLOW).scale(3), Create(ring))
@@ -285,10 +346,10 @@ class S05GenerousCivilization(NarratedScene):
         compare_bg = BackgroundRectangle(compare, fill_opacity=0.9, buff=0.3)
         VGroup(compare_bg, compare).to_edge(DOWN, buff=0.4)
         self.play_at("Your chance of picking that exact one", FadeIn(compare_bg), FadeIn(compare[0]))
-        self.play(FadeIn(compare[1]))
         factor = label("about 30× less likely", 26, RED).next_to(compare_bg, UP, buff=0.15)
         factor.add_background_rectangle(opacity=0.9, buff=0.1)
         self.play_at("by a factor of about thirty", FadeIn(factor))
+        self.play_at("than the chance of a single accidental collision", FadeIn(compare[1], shift=UP * 0.1))
         foot = label("…and that lumps every file into one bin; equal lengths only make it smaller", 20, GREY_B)
         foot_bg = BackgroundRectangle(foot, fill_opacity=0.9)
         VGroup(foot_bg, foot).next_to(atoms, DOWN, buff=0.2)
@@ -322,7 +383,13 @@ class S06WhatActuallyGoesWrong(NarratedScene):
             bar.align_to(names, LEFT).shift(RIGHT * (names.width + 0.3))
         axis = label("how often (qualitative, log scale)", 20, GREY_B).next_to(bars, DOWN, buff=0.4)
         self.play_at("This is the right way to think", FadeIn(title))
-        self.play_at("Every real system has failure modes", FadeIn(axis))
+        zero = label('"is the risk zero?"', 36, GREY_A).move_to(UP * 1.0)
+        nope = Line(zero.get_left(), zero.get_right(), color=RED, stroke_width=4)
+        better = label('"how does this risk compare?"', 36, YELLOW).move_to(DOWN * 0.4)
+        self.play_at("is the risk zero", FadeIn(zero))
+        self.play_at("It isn't", Create(nope))
+        self.play_at("how does this risk compare", FadeIn(better, shift=UP * 0.1))
+        self.play_at("Every real system has failure modes", FadeOut(VGroup(zero, nope, better)), FadeIn(axis))
         for name, bar, phrase in zip(names, bars, ["Software has bugs", "Disks and networks", "a stray cosmic ray",
                                                    "enormously more likely than an accidental"]):
             self.play_at(phrase, FadeIn(name), GrowFromEdge(bar, LEFT), run_time=0.6)
@@ -330,9 +397,12 @@ class S06WhatActuallyGoesWrong(NarratedScene):
                         color=RED, buff=0.05)
         where = label("it's here (too small to draw)", 22, RED).next_to(pointer, RIGHT, buff=0.15)
         self.play(GrowArrow(pointer), FadeIn(where))
+        self.play_at("give you the wrong answer", Indicate(title, color=YELLOW, scale_factor=1.03))
         verdict = caption("spend your worry where the risk is", 32, YELLOW)
         self.play_at("because the machine broke, not because the math did", Indicate(bars[:3], color=YELLOW))
         self.play_at("So any engineering effort", FadeIn(verdict))
+        self.play_at("defending against accidental collisions", Indicate(where, color=RED))
+        self.play_at("risks that actually happen", Indicate(bars[:3], color=TEAL))
 
 
 class S07ExistingVersusProblem(NarratedScene):
@@ -360,6 +430,11 @@ class S07ExistingVersusProblem(NarratedScene):
         gates[0][1].next_to(first_note, DOWN, buff=0.1, aligned_edge=LEFT)
         self.play_at("Suppose, against all those odds", FadeIn(gates[0][0]), FadeIn(first_note),
                      GrowFromEdge(gates[0][1], LEFT))
+        twins = VGroup(Dot(color=YELLOW), Dot(color=YELLOW)).arrange(RIGHT, buff=0.7).move_to(outer.get_center() + UP * 0.6)
+        tie = Line(twins[0].get_center(), twins[1].get_center(), color=YELLOW)
+        shared = label("same CID", 20, YELLOW).next_to(tie, UP, buff=0.12)
+        self.play_at("Two files somewhere really do share", FadeIn(twins, scale=2), Create(tie), FadeIn(shared))
+        self.play_at("For that to actually hurt anyone", Indicate(inner, color=RED))
         self.play_at("both files would have to end up somewhere", FadeIn(gates[1][0]), GrowFromEdge(gates[1][1], LEFT))
         self.play_at("you would have to ask for one", FadeIn(gates[2][0]), GrowFromEdge(gates[2][1], LEFT))
         self.play_at("Each of those steps makes", Indicate(inner, color=RED), inner.animate.scale(0.5))
@@ -372,13 +447,19 @@ class S08TheVerdict(NarratedScene):
         assumption = card("assumption", "for inputs nobody designed to break it,\nSHA-512 behaves like the ideal ledger",
                           width=9.5, height=2.4, color=YELLOW, body_size=30).move_to(UP * 2.0)
         self.play_at("All of this rests on one assumption", FadeIn(assumption))
+        coin = VGroup(Circle(0.35, color=YELLOW, fill_color=YELLOW_E, fill_opacity=1), label("1/0", 16, BLACK))
+        coin.next_to(assumption, RIGHT, buff=0.2)
+        self.play_at("the ideal coin-flipping ledger", FadeIn(coin), run_time=0.3)
+        self.play(Rotate(coin, angle=4 * PI, axis=UP), run_time=1.0)
+        mild = tag_box("a mild assumption", GREEN, 24).move_to(UP * 0.45)
+        self.play_at("a mild assumption", FadeIn(mild, shift=UP * 0.1))
         a = ByteRibbon.text(b"Report v1", cell_size=0.32)
         b = ByteRibbon.text(b"Report v2", cell_size=0.32).tint([8], YELLOW)
         ha = mono(sha512_b64(b"Report v1")[:22] + "…", 22, HASH_COLOR)
         hb = mono(sha512_b64(b"Report v2")[:22] + "…", 22, HASH_COLOR)
         pair = VGroup(VGroup(a, ha).arrange(RIGHT, buff=0.5), VGroup(b, hb).arrange(RIGHT, buff=0.5))
         pair.arrange(DOWN, buff=0.3).move_to(DOWN * 0.3)
-        self.play_at("Similar files don't produce similar fingerprints", FadeIn(pair))
+        self.play_at("Similar files don't produce similar fingerprints", FadeOut(mild), FadeIn(pair))
         self.play_at("like lots of files that start the same way",
                      Indicate(VGroup(a.cells[:8], b.cells[:8]), color=YELLOW, scale_factor=1.05))
         self.play_at("doesn't help collisions along", Indicate(VGroup(ha, hb), color=HASH_COLOR, scale_factor=1.05))
@@ -386,12 +467,14 @@ class S08TheVerdict(NarratedScene):
         self.play_at("nobody has ever found a collision", FadeIn(never))
 
         quote = quote_card("I'm comfortable just ignoring accidental problem collisions.", "256t.org")
-        self.play_at("So the spec's position is", FadeOut(VGroup(assumption, pair, never)), FadeIn(quote))
+        self.play_at("So the spec's position is", FadeOut(VGroup(assumption, coin, pair, never)), FadeIn(quote))
+        sums = label("the arithmetic: ≈ 2⁻²⁷¹, ever", 28, GREY_A).next_to(quote, UP, buff=0.5)
+        self.play_at("Having done the arithmetic", FadeIn(sums, shift=DOWN * 0.1))
         conclusion = label("not a shrug — a conclusion", 32, YELLOW).next_to(quote, DOWN, buff=0.5)
         self.play_at("I think that's not a shrug", FadeIn(conclusion))
 
         grid = TaxonomyGrid().scale(0.7)
-        self.play_at("But we've been assuming the universe", FadeOut(quote), FadeOut(conclusion), FadeIn(grid))
+        self.play_at("But we've been assuming the universe", FadeOut(VGroup(quote, conclusion, sums)), FadeIn(grid))
         self.play_at("What if someone is actively trying",
                      grid.cards["accidental"].animate.set_opacity(0.25),
                      grid.cards["adversarial"].animate.scale(1.2),

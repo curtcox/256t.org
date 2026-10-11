@@ -108,9 +108,15 @@ class S01ColdOpen(NarratedScene):
         links.arrange_in_grid(5, 10, buff=0.12).next_to(card404, DOWN, buff=0.5)
         self.play(FadeIn(links, lag_ratio=0.02), run_time=0.8)
         order = list(np.random.default_rng(4).permutation(50))
+        self.play_at("web pages that existed in 2013", Indicate(links, color=BLUE_A, scale_factor=1.05))
+        self.play_at("tried to load them again", LaggedStart(*[Indicate(l, color=WHITE, scale_factor=1.4) for l in links],
+                                                             lag_ratio=0.03, run_time=1.6))
         self.play_at("About thirty-eight percent were simply gone",
                      LaggedStart(*[links[i].animate.set_fill(GREY_D, 0.5) for i in order[:19]], lag_ratio=0.05))
         self.play_at("A decade earlier", FadeIn(group2, shift=RIGHT), links.animate.set_fill(BLUE, 0.9))
+        self.play_at("a team at Harvard Law School", Circumscribe(stat2, color=BLUE_B))
+        self.play_at("looked at the web links cited", LaggedStart(*[Indicate(l, color=WHITE, scale_factor=1.4) for l in links],
+                                                                 lag_ratio=0.03, run_time=1.6))
         self.play_at("documents that are supposed to last for centuries", Indicate(stat2, color=YELLOW, scale_factor=1.05))
         self.play_at("about half of them no longer led",
                      LaggedStart(*[links[i].animate.set_fill(RED, 0.8) for i in order[:25]], lag_ratio=0.04))
@@ -138,6 +144,10 @@ class S01ColdOpen(NarratedScene):
         site = mono("256t.org", 30, LENGTH_COLOR).next_to(title, DOWN, buff=0.5)
         self.play(Write(title[0]), FadeIn(title[1], shift=UP * 0.2))
         self.play_at("It's written up at a site called 256t.org", FadeIn(site, shift=UP * 0.2))
+        later = label("the specifics: from Episode 2 on", 24, GREY_B).next_to(site, RIGHT, buff=0.4)
+        self.play_at("before we get to its specifics", FadeIn(later, shift=LEFT * 0.1), site.animate.set_opacity(0.5))
+        self.play_at("this first episode", FadeOut(later), site.animate.set_opacity(1),
+                     Indicate(title[0], color=YELLOW, scale_factor=1.05))
         pin = map_pin().scale(0.7).next_to(site, DOWN, buff=0.5)
         self.play_at("the idea underneath it", FadeIn(pin, shift=DOWN * 0.2))
         self.play(ReplacementTransform(pin, FingerprintIcon(size=0.9).move_to(pin)), run_time=1.0)
@@ -192,8 +202,12 @@ class S02WhatAURLSays(NarratedScene):
         self.play(Create(lot), FadeIn(rot))
         new_home = house(color=ORANGE, width=1.6).move_to(home.get_center() + UP * 0.1)
         drift = label("content drift", 34, YELLOW).next_to(new_home, DOWN, buff=0.3)
-        self.play_at("And if a different house",
-                     FadeOut(lot), GrowFromEdge(new_home, DOWN), Transform(rot, drift))
+        self.play_at("And if a different house", FadeOut(lot), FadeOut(rot), GrowFromEdge(new_home, DOWN))
+        lead = Arrow(pin.get_bottom(), new_home.get_top(), buff=0.1, color=YELLOW)
+        self.play_at("the address still leads you somewhere", GrowArrow(lead), Indicate(pin, scale_factor=1.15))
+        self.play_at("just to the wrong thing", Indicate(new_home, color=RED))
+        rot = drift.copy().set_opacity(0)
+        self.play_at("That's content drift", FadeOut(lead), rot.animate.set_opacity(1))
         self.play_at("The address never promised", Indicate(pin, scale_factor=1.3))
 
 
@@ -229,6 +243,13 @@ class S03NamingTheThing(NarratedScene):
         # Three people, three machines, one name.
         self.play_at("The crucial property", FadeOut(VGroup(machine, tag, what)), equation.animate.to_edge(UP))
         colors = [TEAL, PINK, ORANGE]
+        nots = VGroup(*[tag_box(t, GREY_B, 26) for t in ("which computer", "the file's name", "the date")])
+        nots.arrange(RIGHT, buff=0.6).move_to(UP * 0.3)
+        strikes = VGroup(*[Line(n.get_left(), n.get_right(), color=RED, stroke_width=4) for n in nots])
+        only = tag_box("only the bytes", GREEN, 30).move_to(DOWN * 1.3)
+        self.play_at("doesn't depend on anything except the bytes", FadeIn(only, shift=UP * 0.1))
+        for k, phrase in enumerate(["Not which computer you're on", "not the file's name", "not the date"]):
+            self.play_at(phrase, FadeIn(nots[k]), Create(strikes[k]), run_time=0.5)
         rows = VGroup()
         for i, color in enumerate(colors):
             who = person(color)
@@ -240,7 +261,8 @@ class S03NamingTheThing(NarratedScene):
         rows.arrange(DOWN, buff=0.6).move_to(DOWN * 0.3)
         for row in rows:
             row[3].set_opacity(0)
-        self.play_at("So anyone, anywhere", LaggedStart(*[FadeIn(r[:3]) for r in rows], lag_ratio=0.3))
+        self.play_at("So anyone, anywhere", FadeOut(VGroup(nots, strikes, only)),
+                     LaggedStart(*[FadeIn(r[:3]) for r in rows], lag_ratio=0.3))
         self.play(*[r[2].turn(run_time=1.0) for r in rows])
         self.play(*[r[3].animate.set_opacity(1) for r in rows])
         merged = mono(GETTYSBURG_CID[:12] + "…", 30, HASH_COLOR).move_to(RIGHT * 4.5 + DOWN * 0.3)
@@ -332,9 +354,15 @@ class S04WhatYouGetForFree(NarratedScene):
                      VGroup(panels[:3], cache, clock_face, hand).animate.set_opacity(0.15))
         latest.move_to(panels[2].get_center())
         self.play(FadeIn(latest))
+        self.play_at("because the latest version keeps changing", Indicate(v2, color=YELLOW), Wiggle(latest))
+        self.play_at("and the name can't", Indicate(VGroup(v1[2], v2[2]), color=HASH_COLOR))
         pointer_arrow = Arrow(latest.get_right(), v2.get_left(), color=YELLOW, buff=0.1)
         note = label("pointer (different problem)", 22, YELLOW).next_to(latest, UP, buff=0.15)
         self.play_at("you need a separate kind of pointer", GrowArrow(pointer_arrow), FadeIn(note))
+        to_v1 = Arrow(latest.get_right(), v1.get_left(), color=YELLOW, buff=0.1)
+        self.play_at("that you update over time", Transform(pointer_arrow, to_v1))
+        self.play(Transform(pointer_arrow, Arrow(latest.get_right(), v2.get_left(), color=YELLOW, buff=0.1)))
+        self.play_at("built on top of this one", Indicate(VGroup(v1, v2), color=GREEN))
         bottom = caption("this series: the bottom layer — a name for some bytes that can't break", 26, GREEN)
         bottom.to_edge(DOWN, buff=0.15)
         self.play_at("The scheme we're looking at", FadeIn(bottom, shift=UP))
@@ -362,6 +390,9 @@ class S05DesigningTheRecipe(NarratedScene):
         self.play(TransformFromCopy(hello, out))
         ok = Check(0.5).next_to(out, RIGHT)
         self.play_at("Same bytes, same name", GrowFromCenter(ok))
+        self.play_at("Different bytes, different names, guaranteed", Indicate(checklist[2], color=GREEN))
+        self.play_at("Impossible to fake", Indicate(checklist[3], color=GREEN))
+        self.play_at("The only problem is size", Indicate(checklist[0], color=RED))
         movie = ByteRibbon.text(b"A long time ago, in a galaxy far, far away....", cell_size=0.35)
         movie.next_to(out, DOWN, buff=0.6).align_to(out, LEFT)
         self.play_at("but a movie makes a name", FadeIn(movie))
@@ -413,7 +444,7 @@ class S05DesigningTheRecipe(NarratedScene):
         h1 = mono(sha512_b64(b"Hello")[:20] + "…", 24, HASH_COLOR).next_to(machine, DOWN, buff=0.4)
         self.play(FadeOut(VGroup(rib, total, x2)), FadeIn(machine))
         self.play(machine.turn(), FadeIn(h1, shift=DOWN * 0.2))
-        flip = label("flip one bit of the input", 22, GREY_B).next_to(machine, LEFT, buff=0.3)
+        flip = label("flip one bit of the input", 22, GREY_B).next_to(h1, DOWN, buff=0.25)
         h2 = mono(sha512_b64(b"hello")[:20] + "…", 24, HASH_COLOR).move_to(h1)
         self.play_at("changing a single bit", FadeIn(flip), machine.turn(run_time=0.8))
         self.play(Transform(h1, h2), run_time=0.8)
@@ -424,6 +455,8 @@ class S05DesigningTheRecipe(NarratedScene):
         self.play(FadeIn(star))
         self.play_at("think of it as a fingerprint for data", Indicate(machine))
         self.play_at("And that asterisk", star.animate.scale(2.2).set_color(RED))
+        self.play_at("our main character", Indicate(checklist[2], color=RED, scale_factor=1.08))
+        self.play_at("Hold onto it", Circumscribe(checklist[2], color=RED))
 
 
 class S06Meet256t(NarratedScene):
@@ -437,6 +470,8 @@ class S06Meet256t(NarratedScene):
         rule = label("at most 94 characters · A–Z a–z 0–9 - _", 28, GREY_B).next_to(name, DOWN, buff=0.3)
         self.play(FadeIn(name))
         self.play_at("at most ninety-four characters", FadeIn(rule))
+        self.play_at("built only from characters", Indicate(rule, color=YELLOW, scale_factor=1.05))
+        self.play_at("web addresses and filenames", Circumscribe(rule, color=GREEN))
         places = VGroup(*[tag_box(t, GREY_B, 22) for t in ("end of a URL", "a filename", "a database column")])
         places.arrange(RIGHT, buff=0.5).move_to(DOWN * 0.5)
         self.play_at("So it can sit at the end of a URL", LaggedStart(*[FadeIn(p) for p in places], lag_ratio=0.4))
@@ -532,9 +567,12 @@ class S07HonestAsterisk(NarratedScene):
         board = VGroup(quote, bullets).arrange(DOWN, buff=0.5)
         self.play_at("The 256t spec is refreshingly upfront",
                      FadeOut(VGroup(files, tags, arrows, left, right)), FadeIn(quote))
-        for phrase, b in zip(("That a CID uniquely determines", "That the content is immutable",
-                              "That it can be cached forever"), bullets):
-            self.play_at(phrase, FadeIn(b, shift=RIGHT * 0.2), run_time=0.5)
+        slots = VGroup(*[label("•  …", 26, GREY_B).move_to(b, aligned_edge=LEFT) for b in bullets])
+        self.play_at("It lists a few statements", LaggedStart(*[FadeIn(sl) for sl in slots], lag_ratio=0.3))
+        self.play_at("true enough despite being false", Indicate(quote, color=YELLOW, scale_factor=1.03))
+        for phrase, b, sl in zip(("That a CID uniquely determines", "That the content is immutable",
+                                  "That it can be cached forever"), bullets, slots):
+            self.play_at(phrase, FadeOut(sl), FadeIn(b, shift=RIGHT * 0.2), run_time=0.5)
         crack = VMobject(color=WHITE, stroke_width=3).set_points_as_corners(
             [quote.get_corner(UR) + LEFT * 0.2, quote.get_corner(UR) + LEFT * 0.7 + DOWN * 0.4,
              quote.get_corner(UR) + LEFT * 0.55 + DOWN * 0.75, quote.get_corner(UR) + LEFT * 1.1 + DOWN * 1.1])

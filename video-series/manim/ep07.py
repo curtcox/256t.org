@@ -14,6 +14,7 @@ NI_URI = "ni:///sha-256;" + b64url(hashlib.sha256(GETTYSBURG).digest())
 METADATA = json.dumps({"title": "The Gettysburg Address", "type": "text/plain", "file": GETTYSBURG_CID},
                       indent=2).encode()
 METADATA_CID = compute_cid(METADATA)
+IMPLEMENTATIONS = sorted(p.name for p in (REPO_DIR / "implementations").iterdir() if p.is_dir())
 
 
 class S01DefinedByItsEdges(NarratedScene):
@@ -38,7 +39,12 @@ class S01DefinedByItsEdges(NarratedScene):
         stamps = VGroup(*[label("beyond the scope of this text", 16, RED).rotate(0.08).next_to(c[0].get_bottom(), UP, buff=0.12)
                           for c in cards])
         self.play_at("beyond the scope of this text", LaggedStart(*[FadeIn(s, scale=1.4) for s in stamps], lag_ratio=0.15))
+        self.play_at("go through those omissions", LaggedStart(*[Indicate(c, color=YELLOW, scale_factor=1.05) for c in cards],
+                                                              lag_ratio=0.3))
+        self.play_at("each one is a trade-off", *[s.animate.set_color(YELLOW) for s in stamps])
         self.play_at("each trade-off buys something", Indicate(tag, color=YELLOW))
+        neighbors = tag_box("then: the neighbors", GREY_B, 22).next_to(does, DOWN, buff=0.4)
+        self.play_at("Then we'll meet the neighbors", FadeIn(neighbors, shift=UP * 0.15))
 
 
 class S02FindingAndPublishing(NarratedScene):
@@ -101,6 +107,14 @@ class S03NoMetadata(NarratedScene):
                            .arrange(DOWN, buff=0.12) for n in names]).arrange(DOWN, buff=0.35).move_to(LEFT * 3.5)
         tag = tag_box("one CID", HASH_COLOR, 28).move_to(RIGHT * 3)
         self.play_at("A CID knows nothing about a file's name", FadeIn(uploads, lag_ratio=0.2))
+        unknown = VGroup(*[tag_box(t, GREY_B, 24) for t in ("name", "type", "author", "date")]).arrange(DOWN, buff=0.25)
+        unknown.move_to(RIGHT * 3)
+        strikes = VGroup(*[Line(u.get_left(), u.get_right(), color=RED, stroke_width=4) for u in unknown])
+        self.play(FadeIn(unknown[0]), Create(strikes[0]), run_time=0.5)
+        for k, phrase in enumerate(["its type", "its author", "or its date"], start=1):
+            self.play_at(phrase, FadeIn(unknown[k]), Create(strikes[k]), run_time=0.5)
+        self.play_at("Just the bytes", *[Indicate(u[1], color=YELLOW) for u in uploads])
+        self.play_at("And that's a feature", FadeOut(VGroup(unknown, strikes)))
         arrows = VGroup(*[Arrow(u.get_right(), tag.get_left(), buff=0.15, color=GREY_B) for u in uploads])
         self.play_at("Upload the same photo three times", LaggedStart(*[GrowArrow(a) for a in arrows], lag_ratio=0.2),
                      FadeIn(tag))
@@ -110,6 +124,11 @@ class S03NoMetadata(NarratedScene):
         self.play_at("The draft URI scheme does allow one small hint", FadeOut(VGroup(uploads, arrows, tag, dedup)))
         uri = mono("t256:AAAAAAANSGVsbG8sIFdvcmxkIQ.txt", 34).move_to(UP * 1.5)
         self.play(FadeIn(uri))
+        self.play_at("like dot t x t", Indicate(uri[31:], color=YELLOW, scale_factor=1.3))
+        web = VGroup(mono("https://example.com/report", 30, GREY_B), mono(".txt", 30, YELLOW)).arrange(RIGHT, buff=0.02)
+        web.move_to(DOWN * 1.6)
+        self.play_at("just like a web address", FadeIn(web, shift=UP * 0.15))
+        self.play_at("But notice where it sits", FadeOut(web), Indicate(uri[5:31], color=GREEN))
         which = Brace(uri[5:31], DOWN, color=GREEN)
         which_note = label("CID → which bytes (verified)", 22, GREEN)
         which.put_at_tip(which_note)
@@ -124,6 +143,8 @@ class S03NoMetadata(NarratedScene):
                     language="json", formatter_style="monokai", add_line_numbers=False,
                     paragraph_config={"font": MONO, "font_size": 24}).move_to(LEFT * 2.8 + UP * 0.6)
         self.play(FadeIn(code))
+        self.play_at("this is the Gettysburg Address", Indicate(code.code_lines[1], color=YELLOW))
+        self.play_at("plain text", Indicate(code.code_lines[2], color=YELLOW))
         gettys = VGroup(label("Gettysburg Address", 22), ByteRibbon.text(b"Four score", cell_size=0.3)).arrange(DOWN, buff=0.1)
         gettys.move_to(RIGHT * 4 + UP * 0.6)
         pointer = Arrow(code.get_right(), gettys.get_left(), color=HASH_COLOR, buff=0.2)
@@ -150,6 +171,8 @@ class S03NoMetadata(NarratedScene):
         self.play_at("the collection's name changes", Transform(root, new_root))
         cap = caption("names inside content → structures made of names", 30, YELLOW)
         self.play_at("Names inside content let you build", FadeIn(cap))
+        self.play_at("the structures inherit all the same guarantees", edges.animate.set_color(GREEN),
+                     *[Indicate(m, color=GREEN) for m in mids])
 
 
 class S04Permissions(NarratedScene):
@@ -172,6 +195,12 @@ class S04Permissions(NarratedScene):
         self.play_at("disputed ownership", FadeIn(scales))
         self.play_at("legal to distribute in one country", FadeIn(globe))
         self.play_at("declines to decide it", Create(border), FadeIn(out))
+        self.play_at("A CID is a precise name", Indicate(tag, color=HASH_COLOR))
+        asks = VGroup(label("who may serve it?", 26, YELLOW), label("to whom?", 26, YELLOW)).arrange(DOWN, buff=0.2)
+        asks.next_to(human, DOWN, buff=0.6)
+        self.play_at("Who's allowed to serve those bytes", FadeIn(asks[0], shift=UP * 0.15))
+        self.play_at("and to whom", FadeIn(asks[1], shift=UP * 0.15))
+        self.play_at("human questions", Indicate(human, color=YELLOW))
         cap = caption("a name doesn't decide who may share", 30, YELLOW)
         self.play_at("they're answered by people and laws", FadeIn(cap))
 
@@ -184,7 +213,12 @@ class S05OneHashForTheWholeFile(NarratedScene):
         gauge = StreamGauge(1000, width=9, overflow=0.05).move_to(UP * 1.6)
         gauge.stop_label.become(label("last byte", 20, LENGTH_COLOR).next_to(gauge.stop, UP, buff=0.1))
         self.play_at("hashes the whole file as one piece", FadeIn(title), FadeIn(gauge))
-        self.play_at("you can't fully accept anything", gauge.fill_to(1000, run_time=1.6))
+        self.play_at("That has a cost", Indicate(title, color=HASH_COLOR))
+        early = XMark(0.35).next_to(gauge.track, DOWN, buff=0.2).align_to(gauge.track, LEFT).shift(RIGHT * 2.4)
+        self.play_at("you can reject bad bytes early", gauge.fill_to(300, color=RED, run_time=0.8))
+        self.play(GrowFromCenter(early))
+        self.play_at("you can't fully accept anything", FadeOut(early), gauge.fill_to(0.001, run_time=0.2))
+        self.play(gauge.fill_to(1000, run_time=1.6))
         ok = Check(0.4).next_to(gauge.stop, RIGHT, buff=0.2)
         self.play(GrowFromCenter(ok))
         self.play_at("if a long download turns out to be wrong", FadeOut(ok), gauge.fill_to(900, color=RED, run_time=0.6))
@@ -231,10 +265,17 @@ class S05OneHashForTheWholeFile(NarratedScene):
             self.play(FadeIn(row, shift=UP * 0.15), run_time=0.5)
             if phrase == "Different choices give the same file different names":
                 self.play_at("In some popular systems", Indicate(row[2], color=TEAL, scale_factor=1.15))
+                self.play_at("several different identifiers", Wiggle(row[2], scale_value=1.15))
                 self.play_at("gives every sequence of bytes exactly one name",
                              Indicate(row[1], color=HASH_COLOR, scale_factor=1.15))
+        self.play_at("choosing simplicity and uniqueness", *[Indicate(r[1], color=HASH_COLOR) for r in table[1:]])
+        self.play_at("over piecewise verification", Indicate(table[1][2], color=TEAL))
+        odo = LengthOdometer(0, size=0.9).move_to(UP * 0.8)
+        self.play_at("One more limit falls out of the format", FadeOut(table), FadeIn(odo))
         ceiling = caption("ceiling: 2⁴⁸ − 1 bytes ≈ 256 TiB per file", 28, LENGTH_COLOR)
-        self.play_at("the length prefix tops out", FadeIn(ceiling))
+        self.play_at("the length prefix tops out", odo.roll_to(2 ** 48 - 1, run_time=1.5), FadeIn(ceiling))
+        disk = label("a whole 1 TB disk: under 0.4% of that", 28, GREY_A).next_to(odo, DOWN, buff=0.6)
+        self.play_at("For a single file", FadeIn(disk, shift=UP * 0.15))
 
 
 class S06NoAlgorithmAgility(NarratedScene):
@@ -247,7 +288,12 @@ class S06NoAlgorithmAgility(NarratedScene):
                        label("self-describing: names its algorithm", 22, TEAL)).arrange(DOWN, buff=0.15)
         agile.move_to(UP * 2 + RIGHT * 3.5)
         self.play_at("the hash function itself is fixed", FadeIn(fixed))
-        self.play_at("put a small label at the front", FadeIn(agile))
+        ghost = tag_box('"made with SHA-512"', GREY_B, 20).next_to(fixed, DOWN, buff=0.35)
+        ghost_strike = Line(ghost.get_left(), ghost.get_right(), color=RED, stroke_width=4)
+        self.play_at("doesn't say", FadeIn(ghost, shift=UP * 0.1))
+        self.play(Create(ghost_strike))
+        self.play_at("It just is", Indicate(fixed[1], color=HASH_COLOR, scale_factor=1.3))
+        self.play_at("put a small label at the front", FadeOut(VGroup(ghost, ghost_strike)), FadeIn(agile))
 
         beam = Line(LEFT * 4, RIGHT * 4, color=GREY_B, stroke_width=6).move_to(DOWN * 0.6)
         pivot = Triangle(color=GREY_B, fill_opacity=1).scale(0.3).next_to(beam, DOWN, buff=0)
@@ -262,7 +308,13 @@ class S06NoAlgorithmAgility(NarratedScene):
         self.play_at("That flexibility is real", FadeIn(right_pan[0]))
         self.play_at("but it isn't free", FadeIn(right_pan[1]))
         self.play_at("every implementation has to handle every option", FadeIn(right_pan[2]))
-        self.play_at("takes the other side of that bet", FadeIn(left_pan, lag_ratio=0.3))
+        self.play_at("takes the other side of that bet", FadeIn(left_pan[0], shift=UP * 0.1))
+        self.play_at("nothing to negotiate", FadeIn(left_pan[1], shift=UP * 0.1))
+        self.play(FadeIn(left_pan[2], shift=UP * 0.1))
+        crack = VMobject(color=RED, stroke_width=4).set_points_as_corners(
+            [fixed[0].get_corner(UL) + RIGHT * 1.0, fixed[0].get_center() + LEFT * 0.2,
+             fixed[0].get_center() + RIGHT * 0.3 + DOWN * 0.1, fixed[0].get_corner(DR) + LEFT * 0.8])
+        self.play_at("ever did start to crack", Create(crack))
         warn = caption("if SHA-512 ever cracks: a new scheme, with years of warning", 28, YELLOW)
         self.play_at("the remedy would be a new scheme", FadeIn(warn))
 
@@ -302,42 +354,84 @@ class S07TheNeighbors(NarratedScene):
         shown = VGroup()
         extras = VGroup()
 
+        def drop() -> Animation:
+            """Fade out the current extras and forget them, so later fades can't bring them back."""
+            group = VGroup(*extras.submobjects)
+            extras.remove(*extras.submobjects)
+            return FadeOut(group)
+
         def data_uri_beats(n):
             inline = VGroup(label("256t inline:", 18, GREEN), mono(compute_cid(b"Hello"), 22, GREEN)).arrange(RIGHT, buff=0.15)
             inline.next_to(n, DOWN, buff=0.15)
             self.play_at("That's exactly 256t's inline case", FadeIn(inline, shift=UP * 0.1))
             huge = mono("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA…", 18, GREY_B).next_to(inline, DOWN, buff=0.1)
             huge.align_to(inline, LEFT)
+            self.play_at("for content of any size", Indicate(n[1][1], color=GREEN))
             self.play_at("so they can get huge", AddTextLetterByLetter(huge), run_time=1.0)
             extras.add(inline, huge)
 
         def sri_beats(n):
+            snippet = VGroup(mono('<script src="https://cdn…/app.js"', 18, GREY_B),
+                             mono('        integrity="sha384-…">', 18, BLUE_B)).arrange(DOWN, aligned_edge=LEFT, buff=0.08)
+            snippet.next_to(n, LEFT, buff=0.3).shift(UP * 0.2)
+            self.play_at("load this script from this location", FadeIn(snippet[0], shift=RIGHT * 0.1))
+            self.play_at("refuse it unless its hash matches", FadeIn(snippet[1], shift=RIGHT * 0.1))
+            extras.add(snippet)
             self.play_at("verification bolted onto an ordinary address", Indicate(n[1][1], color=BLUE_B, scale_factor=1.2))
             gone = tag_box("location gone → 404 → stuck", RED, 20).next_to(n, LEFT, buff=0.3)
-            self.play_at("if the location disappears", FadeOut(extras), FadeIn(gone))
+            self.play_at("if the location disappears", drop(), FadeIn(gone))
             extras.add(gone)
 
         def git_beats(n):
-            self.play_at("Length plus fingerprint", Indicate(n[1][2], color=ORANGE, scale_factor=1.3))
+            self.play_at("convergent design", drop(), Indicate(n[1][2], color=ORANGE, scale_factor=1.2))
+            parts = VGroup(tag_box("blob", ORANGE, 22), tag_box(f"{len(GETTYSBURG)}", LENGTH_COLOR, 22),
+                           tag_box("\\0", GREY_B, 22), tag_box("Four score…", GREY_A, 22)).arrange(RIGHT, buff=0.12)
+            parts.move_to(LEFT * 3.6 + DOWN * 1.6)
+            self.play_at("starts with the word", FadeIn(parts[0], shift=UP * 0.1))
+            self.play_at("and the file's length", FadeIn(parts[1:3], shift=UP * 0.1))
+            self.play_at("before the content", FadeIn(parts[3], shift=UP * 0.1))
+            algo = tag_box("SHA-1", ORANGE, 22)
+            newer = tag_box("SHA-256", TEAL, 22)
+            down = Arrow(UP * 0.3, DOWN * 0.3, color=GREY_B, buff=0)
+            digest = mono(GIT_BLOB[:16] + "…", 20, ORANGE)
+            chain = VGroup(down, newer, digest).arrange(RIGHT, buff=0.25).next_to(parts, DOWN, buff=0.3)
+            algo.move_to(newer, aligned_edge=LEFT)
+            newer.move_to(algo, aligned_edge=LEFT)
+            self.play_at("Length plus fingerprint", Indicate(n[1][2], color=ORANGE, scale_factor=1.3),
+                         Indicate(parts[1], color=LENGTH_COLOR), GrowArrow(down), FadeIn(digest))
+            self.play_at("Git has used SHA-1", FadeIn(algo))
+            self.play_at("the SHA-1 collisions we saw", Indicate(algo, color=RED))
+            self.play_at("moving toward SHA-256", Transform(algo, newer))
+            extras.add(parts, down, digest, algo)
 
         def ni_beats(n):
+            self.play_at("Naming Things with Hashes", drop())
+            self.play_at("start with the letters n i", Indicate(n[1][1][:3], color=TEAL, scale_factor=1.5))
             self.play_at("they label which hash algorithm was used", Indicate(n[1][1], color=TEAL, scale_factor=1.2))
             lacks = tag_box("no length prefix · no inline content", GREY_B, 18).next_to(n, LEFT, buff=0.3)
-            self.play_at("no room for the length prefix", FadeOut(extras), FadeIn(lacks))
+            self.play_at("no room for the length prefix", FadeIn(lacks))
             extras.add(lacks)
+
+        def magnet_beats(n):
+            tree = MerkleTree(leaves=4, width=2.6, level_gap=0.6).move_to(LEFT * 3.6 + DOWN * 1.9)
+            note = label("v2: a Merkle tree of pieces", 20, PINK).next_to(tree, UP, buff=0.2)
+            self.play_at("uses Merkle trees", FadeIn(tree), FadeIn(note))
+            marks = VGroup(*[Check(0.2).next_to(leaf, DOWN, buff=0.1) for leaf in tree.leaves])
+            self.play_at("each piece can be checked", LaggedStart(*[GrowFromCenter(m) for m in marks], lag_ratio=0.25))
+            extras.add(tree, note, marks)
 
         def ipfs_beats(n):
             chips = VGroup(*[tag_box(t, PURPLE, 18) for t in ("names its algorithm + type", "chunked trees",
                                                                "peer-to-peer network")])
             chips.arrange(DOWN, buff=0.1).next_to(n, DOWN, buff=0.15)
-            self.play(FadeOut(extras), run_time=0.3)
+            self.play(drop(), run_time=0.3)
             for chip, chip_phrase in zip(chips, ["label their hash algorithm and content type",
                                                  "chunked trees for large files", "a whole peer-to-peer network"]):
                 self.play_at(chip_phrase, FadeIn(chip, shift=LEFT * 0.1), run_time=0.4)
             extras.add(chips)
 
         beats = {"data: URI": data_uri_beats, "Subresource Integrity": sri_beats, "Git": git_beats,
-                 "ni: (RFC 6920)": ni_beats, "IPFS": ipfs_beats}
+                 "ni: (RFC 6920)": ni_beats, "BitTorrent magnet": magnet_beats, "IPFS": ipfs_beats}
         for name, example, note, color, pos, phrase in cards:
             n = neighbor(name, example, note, color, pos)
             self.play_at(phrase, FadeIn(n, scale=0.9), run_time=0.6)
@@ -349,9 +443,18 @@ class S07TheNeighbors(NarratedScene):
         badge = VGroup(us_bg, us).move_to(LEFT * 1.6 + UP * 0.9)
         inline_link = DashedLine(badge.get_left(), shown[0].get_right(), color=GREEN)
         hash_link = DashedLine(badge.get_right(), shown[2].get_left(), color=ORANGE)
-        self.play_at("sits in a deliberately small spot", FadeOut(extras), FadeIn(badge, scale=1.3))
+        self.play_at("sits in a deliberately small spot", drop(), FadeIn(badge, scale=1.3))
         self.play(Create(inline_link), Create(hash_link))
+        for k, phrase in ((5, "Smaller than IPFS"), (1, "more findable than Subresource Integrity"),
+                          (0, "more compact than a data URI")):
+            self.play_at(phrase, Indicate(shown[k], scale_factor=1.08))
         self.play_at("at most ninety-four characters", Indicate(badge, color=LENGTH_COLOR))
+        url = VGroup(mono("https://256t.org/", 22, GREY_B), mono(GETTYSBURG_CID[:16] + "…", 22, HASH_COLOR)).arrange(RIGHT, buff=0.02)
+        url.move_to(LEFT * 3.2 + DOWN * 1.7)
+        url_bg = BackgroundRectangle(url, fill_opacity=0.9, buff=0.1)
+        self.play_at("a single segment of a URL", FadeIn(url_bg), FadeIn(url, shift=UP * 0.1))
+        anyone = label("…that anyone can compute", 24, LENGTH_COLOR).next_to(url, DOWN, buff=0.25).align_to(url, LEFT)
+        self.play_at("anyone can compute", FadeIn(anyone, shift=UP * 0.1))
 
 
 class S08TheWholePicture(NarratedScene):
@@ -362,7 +465,8 @@ class S08TheWholePicture(NarratedScene):
         self.play_at("put the whole thing back together", FadeIn(cid))
         where = VGroup(label("where", 30, GREY_B), Arrow(LEFT * 0.6, RIGHT * 0.6, color=GREY_B), label("what", 30, YELLOW))
         where.arrange(RIGHT, buff=0.3).next_to(cid, DOWN, buff=0.4)
-        self.play_at("A web address usually tells you where", FadeIn(where))
+        self.play_at("A web address usually tells you where", FadeIn(where[0]))
+        self.play_at("tells you what it is", GrowArrow(where[1]), FadeIn(where[2]), Indicate(cid, color=YELLOW, scale_factor=1.03))
         b1 = Brace(cid.prefix, DOWN, color=LENGTH_COLOR)
         t1 = label("length → 256 TiB → the name", 20, LENGTH_COLOR)
         b1.put_at_tip(t1)
@@ -372,6 +476,8 @@ class S08TheWholePicture(NarratedScene):
         b2.put_at_tip(t2)
         self.play_at("Eight characters of length", FadeOut(where), GrowFromCenter(b1), FadeIn(t1))
         self.play_at("Then up to eighty-six characters", GrowFromCenter(b2), FadeIn(t2))
+        self.play_at("either the content itself", Indicate(cid.suffix, color=INLINE_COLOR, scale_factor=1.03))
+        self.play_at("fingerprint", Indicate(cid.suffix, color=HASH_COLOR, scale_factor=1.03))
 
         recap = VGroup(
             VGroup(dice_icon(GREY_A, 0.5), label("accidental collision, ever: ~2⁻²⁷¹", 24)).arrange(RIGHT, buff=0.3),
@@ -379,8 +485,16 @@ class S08TheWholePicture(NarratedScene):
             VGroup(CacheBox(size=0.6), label("verify, then fetch from anyone and cache forever", 24)).arrange(RIGHT, buff=0.3),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).move_to(DOWN * 1.0)
         self.play_at("Collisions exist, by simple counting", FadeIn(recap[0], shift=RIGHT * 0.2))
+        aside = label("8 × 10⁹ people × 10⁹ files per second × 13.8 billion years", 22, GREY_A).move_to(DOWN * 2.9)
+        self.play_at("a billion files per person per second", FadeIn(aside, shift=UP * 0.1))
+        self.play_at("would almost certainly never see one", Indicate(recap[0][0], color=YELLOW),
+                     Transform(aside, label("→ chance of even one accidental collision ≈ 2⁻²⁷¹", 22, YELLOW).move_to(aside)))
         self.play_at("Adversaries have it harder", FadeIn(recap[1], shift=RIGHT * 0.2))
-        self.play_at("And once you verify", FadeIn(recap[2], shift=RIGHT * 0.2))
+        self.play_at("the cheap attack, lying",
+                     Transform(aside, label("lying: one hash computation catches it", 22, GREEN).move_to(aside)))
+        self.play_at("the expensive attack, forging", Indicate(recap[1][0], color=ADVERSARY_COLOR),
+                     Transform(aside, label("forging: a SHA-512 collision, ~2²⁵⁶ work, never done", 22, ADVERSARY_COLOR).move_to(aside)))
+        self.play_at("And once you verify", FadeIn(recap[2], shift=RIGHT * 0.2), FadeOut(aside))
 
         self.play_at("It's a small idea", *[FadeOut(m) for m in self.mobjects])
         logo_path = REPO_DIR / "examples" / "256t_logo.png"
@@ -389,5 +503,10 @@ class S08TheWholePicture(NarratedScene):
         line = label("a name for bytes", 34).next_to(site, DOWN, buff=0.3)
         self.play(FadeIn(logo), FadeIn(site))
         self.play_at("small enough to implement in an afternoon", FadeIn(line))
+        langs = VGroup(*[tag_box(name, GREY_B, 18) for name in IMPLEMENTATIONS[::5][:9]]).arrange(RIGHT, buff=0.15)
+        fit_width(langs, FRAME_W - 1).next_to(line, DOWN, buff=0.4)
+        self.play_at("in whatever language you like", LaggedStart(*[FadeIn(t, shift=UP * 0.1) for t in langs], lag_ratio=0.1))
+        same = VGroup(*[Check(0.22).next_to(t, DOWN, buff=0.08) for t in langs])
+        self.play_at("exactly the same answers", LaggedStart(*[GrowFromCenter(c) for c in same], lag_ratio=0.08))
         row = fit_width(series_row(), FRAME_W - 1).scale(0.7).to_edge(DOWN, buff=0.3)
-        self.play_at("pick a file you care about", FadeIn(row, lag_ratio=0.1))
+        self.play_at("pick a file you care about", FadeOut(VGroup(langs, same)), FadeIn(row, lag_ratio=0.1))

@@ -37,9 +37,20 @@ class S01BytesFromAStranger(NarratedScene):
         self.play(ribbon.animate.next_to(laptop, RIGHT, buff=0.3).shift(DOWN * 0.5), run_time=2, rate_func=linear)
         q = caption("what should your code do now?", 34, YELLOW)
         self.play_at("the advice was", FadeIn(q))
+        advice = tag_box('"always verify"', GREEN, 28).move_to(DOWN * 1.4)
+        self.play_at("always verify", FadeIn(advice, shift=UP * 0.2))
+        self.play_at("That sounds simple", Indicate(advice, color=GREEN))
+        decisions = VGroup(*[tag_box(t, GREY_B, 20) for t in ("count the bytes", "one canonical name", "trust no headers")])
+        decisions.arrange(RIGHT, buff=0.3).next_to(advice, DOWN, buff=0.35)
+        self.play_at("a few small decisions", LaggedStart(*[FadeIn(d, shift=UP * 0.15) for d in decisions], lag_ratio=0.3))
         airtight = VGroup(label("airtight", 28, GREEN), label("vs.", 24, GREY_B), label("looks airtight", 28, RED))
         airtight.arrange(RIGHT, buff=0.3).move_to(UP * 2.6)
         self.play_at("separate a check that's airtight", FadeIn(airtight))
+        leak = VMobject(color=RED, stroke_width=3).set_points_as_corners(
+            [airtight[2].get_top() + LEFT * 0.3, airtight[2].get_center() + RIGHT * 0.05,
+             airtight[2].get_center() + LEFT * 0.15 + DOWN * 0.1, airtight[2].get_bottom() + RIGHT * 0.3])
+        self.play_at("only looks airtight", Create(leak))
+        self.play_at("once verification is solid", Indicate(airtight[0], color=GREEN, scale_factor=1.3))
         cache = CacheBox(size=1.2).move_to(UP * 2.6 + RIGHT * 4.5)
         self.play_at("permission to cache forever", FadeIn(cache, scale=0.5))
 
@@ -97,6 +108,9 @@ class S03LengthPrefixEarnsItsKeep(NarratedScene):
         gear[1].move_to(gear[0])
         gear_note = label("hashing as bytes arrive", 20, HASH_COLOR).next_to(gear, RIGHT, buff=0.2)
         self.play_at("Before a single byte arrives", FadeIn(gauge))
+        self.play_at("For the Gettysburg Address", Indicate(brace_label, color=LENGTH_COLOR),
+                     Indicate(gauge.stop_label, color=LENGTH_COLOR))
+        self.play(Flash(gauge.stop.get_top(), color=LENGTH_COLOR), Flash(gauge.stop.get_bottom(), color=LENGTH_COLOR))
         self.play_at("you can hash the bytes as they stream in", FadeIn(gear), FadeIn(gear_note))
 
         cases = VGroup(label("A: honest", 26, GREEN), label("B: too short", 26, RED), label("C: too long", 26, RED))
@@ -133,7 +147,13 @@ class S03LengthPrefixEarnsItsKeep(NarratedScene):
         self.play_at("There's one limit worth being upfront about", FadeOut(extras))
         limit = VGroup(label("reject early", 28, RED), label("·", 28, GREY_B), label("accept only at the last byte", 28, GREEN))
         limit.arrange(RIGHT, buff=0.3).move_to(DOWN * 1.9)
-        self.play(gauge.fill_to(L * 0.98, run_time=1.2), FadeIn(limit))
+        whole = SurroundingRectangle(VGroup(gauge.track, gauge.stop), color=HASH_COLOR, buff=0.08)
+        self.play_at("the fingerprint covers the whole file", Create(whole),
+                     Transform(gear_note, label(f"one fingerprint over all {L:,} bytes", 20, HASH_COLOR)
+                               .next_to(gear, RIGHT, buff=0.2)))
+        self.play_at("until you've seen the last one", FadeOut(whole), gauge.fill_to(L * 0.98, run_time=1.2))
+        self.play_at("You can reject early", FadeIn(limit[0]))
+        self.play(FadeIn(limit[1:]))
         pending = label("?", 40, YELLOW).next_to(gauge.stop, RIGHT, buff=0.2)
         self.play_at("you can only accept at the end", FadeIn(pending))
         self.play(gauge.fill_to(L, run_time=0.4), Transform(pending, Check(0.4).move_to(pending)))
@@ -212,6 +232,10 @@ class S05DecodeIsNotVerify(NarratedScene):
         self.play_at("you do get the right bytes", FadeIn(fine, shift=UP * 0.1))
         danger = label("the danger: what you conclude about the name", 26, RED).move_to(DOWN * 1.5)
         self.play_at("The danger is in what you conclude", FadeIn(danger, shift=UP * 0.1))
+        twins = VGroup(mono(CID_A, 26, GREEN), label("and", 22, GREY_B), mono(CID_A[:-1] + "R", 26, RED),
+                       label('→ same "A", two different keys', 22, YELLOW)).arrange(RIGHT, buff=0.3).move_to(DOWN * 0.55)
+        self.play_at("Two different-looking names for the same content", FadeOut(VGroup(sloppy, fine)),
+                     danger.animate.move_to(DOWN * 1.4), FadeIn(twins, shift=UP * 0.1))
         keys = VGroup(*[tag_box(t, GREY_B, 22) for t in ("cache keys", "database index", "approved-document list")])
         keys.arrange(RIGHT, buff=0.4).move_to(DOWN * 2.5)
         for key, phrase in zip(keys, ["like a cache", "a database index", "a list of approved documents"]):
@@ -220,20 +244,34 @@ class S05DecodeIsNotVerify(NarratedScene):
 
         # The rule.
         self.play_at("The fix is the same rule", *[FadeOut(m) for m in self.mobjects])
+        fix = label("the fix: the same rule as before", 34, YELLOW).to_edge(UP, buff=0.5)
+        self.play(FadeIn(fix))
+        self.play_at("applied consistently", Indicate(fix, color=YELLOW))
         wrong = VGroup(label("✗  decode the CID → trust the result", 32, RED))
         right = VGroup(label("✓  compute the CID of the bytes → compare strings", 32, GREEN))
-        rules = VGroup(wrong, right).arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to(UP * 1.8)
+        rules = VGroup(wrong, right).arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to(UP * 1.4)
         self.play_at("Never verify by decoding", FadeIn(wrong))
+        cross = Line(wrong.get_left(), wrong.get_right(), color=RED, stroke_width=4)
+        self.play_at("trusting what comes out", Create(cross))
         self.play_at("Always go the other way", FadeIn(right))
+        machine = RecipeMachine("standard recipe", width=2.8, height=1.2).move_to(DOWN * 0.6 + LEFT * 2.5)
+        given = mono('"A"', 30).next_to(machine, LEFT, buff=0.5)
+        made = mono(CID_A, 30, GREEN).next_to(machine, RIGHT, buff=0.5)
+        self.play_at("take the bytes", FadeIn(given, shift=RIGHT * 0.2))
+        self.play_at("compute their CID with the standard recipe", FadeIn(machine))
+        self.play(given.animate.move_to(machine.intake).scale(0.5).set_opacity(0), machine.turn(run_time=0.8))
+        self.play(FadeIn(made, shift=RIGHT * 0.2))
+        self.play_at("compare the strings", Indicate(made, color=GREEN))
         checks = VGroup()
         for given, data in ((CID_A[:-1] + "R", b"A"), (LYING_LENGTH, b"Hi")):
             computed = compute_cid(data)
             row = VGroup(mono(given, 26, RED), label("vs computed", 20, GREY_B), mono(computed, 26, GREEN),
                          XMark(0.3)).arrange(RIGHT, buff=0.3)
             checks.add(row)
-        checks.arrange(DOWN, buff=0.35).move_to(DOWN * 1.0)
-        self.play_at("The recipe only ever produces one canonical name", LaggedStart(*[FadeIn(c) for c in checks],
-                                                                                         lag_ratio=0.5))
+        checks.arrange(DOWN, buff=0.35).move_to(DOWN * 2.4)
+        self.play_at("The recipe only ever produces one canonical name", FadeOut(VGroup(machine, made)),
+                     LaggedStart(*[FadeIn(c) for c in checks], lag_ratio=0.5))
+        self.play_at("anything else fails the comparison", *[Indicate(c[3], color=RED, scale_factor=1.5) for c in checks])
 
 
 class S06CachingForever(NarratedScene):
@@ -245,14 +283,27 @@ class S06CachingForever(NarratedScene):
         self.play_at("There's an old joke", FadeIn(quote))
         tag = CIDText(GETTYSBURG_CID[:16] + "…", size=34)
         self.play_at("Content addressing is a nice punchline", ReplacementTransform(quote, tag))
+        hard = VGroup(label("naming things", 30, GREEN), label("cache invalidation", 30, RED)).arrange(RIGHT, buff=1.2)
+        hard.next_to(tag, DOWN, buff=0.8)
+        self.play_at("by solving naming", FadeIn(hard[0], shift=UP * 0.2), Indicate(tag, color=GREEN))
+        gone = Line(hard[1].get_left(), hard[1].get_right(), color=RED, stroke_width=4)
+        self.play_at("it makes cache invalidation disappear", FadeIn(hard[1]))
+        self.play(Create(gone))
 
-        self.play_at("Think about what makes caching hard", tag.animate.to_edge(UP, buff=0.4))
+        self.play_at("Think about what makes caching hard", tag.animate.to_edge(UP, buff=0.4), FadeOut(VGroup(hard, gone)))
         stale = VGroup(CacheBox(size=1.3), label("is my copy out of date?", 26, RED)).arrange(RIGHT, buff=0.4)
-        self.play(FadeIn(stale))
+        self.play(FadeIn(stale[0]))
+        copy = tag.copy()
+        self.play_at("A cache keeps a copy", copy.animate.scale(0.3).move_to(stale[0]))
+        self.play_at("The hard question is always", FadeIn(stale[1], shift=LEFT * 0.2))
         never = label("a CID can't go out of date", 26, GREEN).move_to(stale[1], aligned_edge=LEFT)
         self.play_at("But a CID can't go out of date", Transform(stale[1], never))
+        days = VGroup(*[VGroup(label(d, 24, GREY_B), Check(0.3)).arrange(RIGHT, buff=0.15)
+                        for d in ("yesterday", "today", "forever")]).arrange(RIGHT, buff=0.8).next_to(stale, DOWN, buff=0.6)
+        for d, phrase in zip(days, ["named these bytes yesterday", "exactly these bytes today", "and forever"]):
+            self.play_at(phrase, FadeIn(d, shift=UP * 0.15), run_time=0.5)
 
-        self.play_at("So a server can tell every cache", FadeOut(stale))
+        self.play_at("So a server can tell every cache", FadeOut(VGroup(stale, copy, days)))
         headers = VGroup(mono("Cache-Control: public, max-age=31536000, immutable", 26),
                          mono('ETag: "' + GETTYSBURG_CID[:16] + '…"', 26)).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
         headers.move_to(UP * 1.3)
@@ -271,6 +322,7 @@ class S06CachingForever(NarratedScene):
             self.play_at(phrase, Indicate(part, color=YELLOW), FadeIn(note))
             note_group.add(note)
         self.play_at("The CID also makes a perfect version tag", FadeIn(headers[1]))
+        self.play_at("it already changes exactly when the content changes", Indicate(headers[1], color=HASH_COLOR))
 
         # Chain of caches.
         self.play_at("Two small cautions", FadeOut(note_group), VGroup(frame, headers).animate.scale(0.7).to_edge(UP, buff=1.2))
@@ -295,7 +347,10 @@ class S06CachingForever(NarratedScene):
                        label("same bytes, same CID: a hint, not identity", 22, YELLOW)).arrange(RIGHT, buff=0.3)
         types.move_to(DOWN * 2.6)
         fit_width(types, FRAME_W - 0.6)
-        self.play_at("headers like the content type", FadeIn(types))
+        self.play_at("headers like the content type", FadeIn(types[0]))
+        self.play_at("The same bytes have the same CID", Indicate(tag, color=HASH_COLOR))
+        self.play_at("or plain text", FadeIn(types[1]))
+        self.play_at("Treat that kind of information as a hint", FadeIn(types[2]))
 
         suffix_old = mono("t256:AAAAAAANSGVsbG8sIFdvcmxkIQ.txt", 30)
         suffix_new = mono("t256:AAAAAAANSGVsbG8sIFdvcmxkIQ.html", 30)
@@ -303,6 +358,7 @@ class S06CachingForever(NarratedScene):
                      FadeOut(VGroup(boxes, arrows, badges, not_found, types, frame, headers, tag)))
         suffix_old.move_to(UP * 1.4)
         self.play(FadeIn(suffix_old))
+        self.play_at("allows on the end of a CID", Indicate(suffix_old[31:], color=YELLOW, scale_factor=1.3))
         cid_part = suffix_old[5:31]
         cid_brace = Brace(cid_part, DOWN, color=GREEN)
         cid_note = label("CID: verified ✓", 22, GREEN)
@@ -311,11 +367,16 @@ class S06CachingForever(NarratedScene):
         self.play_at("Verification covers the bytes, not the suffix", GrowFromCenter(cid_brace), FadeIn(cid_note),
                      FadeIn(sfx_note))
         suffix_new.move_to(suffix_old, aligned_edge=LEFT)
-        self.play_at("anyone who can edit a link", Transform(suffix_old, suffix_new))
+        self.play_at("anyone who can edit a link", Indicate(suffix_old[31:], color=RED, scale_factor=1.3))
+        self.play_at("as a web page", Transform(suffix_old, suffix_new))
         warn = VGroup(Triangle(color=YELLOW, fill_opacity=0).scale(0.4), label("!", 30, YELLOW)).move_to(DOWN * 1.4 + LEFT * 2.5)
         warn[1].move_to(warn[0]).shift(DOWN * 0.08)
         warn_text = label("text treated as HTML can run scripts", 28, YELLOW).next_to(warn, RIGHT, buff=0.3)
         self.play_at("a careless browser might then run code", FadeIn(warn), FadeIn(warn_text))
+        script = mono("<script>…</script>", 26, RED).next_to(warn_text, DOWN, buff=0.3).align_to(warn_text, LEFT)
+        self.play_at("hidden in that text", FadeIn(script, shift=UP * 0.1))
+        rule = caption("hints get the same suspicion as any unverified header", 28, YELLOW)
+        self.play_at("Give those hints the same suspicion", FadeIn(rule))
 
 
 class S07TrueEnoughRevisited(NarratedScene):
@@ -333,19 +394,31 @@ class S07TrueEnoughRevisited(NarratedScene):
                                                                   lag_ratio=0.4))
         stamp = tag_box("+ verification", GREEN, 28).rotate(0.04).next_to(rows, DOWN, buff=0.5)
         self.play_at("Verification changes what kind of statements", FadeIn(stamp, scale=1.4))
+        self.play_at("A CID uniquely determines content", Indicate(rows[0], color=YELLOW))
         cues = ["stops being a claim about the universe", '"The content is immutable" becomes',
                 '"cache it forever" becomes']
         for row, (_, rule), phrase in zip(rows, statements, cues):
             new = label("✓  " + rule, 30, GREEN).move_to(row, aligned_edge=LEFT)
             self.play_at(phrase, Transform(row, new))
-        self.play(FadeOut(quote), FadeOut(stamp))
+            if row is rows[0]:
+                self.play_at("becomes a rule about you", Indicate(row, color=GREEN))
+        self.play_at("Engineering is full of statements like this", FadeOut(quote), FadeOut(stamp),
+                     rows.animate.set_opacity(0.4))
         analogies = VGroup(*[tag_box(t, GREY_B, 22) for t in (
             "floating-point ≈ real numbers", "TCP ≈ reliable", "the Earth ≈ flat (for a house)")]).arrange(RIGHT, buff=0.3)
         analogies.move_to(DOWN * 2.0)
         for box, phrase in zip(analogies, ["floating-point numbers", "a stream of unreliable packets", "A carpenter treats"]):
             self.play_at(phrase, FadeIn(box, shift=UP * 0.2), run_time=0.5)
+        self.play_at("None of these are true", *[b[0].animate.set_stroke(RED) for b in analogies])
+        self.play_at("All of them are true enough", *[b[0].animate.set_stroke(GREEN) for b in analogies])
         cap = caption("useful abstractions with known cracks", 28, YELLOW)
         self.play_at("as long as you know exactly where the crack is", FadeIn(cap))
+        measured = VGroup(VGroup(dice_icon(GREY_A, 0.45), label("accidents: ~2⁻²⁷¹ (Episode 4)", 22)).arrange(RIGHT, buff=0.2),
+                          VGroup(mask_icon(ADVERSARY_COLOR, 0.45), label("forgery: ~2²⁵⁶ work (Episode 5)", 22)).arrange(RIGHT, buff=0.2))
+        measured.arrange(RIGHT, buff=0.8).move_to(analogies)
+        self.play_at("somewhere you can live with", Indicate(cap, color=YELLOW))
+        self.play_at("Over the last two episodes", FadeOut(analogies), FadeIn(measured[0], shift=UP * 0.2))
+        self.play_at("exactly where 256t's crack is", FadeIn(measured[1], shift=UP * 0.2))
 
 
 class S08TrustMovesToTheMath(NarratedScene):
@@ -366,4 +439,13 @@ class S08TrustMovesToTheMath(NarratedScene):
         self.play_at("A big data center, a library", Create(lines), LaggedStart(*[GrowFromCenter(c) for c in loop_checks],
                                                                                  lag_ratio=0.25))
         cap = caption("trust the name, not the messenger", 34, YELLOW)
-        self.play_at("The trust lives in the name", FadeIn(cap))
+        self.play_at("The trust lives in the name", FadeIn(cap), Indicate(tag, color=YELLOW))
+        fp = FingerprintIcon(size=0.9).next_to(tag, RIGHT, buff=0.4)
+        self.play_at("and the math that checks it", FadeIn(fp, scale=0.5), *[Indicate(c, color=GREEN) for c in loop_checks])
+        self.play_at("Next time", *[FadeOut(m) for m in self.mobjects])
+        nxt = episode_card(7, EPISODE_TITLES[6]).scale(1.3).move_to(UP * 0.6)
+        self.play(FadeIn(nxt, shift=UP * 0.2))
+        omit = VGroup(*[tag_box(t, GREY_B, 22) for t in ("what it leaves out", "its neighbors")]).arrange(RIGHT, buff=0.6)
+        omit.next_to(nxt, DOWN, buff=0.5)
+        self.play_at("deliberately doesn't do", FadeIn(omit[0], shift=UP * 0.15))
+        self.play_at("how it compares to its neighbors", FadeIn(omit[1], shift=UP * 0.15))
