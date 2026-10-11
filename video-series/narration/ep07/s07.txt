@@ -10,4 +10,4 @@ There's even an internet standard for names like these, called "Naming Things wi
 
 Magnet links in BitTorrent name a torrent by the hash of its description, and the newer version of BitTorrent uses Merkle trees, so each piece can be checked as it arrives. And I P F S goes furthest: self-describing names that label their hash algorithm and content type, chunked trees for large files, and a whole peer-to-peer network for finding things.
 
-Two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data URI. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.
+Two fifty-six tee sits in a deliberately small spot on this map. Smaller than I P F S, more findable than Subresource Integrity, and more compact than a data U-R-I. It's just a name, at most ninety-four characters, that fits in a single segment of a URL, and that anyone can compute.

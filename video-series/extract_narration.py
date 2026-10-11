@@ -36,6 +36,7 @@ PRONUNCIATIONS = [
     (r"CID", "C-I-D"),
     (r"IPFS", "I P F S"),
     (r"URIs", "U-R-Is"),
+    (r"URI", "U-R-I"),
     (r"PNG", "P N G"),
     (r"GPU", "G P U"),
     (r"CWI", "C W I"),

@@ -78,7 +78,7 @@ it easy to time animations to the clip, either by hand or with a tool like `mani
   | MD5 | "M D five" |
   | base64 / base64url | "base sixty-four" / "base sixty-four U R L" |
   | CID / CIDs | "C-I-D" / "C-I-Ds" |
-  | IPFS, PNG, GPU, CWI, URIs | spelled out letter by letter |
+  | IPFS, PNG, GPU, CWI, URI(s) | spelled out letter by letter |
 
 - Pauses: scene boundaries are natural pause points. If one clip per episode sounds rushed, generate one
   clip per scene and put the gaps in during editing.
