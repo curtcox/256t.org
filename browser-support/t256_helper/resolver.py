@@ -37,6 +37,8 @@ def save_json(path, value):
 
 
 def validate_config(config):
+    if not isinstance(config, dict) or not isinstance(config.get("providers"), list):
+        raise ValueError("Configuration must contain a providers array")
     if config.get("version") != 1:
         raise ValueError("Unsupported configuration version")
     for key in ("max_bytes", "cache_bytes"):
@@ -44,8 +46,10 @@ def validate_config(config):
             raise ValueError(key + " must be a positive byte count")
     ids = set()
     for provider in config.get("providers", []):
+        if not isinstance(provider, dict):
+            raise ValueError("Each provider must be an object")
         identifier = provider.get("id", "")
-        if not identifier or not identifier.replace("-", "").replace("_", "").isalnum() or identifier in ids:
+        if not isinstance(identifier, str) or not identifier or not identifier.replace("-", "").replace("_", "").isalnum() or identifier in ids:
             raise ValueError("Provider IDs must be unique letters, digits, hyphens, or underscores")
         ids.add(identifier)
         kind = provider.get("type")
@@ -67,6 +71,8 @@ def validate_config(config):
     if not isinstance(config.get("allowed_origins", []), list):
         raise ValueError("allowed_origins must be an array")
     for origin in config.get("allowed_origins", []):
+        if not isinstance(origin, str):
+            raise ValueError("Origins must be strings")
         url = urlsplit(origin)
         if url.scheme not in ("http", "https") or not url.hostname or origin != url.scheme + "://" + url.netloc or url.username or url.password:
             raise ValueError("Grant a specific HTTP(S) origin without a path or wildcard")

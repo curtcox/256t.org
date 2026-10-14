@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>t256 · Your content providers</title>
+  <style>
+    :root{color-scheme:light dark;font:16px/1.6 system-ui,sans-serif}body{max-width:1000px;margin:0 auto;padding:36px 24px}h1{font-size:2.3rem;margin:0}h2{margin-top:0}p{max-width:75ch}.eyebrow{color:#718096;letter-spacing:.12em}section{border:1px solid #8886;border-radius:14px;padding:24px;margin-top:24px}label{display:block;margin:12px 0}input,select,textarea,button{font:inherit;border:1px solid #8888;border-radius:6px;padding:8px}input,textarea{box-sizing:border-box;width:100%}button{cursor:pointer}button.primary{background:#215cdd;color:white}table{border-collapse:collapse;width:100%;margin:16px 0}td,th{text-align:left;border-bottom:1px solid #8885;padding:10px;overflow-wrap:anywhere}td button{margin:3px}#status{white-space:pre-wrap}#connection{overflow-wrap:anywhere}details{margin:16px 0}.grid{display:grid;grid-template-columns:1fr 2fr;gap:16px}small{color:#718096}a{color:inherit}output{display:block;margin-top:12px}button:disabled{opacity:.5}@media(max-width:600px){.grid{grid-template-columns:1fr}table{font-size:.85rem}}
+  </style>
+</head>
+<body>
+  <div class="eyebrow">256T / DESKTOP RESOLVER</div><h1>Your content, wherever it lives.</h1>
+  <p>Choose the folders, repositories, and servers to search. Content is verified against its identifier before the browser receives it.</p>
+  <output id="status" role="status">Connecting to your helper…</output>
+  <section><h2>Content providers</h2><p>Providers are tried in the order below, after inline content and the verified cache. Mounted network drives work as folders.</p>
+    <table><thead><tr><th>Provider</th><th>Location</th><th>Actions</th></tr></thead><tbody id="providers"></tbody></table>
+    <form id="add-provider"><div class="grid"><label>Name<input name="id" required pattern="[A-Za-z0-9_-]+" placeholder="my-files"></label><label>Type<select name="type"><option value="folder">Folder or network drive</option><option value="http">HTTP(S) base URL</option><option value="github">GitHub repository</option><option value="git">Local Git clone</option></select></label></div>
+      <label>Location<input name="location" required placeholder="Folder path, base URL, or owner/repository"></label>
+      <details><summary>Repository and authentication options</summary><label>Revision<input name="ref" value="HEAD"></label><label>Directory inside repository<input name="directory" value="cids"></label><label>Credential environment variable<input name="token_env" placeholder="GH_TOKEN (leave blank for public access)"></label><label><input type="checkbox" name="use_gh" style="width:auto"> Use existing GitHub CLI login</label><label>GitHub API URL<input name="api_url" value="https://api.github.com"></label></details>
+      <button class="primary">Add provider</button></form>
+  </section>
+  <section><h2>Open verified content</h2><form id="open-content"><label>t256 URI<input name="uri" required placeholder="t256:AAAAAAAFaGVsbG8.txt"></label><button class="primary">Open content</button></form><p>HTML opened here uses an isolated browser origin. Static t256 resource references are translated before loading. JavaScript modules need an explicit import map.</p></section>
+  <section><h2>Connect a website</h2><p>A connection grants the website read access to content available through your selected providers. Keep the connection URL private. Remove the origin below to revoke access.</p><form id="grant"><label>Website origin<input name="origin" required placeholder="https://your-site.example"></label><button>Grant access and copy connection URL</button></form><output id="connection"></output><ul id="origins"></ul></section>
+  <section><h2>Storage limits</h2><form id="limits"><div class="grid"><label>Maximum content size (MiB)<input name="max_bytes" type="number" min="1" required></label><label>Cache budget (MiB)<input name="cache_bytes" type="number" min="1" required></label></div><button>Save limits</button></form><p><small>Index folders or local clones to find content stored under ordinary filenames. Reindex after files or revisions change.</small></p></section>
+  <script type="module" src="/settings.mjs"></script>
+</body></html>

@@ -228,4 +228,6 @@ function toHexDump(bytes) {
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { toBase64Url, fromBase64Url, encodeLength, decodeLength, computeCid, downloadCid, isLiteralCid, extractLiteralContent, toHexDump };
+} else {
+  globalThis.t256Cid = { toBase64Url, fromBase64Url, encodeLength, decodeLength, computeCid, downloadCid, isLiteralCid, extractLiteralContent, toHexDump };
 }
