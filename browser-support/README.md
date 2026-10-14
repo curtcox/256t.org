@@ -7,6 +7,9 @@ runtime dependencies. Node.js and Playwright are needed only for browser tests.
 
 ## Start
 
+Download `browser-support/dist/t256-desktop.zip` from the published URI resolver
+and extract it, or clone this repository. Preserve the directory layout.
+
 From the repository root:
 
 ```sh
@@ -23,6 +26,7 @@ To open a URI, starting the helper automatically:
 ```sh
 python3 browser-support/run.py open t256:AAAAAAAFaGVsbG8.txt
 python3 browser-support/run.py settings
+python3 browser-support/run.py stop
 ```
 
 Settings live in `~/Library/Application Support/t256` on macOS,
@@ -219,6 +223,10 @@ Registration uses an AppleScript `.app` on macOS, per-user URL protocol registry
 keys on Windows, and a desktop entry plus `xdg-mime` on Linux. It does not require
 administrator access. Python and this checkout must remain at their installed
 paths. Uninstallation retains provider settings and cached bytes.
+
+The macOS wrapper is locally ad-hoc signed. It is generated on installation and
+does not require a developer signing identity. Safari extension distribution is a
+separate signed-containing-app process.
 
 ## Public HTTPS fallback
 

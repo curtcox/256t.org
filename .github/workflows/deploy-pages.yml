@@ -25,6 +25,9 @@ jobs:
       - name: Set up GitHub Pages
         uses: actions/configure-pages@v4
 
+      - name: Build desktop helper download
+        run: python browser-support/build_distribution.py
+
       - name: Build static site
         run: |
           python -m pip install --upgrade pip

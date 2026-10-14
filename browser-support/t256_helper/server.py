@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import signal
 import threading
 from urllib.parse import parse_qs, quote, urlsplit
 import webbrowser
@@ -196,10 +197,19 @@ def serve(resolver, port=25600, open_browser=False):
     print("t256 helper listening at " + server.origin, flush=True)
     if open_browser:
         webbrowser.open(server.settings_url)
+    def terminate(signum, frame):
+        raise KeyboardInterrupt
+    previous_signal = signal.signal(signal.SIGTERM, terminate)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         server.server_close()
-        (resolver.directory / "runtime.json").unlink(missing_ok=True)
+        runtime_path = resolver.directory / "runtime.json"
+        try:
+            if json.loads(runtime_path.read_text())["pid"] == os.getpid():
+                runtime_path.unlink(missing_ok=True)
+        except (OSError, ValueError, KeyError):
+            pass
+        signal.signal(signal.SIGTERM, previous_signal)

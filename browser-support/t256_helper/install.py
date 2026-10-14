@@ -56,7 +56,8 @@ def install(resolver, browser=None, extension_id=None):
     open_launcher = destination / ("t256-open" + suffix)
     native_launcher = destination / ("t256-native" + suffix)
     for path, mode in ((open_launcher, "open"), (native_launcher, "native")):
-        path.write_text(launcher_text(sys.executable, ENTRY, resolver.directory, mode, platform == "win32"), encoding="utf-8")
+        with path.open("w", encoding="utf-8", newline="") as stream:
+            stream.write(launcher_text(sys.executable, ENTRY, resolver.directory, mode, platform == "win32"))
         if platform != "win32": path.chmod(0o700)
     receipt_path = resolver.directory / "registration.json"
     receipt = json.loads(receipt_path.read_text()) if receipt_path.exists() else {"files": [], "registry": [], "platform": platform}
@@ -73,6 +74,7 @@ def install(resolver, browser=None, extension_id=None):
         with info.open("rb") as stream: properties = plistlib.load(stream)
         properties.update(CFBundleIdentifier="org.t256.helper", CFBundleURLTypes=[{"CFBundleURLName": "256t content", "CFBundleURLSchemes": ["t256"]}])
         with info.open("wb") as stream: plistlib.dump(properties, stream)
+        subprocess.run(["codesign", "--force", "--sign", "-", str(app)], check=True, capture_output=True)
         subprocess.run(["/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister", "-f", str(app)], check=True, capture_output=True)
         receipt["files"].extend([str(app), str(script)])
     elif platform == "linux":

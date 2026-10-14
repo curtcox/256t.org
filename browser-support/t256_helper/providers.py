@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import threading
+import shutil
 from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
@@ -58,7 +59,10 @@ def github_headers(provider):
     token = os.environ.get(provider.get("token_env", "GH_TOKEN"))
     host = urlsplit(provider.get("api_url", "https://api.github.com")).hostname
     if not token and provider.get("use_gh", False):
-        result = subprocess.run(["gh", "auth", "token", "--hostname", "github.com" if host == "api.github.com" else host],
+        executable = shutil.which("gh")
+        if not executable:
+            executable = next((path for path in ("/opt/homebrew/bin/gh", "/usr/local/bin/gh") if Path(path).is_file()), "gh")
+        result = subprocess.run([executable, "auth", "token", "--hostname", "github.com" if host == "api.github.com" else host],
                                 capture_output=True, text=True, timeout=15)
         if result.returncode == 0:
             token = result.stdout.strip()

@@ -7,6 +7,7 @@ from pathlib import PurePosixPath
 import tempfile
 import threading
 import subprocess
+import math
 from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 
@@ -62,13 +63,21 @@ def validate_config(config):
         if kind == "github" and len(provider["repo"].split("/")) != 2:
             raise ValueError("GitHub repository must be owner/repo")
         if kind in ("http", "github"):
-            url = urlsplit(provider["url"] if kind == "http" else provider.get("api_url", "https://api.github.com"))
+            raw_url = provider["url"] if kind == "http" else provider.get("api_url", "https://api.github.com")
+            if not isinstance(raw_url, str):
+                raise ValueError("Provider URLs must be strings")
+            url = urlsplit(raw_url)
             if url.scheme not in ("http", "https") or not url.hostname or url.username or url.password or url.query or url.fragment:
                 raise ValueError("Provider URL must be an HTTP(S) base without credentials, query, or fragment")
-        if not isinstance(provider.get("timeout", 15), (float, int)) or provider.get("timeout", 15) <= 0:
+        if not isinstance(provider.get("timeout", 15), (float, int)) or not math.isfinite(provider.get("timeout", 15)) or provider.get("timeout", 15) <= 0:
             raise ValueError("Provider timeout must be positive")
-        if kind in ("git", "github") and provider.get("ref", "HEAD").startswith("-"):
-            raise ValueError("Repository revision cannot start with a hyphen")
+        if kind in ("git", "github"):
+            ref = provider.get("ref", "HEAD")
+            if not isinstance(ref, str) or not ref or ref.startswith("-"):
+                raise ValueError("Repository revision must be a nonempty string without a leading hyphen")
+            directory = provider.get("directory", "cids")
+            if not isinstance(directory, str) or PurePosixPath(directory).is_absolute() or ".." in PurePosixPath(directory).parts or "\\" in directory:
+                raise ValueError("Repository directory must be a relative path")
     if not isinstance(config.get("allowed_origins", []), list):
         raise ValueError("allowed_origins must be an array")
     for origin in config.get("allowed_origins", []):

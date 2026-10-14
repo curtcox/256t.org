@@ -1,6 +1,7 @@
 """Start/reuse the helper and respond to browser native messages."""
 
 import json
+import os
 from pathlib import Path
 import struct
 import subprocess
@@ -34,21 +35,49 @@ def ensure_gateway(resolver):
         return running_gateway(resolver)
     except (OSError, ValueError, KeyError):
         pass
-    log = resolver.directory / "helper.log"
-    with log.open("ab") as output:
-        if sys.platform != "win32": log.chmod(0o600)
-        options = {"creationflags": subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} if sys.platform == "win32" else {"start_new_session": True}
-        process = subprocess.Popen([sys.executable, str(ENTRY), "--state", str(resolver.directory), "serve", "--port", "0"],
-                                   stdin=subprocess.DEVNULL, stdout=output, stderr=output, **options)
     deadline = time.monotonic() + 10
+    lock = resolver.directory / "gateway-start.lock"
+    owned = False
     while time.monotonic() < deadline:
-        if process.poll() is not None:
-            raise RuntimeError("Helper could not start; check helper.log in the settings directory")
         try:
             return running_gateway(resolver)
         except (OSError, ValueError, KeyError):
+            pass
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            os.close(fd)
+            owned = True
+            break
+        except FileExistsError:
+            try:
+                if time.time() - lock.stat().st_mtime > 15: lock.unlink()
+            except FileNotFoundError: pass
             time.sleep(0.05)
-    raise RuntimeError("Helper did not become ready within ten seconds")
+    if not owned:
+        raise RuntimeError("Another helper startup did not complete within ten seconds")
+    try:
+        # Another caller may have finished between the first check and lock acquisition.
+        try:
+            return running_gateway(resolver)
+        except (OSError, ValueError, KeyError):
+            pass
+        log = resolver.directory / "helper.log"
+        with log.open("ab") as output:
+            if sys.platform != "win32": log.chmod(0o600)
+            options = {"creationflags": subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} if sys.platform == "win32" else {"start_new_session": True}
+            process = subprocess.Popen([sys.executable, str(ENTRY), "--state", str(resolver.directory), "serve", "--port", "0"],
+                                       stdin=subprocess.DEVNULL, stdout=output, stderr=output, **options)
+        while time.monotonic() < deadline:
+            if process.poll() is not None:
+                raise RuntimeError("Helper could not start; check helper.log in the settings directory")
+            try:
+                return running_gateway(resolver)
+            except (OSError, ValueError, KeyError):
+                time.sleep(0.05)
+        process.terminate()
+        raise RuntimeError("Helper did not become ready within ten seconds")
+    finally:
+        lock.unlink(missing_ok=True)
 
 
 def open_uri(resolver, value):

@@ -53,6 +53,7 @@ def main():
     native = commands.add_parser("native", help="Browser native messaging host")
     native.add_argument("browser_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
     commands.add_parser("settings", help="Open settings, starting the helper if necessary")
+    commands.add_parser("stop", help="Stop the running helper")
     install = commands.add_parser("install", help="Install per-user t256 scheme registration")
     install.add_argument("--browser", choices=["chrome", "edge", "brave", "opera", "firefox"])
     install.add_argument("--extension-id", help="Also register a browser native messaging host")
@@ -106,6 +107,12 @@ def main():
             else:
                 import webbrowser
                 webbrowser.open(ensure_gateway(resolver)["settings_url"])
+        elif args.command == "stop":
+            import signal
+            from .desktop import running_gateway
+            runtime = running_gateway(resolver)
+            os.kill(runtime["pid"], signal.SIGTERM)
+            print("Stopped the helper")
         elif args.command in ("install", "uninstall"):
             from .install import install, uninstall
             install(resolver, args.browser, args.extension_id) if args.command == "install" else uninstall(resolver)

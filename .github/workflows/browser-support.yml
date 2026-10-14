@@ -29,15 +29,26 @@ jobs:
         env:
           PYTHONPATH: browser-support
         run: python -m unittest discover -s browser-support/tests -v
+      - name: Verify classic loader matches its modules
+        run: |
+          python browser-support/build_loader.py
+          git diff --exit-code -- browser-support/web/loader.js
       - name: Browser loader tests
         run: node --test browser-support/tests/loader.test.mjs
       - name: Build extension packages
         run: python browser-support/build_extensions.py
+      - name: Build desktop helper download
+        run: python browser-support/build_distribution.py
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-latest'
         with:
           name: t256-browser-extensions
           path: browser-support/dist/extensions/*.zip
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: t256-desktop-helper
+          path: browser-support/dist/t256-desktop.zip
 
   browsers:
     strategy:

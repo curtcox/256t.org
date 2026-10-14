@@ -10,7 +10,7 @@ async function request(path, body) {
 }
 async function action(work) {
   status.textContent = 'Working…';
-  try { await work(); status.textContent = 'Ready. Content is verified before use.'; }
+  try { const message = await work(); status.textContent = message ?? 'Ready. Content is verified before use.'; }
   catch (error) { status.textContent = error.message; }
 }
 function button(label, work) {
@@ -26,7 +26,7 @@ function render() {
     const controls = document.createElement('td');
     controls.append(button(provider.enabled === false ? 'Enable' : 'Disable', async () => { provider.enabled = provider.enabled === false; await save(); }));
     if (index) controls.append(button('Move up', async () => { [config.providers[index - 1], config.providers[index]] = [provider, config.providers[index - 1]]; await save(); }));
-    if (['folder', 'git'].includes(provider.type)) controls.append(button('Index files', async () => { const result = await request('/api/index', { id: provider.id }); status.textContent = `Indexed ${result.indexed} content identifiers`; }));
+    if (['folder', 'git'].includes(provider.type)) controls.append(button('Index files', async () => { const result = await request('/api/index', { id: provider.id }); return `Indexed ${result.indexed} content identifiers`; }));
     controls.append(button('Remove', async () => { config.providers.splice(index, 1); await save(); }));
     row.append(controls); return row;
   });
