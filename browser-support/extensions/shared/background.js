@@ -1,3 +1,4 @@
+if (typeof importScripts === 'function') importScripts('uri.js');
 const api = globalThis.browser ?? chrome;
 const native = async message => {
   const result = await api.runtime.sendNativeMessage('org.t256.helper', message);
@@ -19,9 +20,25 @@ api.contextMenus.onClicked.addListener(info => {
   if (!/^t256:[A-Za-z0-9_-]+(?:\.[A-Za-z0-9]+)*$/i.test(uri)) return;
   openNative({ action: 'open', uri }).catch(error => console.warn(error.message));
 });
-if (api.omnibox) api.omnibox.onInputEntered.addListener(uri => {
-  openNative({ action: 'open', uri: uri.trim() }).catch(error => console.warn(error.message));
-});
+if (api.omnibox) {
+  const inputUri = text => {
+    const value = text.trim();
+    return globalThis.t256URI.parseUri(/^t256:/i.test(value) ? value : `t256:${value}`).uri;
+  };
+  const hint = description => api.omnibox.setDefaultSuggestion({ description });
+  api.omnibox.onInputStarted.addListener(() => hint('Enter a CID or a full t256 URI to open verified content'));
+  api.omnibox.onInputChanged.addListener((text, suggest) => {
+    try { inputUri(text); hint('Open verified content with your desktop helper'); }
+    catch { hint('Enter a valid CID or t256 URI, optionally followed by a file suffix'); }
+    suggest([]);
+  });
+  api.omnibox.onInputEntered.addListener(text => {
+    let uri;
+    try { uri = inputUri(text); }
+    catch { hint('Enter a valid CID or t256 URI, optionally followed by a file suffix'); return; }
+    openNative({ action: 'open', uri }).catch(error => console.warn(error.message));
+  });
+}
 api.runtime.onMessage.addListener((message, sender, reply) => {
   // Only extension UI can launch the helper or ask for website connections.
   if (sender.id !== api.runtime.id || sender.tab) return false;

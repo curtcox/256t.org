@@ -34,7 +34,7 @@ jobs:
           python browser-support/build_loader.py
           git diff --exit-code -- browser-support/web/loader.js
       - name: Browser loader tests
-        run: node --test browser-support/tests/loader.test.mjs
+        run: node --test browser-support/tests/loader.test.mjs browser-support/tests/browser-integration.test.mjs
       - name: Build extension packages
         run: python browser-support/build_extensions.py
       - name: Build desktop helper download

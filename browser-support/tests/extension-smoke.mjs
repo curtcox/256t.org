@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { cp, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createServer } from 'node:http';
+import { execFileSync } from 'node:child_process';
 
 export async function extensionSmoke(chromium, root, state, runtime, fixture) {
   const site = createServer((request, response) => { response.writeHead(200, { 'Content-Type': 'text/html' }); response.end('<!doctype html><body></body>'); });
@@ -15,7 +16,8 @@ export async function extensionSmoke(chromium, root, state, runtime, fixture) {
     assert.equal(configured.status, 200);
     const grant = await (await fetch(runtime.origin + '/api/grant', { method: 'POST', headers, body: JSON.stringify({ origin }) })).json();
     const extension = path.join(state, 'extension');
-    await cp(path.join(root, 'extensions/shared'), extension, { recursive: true });
+    execFileSync(process.env.T256_PYTHON ?? 'python3', [path.join(root, 'build_extensions.py'), '--output', path.join(state, 'packages')]);
+    await cp(path.join(state, 'packages/chromium'), extension, { recursive: true });
     const manifest = JSON.parse(await readFile(path.join(extension, 'manifest.json'), 'utf8'));
     // Test-only permission replaces the toolbar click that grants activeTab in a real browser.
     manifest.host_permissions = [runtime.origin + '/*', origin + '/*'];

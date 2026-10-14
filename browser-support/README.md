@@ -145,7 +145,7 @@ the active web-handler plan below uses an optional letters-only alias.
 
 ### Active implementation plan
 
-Updated 2026-10-13. All three mechanisms are active workstreams. Checked items
+Updated 2026-10-14. All three mechanisms are active workstreams. Checked items
 record existing implementation or completed investigation; unchecked items are
 remaining work. A mechanism is release-ready only after its acceptance checks
 pass in installed browsers. Engine tests and generated extension packages alone
@@ -153,7 +153,7 @@ do not establish that result.
 
 | Mechanism | Status and existing work | Strengths | Limitations | Next deliverable |
 |---|---|---|---|---|
-| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and keyword plumbing exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Accept bare CIDs after the keyword; add a viewer/public fallback and opt-in dynamic adaptation; validate each extension package. |
+| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add a viewer/public fallback and opt-in dynamic adaptation; validate each extension package. |
 | Web protocol handler, including the requested `web+t256:` spelling | **In progress: compatibility design.** Standards investigation is complete; registration and alias handling are not implemented. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Implement an explicit registration flow and a strict, reversible `web+tcontent:` → `t256:` bridge; test exact-spelling rejection. |
 | OS registration of `t256:` with a desktop helper | **In progress: implementation and distribution validation.** macOS app wrapper, Windows per-user registry registration, Linux desktop entry, startup, native messaging and uninstall exist. | Preserves the exact scheme; opens content with user-selected folders, mounted shares, HTTP bases and authenticated repositories; offers Safari an external navigation route. | Requires installation and browser approval where prompted. Typed/pasted address-bar dispatch varies. Current runtime needs Python at a stable path. Does not turn `t256:` into a browser resource protocol. | Validate real browser dispatch and clean installation/removal on all three OSes; build convenient platform packages. |
 
@@ -186,12 +186,12 @@ for the exact scheme in Safari; it is not the only practical Safari integration.
   after an explicit user action; adapt images, stylesheets and media too.
 - [x] Provide native-host context menus and keyword event handling on browsers
   with those APIs; exercise page adaptation in the Chromium extension smoke test.
-- [ ] **Next: make `t256 <CID>[.suffix]` work in keyword mode.** The current
-  background handler expects a full `t256:` URI after the keyword. Accept both
-  forms, preserve CID case, validate strictly, and provide useful invalid-input
-  feedback. Test Firefox's omnibox API separately from Chrome's
+- [x] Make `t256 <CID>[.suffix]` work in keyword mode. Accept bare CIDs and full
+  URIs, preserve CID case, validate with the shared RFC parser before native
+  launch, and show input guidance. Unit tests exercise the built Chromium and
+  Firefox background scripts; installed Firefox checks remain alongside Chrome's
   [keyword API](https://developer.chrome.com/docs/extensions/reference/api/omnibox).
-- [ ] Add an extension viewer or a configured gateway destination so link
+- [ ] **Next: add an extension viewer or a configured gateway destination** so link
   navigation can work without a running native host. Offer the public HTTPS
   resolver for public/inline content and the helper for private/local providers;
   preserve normal link opening, copying, keyboard access and new-tab behavior.
@@ -310,7 +310,7 @@ from page-resource tests: resource loading uses the loader or transformed gatewa
 | Brave / Opera on macOS, Windows, Linux | Shared Chromium source; branded-browser permission/store tests | Probe website/PWA support under default settings | Actual dispatch and browser-specific native-host discovery |
 | Safari on macOS | Built containing app, link adaptation and manual/native connection choices; no current keyword route | Feature detection and HTTPS fallback; no website API support promised | LaunchServices, Safari prompts, signing/notarization and real Safari tests |
 
-Delivery order: first fix keyword input and add viewer fallback; then implement
+Delivery order: keyword input is implemented; next add viewer fallback and implement
 the shared alias adapter and explicit website registration; then validate installed
 browser/OS combinations and package the helper/Safari app. Dynamic adaptation,
 Firefox manifest handling and PWA installation can follow as separate increments.
@@ -449,9 +449,9 @@ Use `edge`, `brave`, or `opera` for other native-host locations. The installed
 native manifests allow only the specified extension. Context menus and the
 `t256` address-bar keyword open content through the gateway. The keyword requires
 the browser's keyword activation gesture; it does not make bare address-bar URIs
-universally recognized. Currently enter a full URI after activating the keyword
-(for example, `t256 t256:AAAAAAAFaGVsbG8.txt`); bare-CID input is the next extension
-plan item above.
+universally recognized. Enter either a CID (for example,
+`t256 AAAAAAAFaGVsbG8.txt`) or a full URI after activating the keyword. Invalid
+identifiers show input guidance and do not launch the native host.
 
 ### OS registration
 
@@ -502,7 +502,7 @@ package omits development dependencies and test fixtures.
 
 ```sh
 PYTHONPATH=browser-support python3 -m unittest discover -s browser-support/tests -v
-node --test browser-support/tests/loader.test.mjs
+npm --prefix browser-support test
 npm --prefix browser-support ci
 browser-support/node_modules/.bin/playwright install chromium firefox webkit
 npm --prefix browser-support run test:browsers
