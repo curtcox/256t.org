@@ -12,6 +12,7 @@ export class T256WebClient {
   }
 
   async read(value, { signal } = {}) {
+    signal?.throwIfAborted();
     const parsed = parseUri(value);
     if (parsed.length > this.maxBytes) throw new RangeError('Content exceeds the page size limit');
     const result = { parsed, type: mediaType(parsed), failures: [] };
@@ -25,7 +26,7 @@ export class T256WebClient {
       try {
         const response = await fetch(`${provider}/${parsed.cid}`, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return { ...result, bytes: await readVerified(response, parsed, signal), provider };
+        return { ...result, bytes: await readVerified(response, parsed, controller.signal), provider };
       } catch (error) {
         if (signal?.aborted) throw signal.reason ?? error;
         result.failures.push({ provider, reason: error.message });

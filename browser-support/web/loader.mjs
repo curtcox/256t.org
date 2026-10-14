@@ -34,7 +34,7 @@ export class T256Client {
     try {
       const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
       if (!response.ok) throw new Error(`t256 resolver returned HTTP ${response.status}`);
-      return await consume(response);
+      return await consume(response, controller.signal);
     } finally {
       clearTimeout(timer);
       signal?.removeEventListener('abort', abort);
@@ -85,7 +85,7 @@ export class T256Client {
     const uri = parseUri(value);
     if (uri.length > this.maxBytes) throw new RangeError('Content exceeds the page size limit');
     if (uri.inline !== null) return uri.inline;
-    return this.request(`${this.base}/raw/${uri.cid}${uri.suffix}`, options.signal, response => readVerified(response, uri, options.signal));
+    return this.request(`${this.base}/raw/${uri.cid}${uri.suffix}`, options.signal, (response, signal) => readVerified(response, uri, signal));
   }
 
   async blobUrl(value, type, options = {}) {

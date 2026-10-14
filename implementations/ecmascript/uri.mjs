@@ -26,22 +26,31 @@ export async function verifyUri(uri, bytes) {
 }
 
 export async function readVerified(response, uri, signal) {
+  signal?.throwIfAborted();
   const parsed = typeof uri === 'string' ? parseUri(uri) : uri;
   const bytes = new Uint8Array(parsed.length);
   const reader = response.body.getReader();
+  // Cancelling the reader also wakes a stalled read, even for streams that do
+  // not themselves listen to fetch's signal. Cleanup must not mask CID errors.
+  const cancel = () => { reader.cancel(signal?.reason).catch(() => {}); };
+  signal?.addEventListener('abort', cancel, { once: true });
   let offset = 0;
   try {
     while (true) {
       const { value, done } = await reader.read();
+      signal?.throwIfAborted();
       if (done) break;
-      if (signal?.aborted) throw signal.reason ?? new Error('Aborted');
       if (offset + value.length > bytes.length) throw new Error('Content exceeds CID length');
       bytes.set(value, offset); offset += value.length;
     }
     if (offset !== bytes.length) throw new Error('Content is shorter than its CID length');
     await verifyUri(parsed, bytes);
+    signal?.throwIfAborted();
     return bytes;
-  } finally { await reader.cancel(); }
+  } finally {
+    signal?.removeEventListener('abort', cancel);
+    cancel(); reader.releaseLock();
+  }
 }
 
 export function mediaType(uri) {

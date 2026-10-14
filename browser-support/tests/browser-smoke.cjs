@@ -137,6 +137,37 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   await page.getByRole('button', { name: 'Resolve and verify' }).click();
   await page.waitForFunction(() => document.querySelector('#status').textContent.startsWith('Verified 5 bytes'));
   assert.equal(await page.locator('#preview').textContent(), 'hello');
+  await page.getByText('Content providers', { exact: true }).click();
+  for (const helper of [false, true]) {
+    const pattern = helper ? '**/s/*/resolve?*' : '**/cancel-test/*';
+    let release, received, completed;
+    const blocked = new Promise(resolve => { release = resolve; });
+    const started = new Promise(resolve => { received = resolve; });
+    const finished = new Promise(resolve => { completed = resolve; });
+    await page.route(pattern, async route => {
+      received(); await blocked;
+      try { await route.fulfill({ status: 200, contentType: 'text/plain', body: 'unused fixture' }); }
+      catch { /* The cancelled request may already have left the browser. */ }
+      finally { completed(); }
+    });
+    try {
+      await page.locator('#uri').fill(fixture.image);
+      await page.locator('#providers').fill(runtime.origin + '/cancel-test');
+      await page.locator('#connection').fill(helper ? `${runtime.origin}/s/${runtime.view}` : '');
+      await page.getByRole('button', { name: 'Resolve and verify' }).click();
+      await started;
+      await page.getByRole('button', { name: 'Cancel retrieval' }).click();
+      await page.getByRole('status').filter({ hasText: 'Retrieval cancelled.' }).waitFor();
+      assert.equal(await page.locator('#download').isHidden(), true);
+      assert.equal(await page.locator('#gateway').isHidden(), true);
+      assert.equal(await page.locator('#submit').isEnabled(), true);
+    } finally { release(); await finished; await page.unroute(pattern); }
+  }
+  await page.locator('#connection').fill('');
+  await page.locator('#uri').fill('t256:AAAAAAAFaGVsbG8.txt');
+  await page.getByRole('button', { name: 'Resolve and verify' }).click();
+  await page.getByRole('status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
+  assert.equal(await page.locator('#preview').textContent(), 'hello');
   assert.deepEqual(errors, []);
   return { gateway, loader, extras, errors };
 };

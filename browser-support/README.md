@@ -280,6 +280,13 @@ bytes from public CORS-enabled providers without installation. Its optional
 connection field uses the desktop resolver for selected private/local providers.
 HTML and JavaScript previews are text, and shared links contain only the URI in
 their fragment, never a helper capability or provider credential.
+Use **Cancel retrieval** to stop a pending provider or helper request and retry.
+Cancellation clears stale previews/download links, and leaving the page releases
+its preview objects. Public providers that time out while streaming content fall
+back to the next selected provider; caller cancellation stops the search entirely.
+The reader cancels stalled streams and releases their locks. A cancelled browser
+request to the helper can leave an already-started provider retrieval running for
+other requests that share it.
 
 ## Hashbin integration
 

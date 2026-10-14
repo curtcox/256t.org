@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
-import { computeCid, parseUri, verifyUri } from '../../implementations/ecmascript/uri.mjs';
+import { computeCid, parseUri, readVerified, verifyUri } from '../../implementations/ecmascript/uri.mjs';
 import { T256Client } from '../web/loader.mjs';
 import { T256WebClient } from '../web/web-client.mjs';
 
@@ -92,4 +92,52 @@ test('public web resolver verifies provider fallback and handles compound suffix
     assert.equal(result.type, 'application/gzip');
     assert.equal(result.failures.length, 1);
   } finally { globalThis.fetch = original; }
+});
+
+test('a stalled public response times out during reading and falls back', async () => {
+  const bytes = new Uint8Array(100); const uri = `t256:${await computeCid(bytes)}`;
+  const original = globalThis.fetch;
+  let stalled, cancelled = 0;
+  try {
+    globalThis.fetch = async url => {
+      if (url.startsWith('https://ready.example')) return new Response(bytes);
+      stalled = new ReadableStream({ start(controller) { controller.enqueue(bytes.slice(0, 1)); }, cancel() { cancelled++; } });
+      return new Response(stalled);
+    };
+    const client = new T256WebClient(['https://stalled.example', 'https://ready.example'], { timeout: 20 });
+    const result = await client.read(uri);
+    assert.deepEqual(result.bytes, bytes);
+    assert.equal(result.provider, 'https://ready.example');
+    assert.match(result.failures[0].reason, /timed out/);
+    assert.equal(cancelled, 1);
+    assert.equal(stalled.locked, false);
+  } finally { globalThis.fetch = original; }
+});
+
+test('public cancellation stops a stalled body without trying another provider', async () => {
+  const uri = `t256:${await computeCid(new Uint8Array(100))}`;
+  const original = globalThis.fetch; const controller = new AbortController();
+  let calls = 0, stalled, reading;
+  const started = new Promise(resolve => { reading = resolve; });
+  try {
+    globalThis.fetch = async () => {
+      calls++;
+      stalled = new ReadableStream({ pull() { reading(); } });
+      return new Response(stalled);
+    };
+    const client = new T256WebClient(['https://one.example', 'https://two.example']);
+    const result = client.read(uri, { signal: controller.signal });
+    await started; controller.abort(new DOMException('Cancelled by caller', 'AbortError'));
+    await assert.rejects(result, { name: 'AbortError' });
+    assert.equal(calls, 1);
+    assert.equal(stalled.locked, false);
+    await assert.rejects(client.read('t256:AAAAAAAFaGVsbG8.txt', { signal: controller.signal }), { name: 'AbortError' });
+  } finally { globalThis.fetch = original; }
+});
+
+test('cleanup failures do not replace a verification error', async () => {
+  const uri = `t256:${await computeCid(new Uint8Array(100))}`;
+  const stream = new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array(101)); }, cancel() { throw new Error('Cleanup failed'); } });
+  await assert.rejects(readVerified(new Response(stream), uri), /exceeds CID length/);
+  assert.equal(stream.locked, false);
 });
