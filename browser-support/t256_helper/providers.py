@@ -116,7 +116,8 @@ def retrieve(provider, uri, index):
         relative = index.get(uri.cid, "/".join(filter(None, [provider.get("directory", "cids").strip("/"), uri.cid])))
         api = provider.get("api_url", "https://api.github.com").rstrip("/")
         url = api + "/repos/" + quote(owner, safe="") + "/" + quote(repo, safe="") + "/contents/" + quote(relative, safe="/")
-        url += "?" + urlencode({"ref": provider.get("ref", "HEAD")})
+        if provider.get("ref", "HEAD") != "HEAD":
+            url += "?" + urlencode({"ref": provider["ref"]})
         return get_url(url, uri.length, timeout, github_headers(provider))
     if kind == "git":
         relative = index.get(uri.cid, "/".join(filter(None, [provider.get("directory", "cids").strip("/"), uri.cid])))

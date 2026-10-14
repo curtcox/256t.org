@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import smoke from './browser-smoke.cjs';
+import { extensionSmoke } from './extension-smoke.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const state = await realpath(await mkdtemp(path.join(tmpdir(), 't256-browser-test-')));
@@ -31,6 +32,10 @@ try {
       const result = await smoke(page, runtime, fixture);
       console.log(`${name} ${browser.browser().version()}: images, script order, CSS imports, modules, dynamic declarations, workers, and public resolver passed`);
     } finally { await browser.close(); }
+    if (name === 'chromium') {
+      await extensionSmoke(chromium, root, state, runtime, fixture);
+      console.log('Chromium extension: verified image adaptation and gateway navigation passed');
+    }
   }
 } finally {
   const exited = new Promise(resolve => helper.once('exit', resolve));

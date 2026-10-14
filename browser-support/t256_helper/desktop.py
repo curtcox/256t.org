@@ -15,6 +15,7 @@ from .uri import parse_uri
 
 
 ENTRY = Path(__file__).resolve().parents[1] / "run.py"
+STARTUP_TIMEOUT = 30
 
 
 def running_gateway(resolver):
@@ -35,7 +36,7 @@ def ensure_gateway(resolver):
         return running_gateway(resolver)
     except (OSError, ValueError, KeyError):
         pass
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + STARTUP_TIMEOUT
     lock = resolver.directory / "gateway-start.lock"
     owned = False
     while time.monotonic() < deadline:
@@ -50,11 +51,11 @@ def ensure_gateway(resolver):
             break
         except FileExistsError:
             try:
-                if time.time() - lock.stat().st_mtime > 15: lock.unlink()
+                if time.time() - lock.stat().st_mtime > STARTUP_TIMEOUT + 15: lock.unlink()
             except FileNotFoundError: pass
             time.sleep(0.05)
     if not owned:
-        raise RuntimeError("Another helper startup did not complete within ten seconds")
+        raise RuntimeError("Another helper startup did not complete within thirty seconds")
     try:
         # Another caller may have finished between the first check and lock acquisition.
         try:
@@ -75,7 +76,7 @@ def ensure_gateway(resolver):
             except (OSError, ValueError, KeyError):
                 time.sleep(0.05)
         process.terminate()
-        raise RuntimeError("Helper did not become ready within ten seconds")
+        raise RuntimeError("Helper did not become ready within thirty seconds")
     finally:
         lock.unlink(missing_ok=True)
 

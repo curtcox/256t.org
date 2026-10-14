@@ -47,6 +47,12 @@ class GatewayTests(unittest.TestCase):
             urlopen(Request(self.server.origin + "/health", headers={"Host": "evil.example"}))
         self.assertEqual(failure.exception.code, 403)
 
+    def test_startup_does_not_depend_on_reverse_dns(self):
+        with patch('socket.getfqdn', side_effect=AssertionError('Unexpected DNS lookup')):
+            server = Gateway(self.resolver, 0)
+            self.assertGreater(server.server_port, 0)
+            server.server_close()
+
     def test_grant_cors_and_revocation(self):
         config = dict(self.resolver.config); config["allowed_origins"] = ["https://publisher.example"]
         self.resolver.configure(config)

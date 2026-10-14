@@ -48,17 +48,20 @@ class DesktopTests(unittest.TestCase):
             command = [sys.executable, str(ENTRY), "--state", directory, "native", "chrome-extension://" + "a" * 32 + "/", "--parent-window=0"]
             runtime = None
             try:
-                first = subprocess.run(command, input=packet, capture_output=True, timeout=15, check=True)
+                first = subprocess.run(command, input=packet, capture_output=True, timeout=45, check=True)
                 length = struct.unpack("=I", first.stdout[:4])[0]
                 result = json.loads(first.stdout[4:4 + length])
+                if 'error' in result:
+                    log = Path(directory) / 'helper.log'
+                    self.fail(str(result['error']) + '\n' + (log.read_text() if log.exists() else 'No helper log'))
                 self.assertIn("/#", result["url"])
                 runtime = json.loads((Path(directory) / "runtime.json").read_text())
-                second = subprocess.run(command, input=packet, capture_output=True, timeout=15, check=True)
+                second = subprocess.run(command, input=packet, capture_output=True, timeout=45, check=True)
                 self.assertEqual(first.stdout, second.stdout)
                 self.assertEqual(runtime["pid"], json.loads((Path(directory) / "runtime.json").read_text())["pid"])
             finally:
                 if runtime:
-                    os.kill(runtime["pid"], signal.SIGTERM if sys.platform == "win32" else signal.SIGINT)
+                    os.kill(runtime["pid"], signal.SIGTERM)
                     for _ in range(100):
                         try:
                             (Path(directory) / 'helper.log').unlink(missing_ok=True)

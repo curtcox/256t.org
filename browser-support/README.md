@@ -162,6 +162,8 @@ values before the browser parses it. External CSS `url()` and quoted `@import`
 references are also transformed. Nested HTML frames and t256 navigation links use
 the gateway. Original JavaScript is not changed.
 
+Transformed HTML and CSS must be UTF-8 and are served explicitly as UTF-8.
+
 An existing page can use standard import maps with t256 targets:
 
 ```html
@@ -245,6 +247,9 @@ compound suffixes. HTTP failures, including 404/451/429, participate in provider
 fallback. Publishing/authentication APIs are outside this read-only resolver.
 
 ## Validation
+
+These commands apply to the source checkout; the small downloadable runtime
+package omits development dependencies and test fixtures.
 
 ```sh
 PYTHONPATH=browser-support python3 -m unittest discover -s browser-support/tests -v

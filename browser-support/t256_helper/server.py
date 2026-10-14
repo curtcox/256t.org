@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import TCPServer
 import json
 import os
 from pathlib import Path
@@ -23,6 +24,13 @@ ASSETS = Path(__file__).resolve().parents[1] / "web"
 class Gateway(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+
+    def server_bind(self):
+        # HTTPServer normally performs a reverse-DNS lookup here. A loopback-only
+        # helper does not need one, and macOS cold DNS lookups can delay startup.
+        TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
 
     def __init__(self, resolver, port=25600):
         super().__init__(("127.0.0.1", port), Handler)
@@ -148,8 +156,10 @@ class Handler(BaseHTTPRequestHandler):
             if operation == "view" and mime == "text/html":
                 content = transform_page(content.decode("utf-8-sig"), make_url).encode("utf-8")
                 transformed = True
+            if transformed:
+                mime += "; charset=utf-8"
             headers = {"X-T256-Source-CID": uri.cid, "X-T256-Representation": "transformed" if transformed else "original"}
-            if mime == "text/html":
+            if media_type(uri) == "text/html":
                 # Content has an opaque origin and cannot acquire management access.
                 origin = self.server.origin
                 headers["Content-Security-Policy"] = "sandbox allow-scripts allow-downloads allow-top-navigation-by-user-activation; default-src 'none'; script-src " + origin + " 'unsafe-inline'; style-src " + origin + " 'unsafe-inline'; img-src " + origin + " data: blob:; font-src " + origin + "; media-src " + origin + "; frame-src " + origin + "; connect-src " + origin
