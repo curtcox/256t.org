@@ -66,7 +66,7 @@ MIME_TYPES = {
     "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif",
     "webp": "image/webp", "avif": "image/avif", "ico": "image/x-icon",
     "pdf": "application/pdf", "zip": "application/zip", "gz": "application/gzip",
-    "mp3": "audio/mpeg", "wav": "audio/wav", "mp4": "video/mp4",
+    "mp3": "audio/mpeg", "wav": "audio/wav", "mp4": "video/mp4", "vtt": "text/vtt",
     "webm": "video/webm", "woff": "font/woff", "woff2": "font/woff2",
     "wasm": "application/wasm",
 }

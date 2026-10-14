@@ -55,6 +55,6 @@ export async function readVerified(response, uri, signal) {
 
 export function mediaType(uri) {
   const parsed = typeof uri === 'string' ? parseUri(uri) : uri;
-  const types = { txt: 'text/plain', html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', pdf: 'application/pdf', gz: 'application/gzip', zip: 'application/zip' };
+  const types = { txt: 'text/plain', html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', ico: 'image/x-icon', pdf: 'application/pdf', gz: 'application/gzip', zip: 'application/zip', mp3: 'audio/mpeg', wav: 'audio/wav', mp4: 'video/mp4', webm: 'video/webm', vtt: 'text/vtt', woff: 'font/woff', woff2: 'font/woff2', wasm: 'application/wasm' };
   return types[parsed.suffix.split('.').at(-1)] ?? 'application/octet-stream';
 }

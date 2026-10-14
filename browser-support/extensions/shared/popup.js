@@ -7,7 +7,7 @@ const message = async value => {
 };
 async function action(work) {
   status.textContent = 'Working…';
-  try { await work(); status.textContent = 'Ready.'; }
+  try { const result = await work(); status.textContent = typeof result === 'string' ? result : 'Ready.'; }
   catch (error) { status.textContent = error.message + '\nInstall the native host or copy a website connection URL from the running helper.'; }
 }
 document.querySelector('#open').addEventListener('click', () => action(async () => {
@@ -31,7 +31,9 @@ document.querySelector('#adapt').addEventListener('click', () => action(async ()
   if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !/^\/s\/[A-Za-z0-9_-]+$/.test(url.pathname)) throw new Error('Invalid helper connection URL');
   await api.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
   const results = await api.scripting.executeScript({ target: { tabId: tab.id }, func: value => globalThis.t256AdaptPage(value), args: [base] });
-  if (results[0]?.result?.error) throw new Error(results[0].result.error);
+  const result = results[0]?.result;
+  if (result?.error) throw new Error(`Adapted ${result.adapted} resource references.\n${result.error}`);
+  return `Adapted ${result?.adapted ?? 0} resource references.`;
 }));
 if (!api.runtime.getManifest().permissions.includes('nativeMessaging')) {
   document.querySelector('#settings').disabled = true;

@@ -253,8 +253,13 @@ Packages are created under `browser-support/dist/extensions`:
   messaging. The page loader/gateway also work without a Safari extension.
 
 The extension uses `activeTab`; it does not automatically read every website.
-“Adapt images and links” handles current image, poster, stylesheet, and navigation
-references after an explicit click. It deliberately leaves existing script tags
+“Adapt images, media, and links” handles current images (including `srcset` and
+picture sources), audio/video sources, posters, caption tracks, stylesheets, and
+navigation references after an explicit click. Source changes reload the affected
+media element once, so resources can be selected again. Identical URIs share one
+metadata request per adaptation. Attributes changed by the page during retrieval
+are left alone, and unavailable content reports the helper's provider diagnostics.
+It deliberately leaves existing script tags
 alone; use the page loader or gateway for execution order and module support.
 
 Chrome/Firefox native launch integration uses this per-user registration:
