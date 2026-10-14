@@ -7,6 +7,8 @@ globalThis.t256AdaptPage = async base => {
     if (!response.ok) throw new Error(`Provider access or retrieval failed (HTTP ${response.status})`);
     const result = await response.json();
     if (!/^t256:[A-Za-z0-9_-]+(?:\.[A-Za-z0-9]+)*$/i.test(result.uri)) throw new Error('Invalid resolved URI');
+    const expected = value.replace(/^t256:/i, 't256:').replace(/\..*$/, suffix => suffix.toLowerCase());
+    if (result.uri !== expected) throw new Error('Resolver returned a different identifier');
     return result;
   };
   for (const element of document.querySelectorAll('img[src],a[href],link[rel="stylesheet"][href],video[poster]')) {

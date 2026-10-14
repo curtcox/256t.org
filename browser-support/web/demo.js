@@ -1,5 +1,3 @@
-import { T256Client } from './loader.mjs';
-import { computeCid } from '../../implementations/ecmascript/uri.mjs';
 const field = document.querySelector('#base');
 field.value = location.hash.slice(1);
 history.replaceState(null, '', location.pathname);
@@ -9,7 +7,7 @@ document.querySelector('#run').addEventListener('click', async () => {
   result.textContent = 'Verifying and loading…';
   try {
     client?.dispose(); client = new T256Client(field.value.trim());
-    const uri = async (text, suffix) => `t256:${await computeCid(text)}.${suffix}`;
+    const uri = async (text, suffix) => `t256:${await t256URI.computeCid(text)}.${suffix}`;
     const image = await uri('<svg xmlns="http://www.w3.org/2000/svg"><circle r="50"/></svg>', 'svg');
     await client.image(document.querySelector('#preview'), image);
     await client.script(await uri('window.t256DemoOrder=[1]', 'js'));

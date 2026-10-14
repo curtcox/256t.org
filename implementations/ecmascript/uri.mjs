@@ -24,3 +24,28 @@ export async function verifyUri(uri, bytes) {
   if (await computeCid(bytes) !== parsed.cid) throw new Error('Content does not match its CID');
   return parsed;
 }
+
+export async function readVerified(response, uri, signal) {
+  const parsed = typeof uri === 'string' ? parseUri(uri) : uri;
+  const bytes = new Uint8Array(parsed.length);
+  const reader = response.body.getReader();
+  let offset = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (signal?.aborted) throw signal.reason ?? new Error('Aborted');
+      if (offset + value.length > bytes.length) throw new Error('Content exceeds CID length');
+      bytes.set(value, offset); offset += value.length;
+    }
+    if (offset !== bytes.length) throw new Error('Content is shorter than its CID length');
+    await verifyUri(parsed, bytes);
+    return bytes;
+  } finally { await reader.cancel(); }
+}
+
+export function mediaType(uri) {
+  const parsed = typeof uri === 'string' ? parseUri(uri) : uri;
+  const types = { txt: 'text/plain', html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', pdf: 'application/pdf', gz: 'application/gzip', zip: 'application/zip' };
+  return types[parsed.suffix.split('.').at(-1)] ?? 'application/octet-stream';
+}

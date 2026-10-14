@@ -1,4 +1,4 @@
-import { parseUri, verifyUri } from '../../implementations/ecmascript/uri.mjs';
+import { parseUri, readVerified } from '../../implementations/ecmascript/uri.mjs';
 
 /** A page opts in to provider access using the connection URL copied from the helper. */
 export class T256Client {
@@ -43,25 +43,7 @@ export class T256Client {
     const uri = parseUri(value);
     if (uri.length > this.maxBytes) throw new RangeError('Content exceeds the page size limit');
     if (uri.inline !== null) return uri.inline;
-    return this.request(`${this.base}/raw/${uri.cid}${uri.suffix}`, options.signal, async response => {
-      const reader = response.body.getReader();
-      const bytes = new Uint8Array(uri.length);
-      let offset = 0;
-      try {
-        while (true) {
-          const { value: chunk, done } = await reader.read();
-          if (done) break;
-          if (options.signal?.aborted) throw options.signal.reason ?? new Error('Aborted');
-          if (offset + chunk.length > bytes.length) throw new Error('Content exceeds CID length');
-          bytes.set(chunk, offset); offset += chunk.length;
-        }
-        if (offset !== bytes.length) throw new Error('Content is shorter than its CID length');
-        await verifyUri(uri, bytes);
-        return bytes;
-      } finally {
-        await reader.cancel();
-      }
-    });
+    return this.request(`${this.base}/raw/${uri.cid}${uri.suffix}`, options.signal, response => readVerified(response, uri, options.signal));
   }
 
   async blobUrl(value, type, options = {}) {

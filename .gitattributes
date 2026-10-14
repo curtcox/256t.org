@@ -1,0 +1,2 @@
+# Content-addressed fixtures must retain exactly the same bytes on every OS.
+cids/** -text

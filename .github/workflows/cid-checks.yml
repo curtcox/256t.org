@@ -73,8 +73,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install node-fetch
-        run: cd implementations/ecmascript && npm install --no-save node-fetch
       - name: Run ECMAScript CID check
         run: cd implementations/ecmascript && node check.js
 

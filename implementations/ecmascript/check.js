@@ -8,7 +8,7 @@ const path = require('path');
 const { webcrypto } = require('crypto');
 global.crypto = webcrypto;
 global.TextEncoder = TextEncoder;
-global.fetch = require('node-fetch');
+// Node 18+ provides fetch; using it avoids CommonJS/ESM polyfill incompatibility.
 
 // Load the ECMAScript implementation
 const { computeCid, downloadCid } = require('./cid.js');

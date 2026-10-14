@@ -22,7 +22,6 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   // The publisher loader also runs as an ordinary same-origin cooperating page.
   await page.goto(runtime.origin + '/demo.html');
   const loader = await page.evaluate(async ({ runtime, fixture }) => {
-    const { T256Client } = await import('/loader.mjs');
     const client = new T256Client(`${runtime.origin}/s/${runtime.view}`);
     document.body.innerHTML = '<img id="loaded"><p id="order"></p><p id="module"></p>';
     await client.image(document.querySelector('#loaded'), fixture.image);
@@ -35,6 +34,30 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
     return result;
   }, { runtime, fixture });
   assert.deepEqual(loader, { image: 48, order: 'first,second', module: '42' });
+  const extras = await page.evaluate(async ({ runtime, fixture }) => {
+    const { computeCid } = t256URI;
+    const client = new T256Client(`${runtime.origin}/s/${runtime.view}`);
+    const declaration = document.createElement('script');
+    declaration.type = 'application/t256';
+    declaration.dataset.t256Src = `t256:${await computeCid('window.hydratedCount=(window.hydratedCount||0)+1')}.js`;
+    document.body.append(declaration);
+    await client.hydrate(document); await client.hydrate(document);
+    const observer = client.observe(document);
+    const ready = new Promise(resolve => document.addEventListener('t256-dynamic-ready', resolve, { once: true }));
+    const dynamic = document.createElement('script'); dynamic.type = 'application/t256';
+    dynamic.dataset.t256Src = `t256:${await computeCid('document.dispatchEvent(new Event("t256-dynamic-ready"))')}.js`;
+    document.body.append(dynamic); await ready; observer.disconnect();
+    const worker = await client.worker(`t256:${await computeCid('postMessage("worker-ready")')}.js`);
+    const workerResult = await new Promise((resolve, reject) => { worker.onmessage = event => resolve(event.data); worker.onerror = reject; });
+    worker.terminate(); client.dispose();
+    return { hydrated: window.hydratedCount, dynamic: true, worker: workerResult };
+  }, { runtime, fixture });
+  assert.deepEqual(extras, { hydrated: 1, dynamic: true, worker: 'worker-ready' });
+  await page.goto(runtime.origin + '/resolve.html');
+  await page.locator('#uri').fill('t256:AAAAAAAFaGVsbG8.txt');
+  await page.getByRole('button', { name: 'Resolve and verify' }).click();
+  await page.waitForFunction(() => document.querySelector('#status').textContent.startsWith('Verified 5 bytes'));
+  assert.equal(await page.locator('#preview').textContent(), 'hello');
   assert.deepEqual(errors, []);
-  return { gateway, loader, errors };
+  return { gateway, loader, extras, errors };
 };

@@ -1,13 +1,13 @@
 import { chromium, firefox, webkit } from 'playwright';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import smoke from './browser-smoke.cjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const state = await mkdtemp(path.join(tmpdir(), 't256-browser-test-'));
+const state = await realpath(await mkdtemp(path.join(tmpdir(), 't256-browser-test-')));
 const python = process.env.T256_PYTHON ?? 'python3';
 const helper = spawn(python, [path.join(root, 'run.py'), '--state', state, 'serve', '--port', '0'], { stdio: ['ignore', 'ignore', 'pipe'] });
 let diagnostics = '';
@@ -25,11 +25,11 @@ try {
   const engines = { chromium, firefox, webkit };
   const selected = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(engines);
   for (const name of selected) {
-    const browser = await engines[name].launch();
+    const browser = await engines[name].launchPersistentContext(path.join(state, `profile-${name}`));
     try {
       const page = await browser.newPage(); page.setDefaultTimeout(15000);
       const result = await smoke(page, runtime, fixture);
-      console.log(`${name} ${browser.version()}: image, script order, CSS imports, modules, and loader passed`);
+      console.log(`${name} ${browser.browser().version()}: images, script order, CSS imports, modules, dynamic declarations, workers, and public resolver passed`);
     } finally { await browser.close(); }
   }
 } finally {

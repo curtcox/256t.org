@@ -101,6 +101,8 @@ These things are beyond the scope of this text.
 - [CID Examples (Elm)](examples-elm.html) — select example files and verify their CIDs using the Elm implementation.
 - [File CID Check](check.html) — drag and drop files to analyze their content and calculate their CID.
 - [CID Download](download.html) — download and verify content from a 256t.org compatible server using a CID.
+- [t256 URI Resolver](resolve.html) — open a t256 URI using inline content, public providers, or your desktop helper.
+- [Desktop and browser support](browser-support/README.md) — selectable folders, network drives, authenticated GitHub repositories, a verified page loader, gateway, and optional extensions.
 
 ## Example Files
 

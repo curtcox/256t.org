@@ -386,12 +386,13 @@
       <a href="hash.html">Hash Calculator</a>
       <a href="check.html">File CID Check</a>
       <a href="examples.html">CID Examples</a>
+      <a href="resolve.html">t256 URI Resolver</a>
     </nav>
   </header>
 
   <div class="form-section">
     <div class="form-group">
-      <label for="urlInput">URL</label>
+      <label for="urlInput">URL or t256 URI</label>
       <input 
         type="text" 
         id="urlInput" 
@@ -807,6 +808,10 @@
     // Handle download
     async function handleDownload() {
       const url = urlInput.value.trim();
+      if (/^t256:/i.test(url)) {
+        location.href = 'resolve.html#uri=' + encodeURIComponent(url);
+        return;
+      }
       const cid = extractCidFromUrl(url);
       
       if (!url) {

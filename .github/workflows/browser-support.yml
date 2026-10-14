@@ -2,9 +2,9 @@ name: t256 browser support
 
 on:
   push:
-    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.github/workflows/browser-support.yml']
+    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.gitattributes', '.github/workflows/browser-support.yml']
   pull_request:
-    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.github/workflows/browser-support.yml']
+    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.gitattributes', '.github/workflows/browser-support.yml']
   workflow_dispatch:
 
 permissions:

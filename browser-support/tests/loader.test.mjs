@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { computeCid, parseUri, verifyUri } from '../../implementations/ecmascript/uri.mjs';
 import { T256Client } from '../web/loader.mjs';
+import { T256WebClient } from '../web/web-client.mjs';
 
 test('strict URI parsing agrees with all existing corpus identifiers', async () => {
   const { readdir } = await import('node:fs/promises');
@@ -45,5 +46,20 @@ test('abort applies while reading a response body, not just its headers', async 
     }));
     const client = new T256Client('http://127.0.0.1:25600/s/test-key', { timeout: 20 });
     await assert.rejects(client.bytes(uri), /aborted/);
+  } finally { globalThis.fetch = original; }
+});
+
+test('public web resolver verifies provider fallback and handles compound suffixes', async () => {
+  const bytes = new TextEncoder().encode('public content'.repeat(12));
+  const uri = `t256:${await computeCid(bytes)}.tar.gz`;
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async url => new Response(url.startsWith('https://bad.example') ? new Uint8Array(bytes.length) : bytes);
+    const client = new T256WebClient(['https://bad.example', 'https://good.example']);
+    const result = await client.read(uri);
+    assert.deepEqual(result.bytes, bytes);
+    assert.equal(result.provider, 'https://good.example');
+    assert.equal(result.type, 'application/gzip');
+    assert.equal(result.failures.length, 1);
   } finally { globalThis.fetch = original; }
 });
