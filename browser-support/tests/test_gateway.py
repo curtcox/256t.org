@@ -92,6 +92,23 @@ class GatewayTests(unittest.TestCase):
         with self.assertRaises(HTTPError): self.request(path, origin="https://other.example")
         config["allowed_origins"] = []; self.resolver.configure(config)
         with self.assertRaises(HTTPError): self.request(path)
+        config["allowed_origins"] = ["https://publisher.example"]; self.resolver.configure(config)
+        replacement = self.server.grant("https://publisher.example")
+        self.assertNotEqual(replacement, token)
+        with self.assertRaises(HTTPError): self.request(path, origin="https://publisher.example")
+        new_path = path.replace(token, replacement)
+        self.assertEqual(self.request(new_path, origin="https://publisher.example").read(), b"hello")
+        config["cache_bytes"] -= 1; self.resolver.configure(config)
+        self.assertEqual(self.server.grant("https://publisher.example"), replacement)
+
+    def test_revoking_one_origin_preserves_other_connections(self):
+        config = dict(self.resolver.config)
+        config["allowed_origins"] = ["https://one.example", "https://two.example"]
+        self.resolver.configure(config)
+        token = self.server.grant("https://two.example")
+        config["allowed_origins"] = ["https://two.example"]; self.resolver.configure(config)
+        self.assertEqual(self.server.grant("https://two.example"), token)
+        with self.assertRaises(ValueError): self.server.grant("https://one.example")
 
     def test_gateway_verifies_before_serving_and_transforms_html(self):
         folder = self.root / "files"; folder.mkdir()

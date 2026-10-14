@@ -115,7 +115,9 @@ an optional letters-only alias remains a future compatibility choice.
 Grant the page's **exact origin** in helper settings, then copy its connection URL.
 For example, a local development site might use `http://127.0.0.1:8080`.
 Connections rotate on helper restart; revoke an origin in settings to reject
-subsequent requests. A connection is a bearer capability: anyone holding it can
+subsequent requests. Granting that origin again creates a new connection URL;
+previously revoked URLs remain invalid. Unrelated provider or storage edits preserve
+connections for origins that stayed allowed. A connection is a bearer capability: anyone holding it can
 request known CIDs from your selected providers. Do not embed private connection
 URLs in publicly distributed source or share links.
 

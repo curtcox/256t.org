@@ -8,6 +8,7 @@ import tempfile
 import threading
 import subprocess
 import math
+import secrets
 from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 
@@ -107,12 +108,15 @@ class Resolver:
         if not self.config_path.exists():
             save_json(self.config_path, DEFAULT_CONFIG)
         self.config = validate_config(json.loads(self.config_path.read_text(encoding="utf-8")))
+        self.origin_epochs = {origin: secrets.token_urlsafe(16) for origin in self.config.get("allowed_origins", [])}
         self.cache.mkdir(exist_ok=True)
 
     def configure(self, config):
         validate_config(config)
         with self.lock:
             save_json(self.config_path, config)
+            self.origin_epochs = {origin: self.origin_epochs.get(origin, secrets.token_urlsafe(16))
+                                  for origin in config.get("allowed_origins", [])}
             self.config = config
             self.trim_cache(config["cache_bytes"])
 

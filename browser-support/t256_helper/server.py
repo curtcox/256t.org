@@ -67,9 +67,13 @@ class Gateway(ThreadingHTTPServer):
         self.settings_url = self.origin + "/#" + self.admin
 
     def grant(self, origin):
-        if origin not in self.resolver.config.get("allowed_origins", []):
-            raise ValueError("This origin has not been granted provider access")
-        return hmac.new(self.admin.encode(), origin.encode(), hashlib.sha256).hexdigest()
+        with self.resolver.lock:
+            epoch = self.resolver.origin_epochs.get(origin)
+            if epoch is None:
+                raise ValueError("This origin has not been granted provider access")
+            # Re-adding a revoked origin must issue a fresh capability. Unrelated
+            # provider edits preserve grants to origins that remained allowed.
+            return hmac.new(self.admin.encode(), (origin + "\0" + epoch).encode(), hashlib.sha256).hexdigest()
 
     def content_url(self, uri, token=None, navigation=False):
         return self.origin + "/s/" + (token or self.view) + ("/view/" if navigation else "/resource/") + uri.cid + uri.suffix
@@ -117,9 +121,10 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         if hmac.compare_digest(token, self.server.view):
             return origin in (None, self.server.origin, "null")
-        for allowed in self.server.resolver.config.get("allowed_origins", []):
-            if hmac.compare_digest(token, self.server.grant(allowed)):
-                return origin in (None, allowed, "null")
+        with self.server.resolver.lock:
+            for allowed in self.server.resolver.origin_epochs:
+                if hmac.compare_digest(token, self.server.grant(allowed)):
+                    return origin in (None, allowed, "null")
         return False
 
     def do_OPTIONS(self):
