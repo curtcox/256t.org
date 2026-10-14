@@ -30,12 +30,12 @@ class GatewayTests(unittest.TestCase):
         self.server.shutdown(); self.server.server_close(); self.thread.join()
         self.temp.cleanup()
 
-    def request(self, path, origin=None, admin=False, body=None):
-        headers = {}
+    def request(self, path, origin=None, admin=False, body=None, headers=None, method=None):
+        headers = dict(headers or {})
         if origin: headers["Origin"] = origin
         if admin: headers["Authorization"] = "Bearer " + self.server.admin
         if body is not None: headers["Content-Type"] = "application/json"
-        request = Request(self.server.origin + path, headers=headers, data=json.dumps(body).encode() if body is not None else None)
+        request = Request(self.server.origin + path, headers=headers, data=json.dumps(body).encode() if body is not None else None, method=method)
         return urlopen(request, timeout=5)
 
     def test_admin_separation_and_rebinding(self):
@@ -118,6 +118,52 @@ class GatewayTests(unittest.TestCase):
         with patch.dict(os.environ, {"T256_TEST_CREDENTIAL": "test-secret"}):
             self.assertEqual(github_headers(provider)["Authorization"], "Bearer test-secret")
             with self.assertRaises(RuntimeError): github_headers({**provider, "api_url": "http://api.example"})
+
+    def test_verified_ranges_and_head(self):
+        content = bytes(range(128))
+        folder = self.root / "media"; folder.mkdir()
+        cid = compute_cid(content); (folder / cid).write_bytes(content)
+        config = dict(self.resolver.config)
+        config["providers"] = [{"id": "media", "type": "folder", "path": str(folder)}]
+        self.resolver.configure(config)
+        path = "/s/" + self.server.view + "/resource/" + cid + ".mp4"
+        for value, start, end in [("bytes=5-9", 5, 9), ("bytes=120-", 120, 127), ("bytes=-7", 121, 127),
+                                  ("bytes=0-9999999999999999999999999", 0, 127), ("bytes=-999", 0, 127)]:
+            with self.subTest(value=value):
+                response = self.request(path, headers={"Range": value}, origin="null")
+                self.assertEqual(response.status, 206)
+                self.assertEqual(response.headers["Content-Range"], f"bytes {start}-{end}/128")
+                self.assertEqual(response.read(), content[start:end + 1])
+                self.assertEqual(response.headers["Accept-Ranges"], "bytes")
+                self.assertIn("Content-Range", response.headers["Access-Control-Expose-Headers"])
+        for value in ["bytes=128-", "bytes=-0", "bytes=9999999999999999999999999-"]:
+            with self.subTest(value=value), self.assertRaises(HTTPError) as failure:
+                self.request(path, headers={"Range": value})
+            self.assertEqual(failure.exception.code, 416)
+            self.assertEqual(failure.exception.headers["Content-Range"], "bytes */128")
+        for value in ["bytes=5-3", "bytes=", "bytes=0-1,4-5", "items=0-5"]:
+            self.assertEqual(self.request(path, headers={"Range": value}).read(), content)
+        self.assertEqual(self.request(path, headers={"Range": "bytes=0-1", "If-Range": '"unknown"'}).status, 200)
+        head = self.request(path, headers={"Range": "bytes=0-1"}, method="HEAD")
+        self.assertEqual(head.status, 200)
+        self.assertEqual(head.headers["Content-Length"], "128")
+        self.assertEqual(head.read(), b"")
+        (self.resolver.cache / cid).unlink(); (folder / cid).write_bytes(bytes(128))
+        with self.assertRaises(HTTPError) as failure:
+            self.request(path, headers={"Range": "bytes=0-1"})
+        self.assertEqual(failure.exception.code, 404)
+
+    def test_empty_and_transformed_range_responses(self):
+        prefix = "/s/" + self.server.view
+        with self.assertRaises(HTTPError) as failure:
+            self.request(prefix + "/raw/" + compute_cid(b""), headers={"Range": "bytes=0-"})
+        self.assertEqual(failure.exception.headers["Content-Range"], "bytes */0")
+        css = b"p { color: red }"
+        path = prefix + "/resource/" + compute_cid(css) + ".css"
+        response = self.request(path, headers={"Range": "bytes=0-1"})
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), css)
+        self.assertIsNone(response.headers["Accept-Ranges"])
 
 
 class TransformTests(unittest.TestCase):

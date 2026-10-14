@@ -80,6 +80,10 @@ The default per-content limit is 64 MiB; the disk cache budget is 256 MiB.
 These limits are editable in settings. Original objects are currently buffered in
 memory; this version is intended for bounded desktop resources rather than
 multi-gigabyte media. The cache is verified on every read and evicted by last use.
+The gateway supports single HTTP byte ranges for original resources, allowing
+audio/video seeking and partial downloads. The entire object is retrieved and
+verified before any range is sent. Transformed HTML/CSS, malformed or multipart
+ranges, and conditional ranges without a matching validator receive full responses.
 Disabling a provider retains previously verified cached content. Clear the
 settings directory's `cache` folder if you want to remove those copies.
 

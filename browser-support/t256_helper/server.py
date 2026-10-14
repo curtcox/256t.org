@@ -7,6 +7,7 @@ from socketserver import TCPServer
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import signal
 import threading
@@ -19,6 +20,31 @@ from .uri import media_type, parse_uri
 
 
 ASSETS = Path(__file__).resolve().parents[1] / "web"
+
+
+def byte_range(value, length):
+    """One HTTP byte range; None means ignore unsupported or malformed syntax."""
+    match = re.fullmatch(r"bytes=([0-9]*)-([0-9]*)", value.strip(), re.IGNORECASE)
+    if not match or not any(match.groups()):
+        return None
+    first, last = match.groups()
+    # Range numbers can exceed platform integers. Values above the object length
+    # only need a sentinel, including when padded with arbitrary leading zeros.
+    def number(text):
+        digits = text.lstrip("0") or "0"
+        return length + 1 if len(digits) > 18 else int(digits)
+    if first:
+        start = number(first)
+        end = number(last) if last else length - 1
+        if last and end < start:
+            return None
+        if start >= length:
+            raise ValueError("Unsatisfiable byte range")
+        return start, min(end, length - 1)
+    suffix = number(last)
+    if not suffix or not length:
+        raise ValueError("Unsatisfiable byte range")
+    return max(0, length - suffix), length - 1
 
 
 class Gateway(ThreadingHTTPServer):
@@ -68,6 +94,7 @@ class Handler(BaseHTTPRequestHandler):
         if origin == self.server.origin or origin in self.server.resolver.config.get("allowed_origins", []) or getattr(self, "opaque_content", False):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Expose-Headers", "Accept-Ranges, Content-Range, X-T256-Source-CID, X-T256-Representation")
         for key, value in (headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -102,7 +129,7 @@ class Handler(BaseHTTPRequestHandler):
         if origin != self.server.origin and origin not in self.server.resolver.config.get("allowed_origins", []):
             return self.json(403, {"error": "Origin has not been granted provider access"})
         self.response(204, headers={"Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
-                                    "Access-Control-Allow-Headers": "Authorization, Content-Type"})
+                                    "Access-Control-Allow-Headers": "Authorization, Content-Type, Range"})
 
     def do_HEAD(self):
         self.do_GET()
@@ -163,6 +190,20 @@ class Handler(BaseHTTPRequestHandler):
                 # Content has an opaque origin and cannot acquire management access.
                 origin = self.server.origin
                 headers["Content-Security-Policy"] = "sandbox allow-scripts allow-downloads allow-top-navigation-by-user-activation; default-src 'none'; script-src " + origin + " 'unsafe-inline'; style-src " + origin + " 'unsafe-inline'; img-src " + origin + " data: blob:; font-src " + origin + "; media-src " + origin + "; frame-src " + origin + "; connect-src " + origin
+            if not transformed:
+                headers["Accept-Ranges"] = "bytes"
+                # Resolve and verify the entire source before returning any slice.
+                # HEAD ignores Range, and If-Range cannot match absent validators.
+                if self.command == "GET" and self.headers.get("Range") and not self.headers.get("If-Range"):
+                    try:
+                        selected = byte_range(self.headers["Range"], len(content))
+                    except ValueError:
+                        headers["Content-Range"] = "bytes */" + str(len(content))
+                        return self.response(416, b"", mime, headers)
+                    if selected is not None:
+                        start, end = selected
+                        headers["Content-Range"] = f"bytes {start}-{end}/{len(content)}"
+                        return self.response(206, content[start:end + 1], mime, headers)
             return self.response(200, content, mime, headers)
         except ResolutionError as error:
             self.json(404, {"error": str(error), "failures": error.failures})
