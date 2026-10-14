@@ -1,14 +1,18 @@
 // Runs only after the user selects a page adaptation action (activeTab).
+globalThis.t256AdaptAnchor = (element, destination) => {
+  const value = element.getAttribute('href')?.trim();
+  if (!value || !/^t256:/i.test(value)) return false;
+  element.href = globalThis.t256ViewerUrl(destination, value);
+  element.relList.add('noopener', 'noreferrer');
+  return true;
+};
 globalThis.t256AdaptLinks = destination => {
   // Validate the destination even if this page has no matching links.
   globalThis.t256ViewerUrl(destination, 't256:AAAAAAAA');
   const failures = new Set(); let adapted = 0;
   for (const element of document.querySelectorAll('a[href]')) {
-    const value = element.getAttribute('href').trim();
-    if (!/^t256:/i.test(value)) continue;
     try {
-      element.href = globalThis.t256ViewerUrl(destination, value);
-      element.relList.add('noopener', 'noreferrer'); adapted++;
+      if (globalThis.t256AdaptAnchor(element, destination)) adapted++;
     } catch (error) { failures.add(error.message); }
   }
   return failures.size ? { adapted, error: [...failures].join('\n') } : { adapted };

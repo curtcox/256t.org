@@ -153,7 +153,7 @@ do not establish that result.
 
 | Mechanism | Status and existing work | Strengths | Limitations | Next deliverable |
 |---|---|---|---|---|
-| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, helper-free viewer navigation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add opt-in dynamic adaptation and validate each installed extension package. |
+| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click resource adaptation, helper-free viewer navigation, opt-in dynamic link adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; dynamic watching currently covers links in the top document. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add dynamic resource/frame coverage and validate each installed extension package. |
 | Web protocol handler, including the requested `web+t256:` spelling | **In progress: implementation and browser validation.** Strict alias conversion and explicit website registration/removal controls exist; engine checks cover transport and rejection. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Validate installed-browser consent/dispatch; add saved-helper choices, Firefox manifest handling and optional PWA support. |
 | OS registration of `t256:` with a desktop helper | **In progress: implementation and distribution validation.** macOS app wrapper, Windows per-user registry registration, Linux desktop entry, startup, native messaging and uninstall exist. | Preserves the exact scheme; opens content with user-selected folders, mounted shares, HTTP bases and authenticated repositories; offers Safari an external navigation route. | Requires installation and browser approval where prompted. Typed/pasted address-bar dispatch varies. Current runtime needs Python at a stable path. Does not turn `t256:` into a browser resource protocol. | Validate real browser dispatch and clean installation/removal on all three OSes; build convenient platform packages. |
 
@@ -197,10 +197,16 @@ for the exact scheme in Safari; it is not the only practical Safari integration.
   Strictly validate URIs and viewer locations, preserve existing link relations
   and leave invalid links/resources unchanged. Chromium tests cover popup opening,
   link navigation, no provider requests during adaptation and verified bytes.
-- [ ] **Next: add optional continued adaptation** for new or changed links/resources on
-  the active page. Bound observation, preserve page edits made during retrieval,
-  release resources on teardown, and avoid repeated media loads. Add optional
-  per-site persistence only with explicit site permissions and a disable control.
+- [x] Add **Keep adapting links on this page** and **Stop adapting new links**.
+  Watch new/changed HTML anchors in the top document, scan in bounded batches,
+  collapse large mutation bursts, ignore removed elements and preserve ordinary
+  page edits. Reinjection replaces the previous observer; stopping/page exit
+  clears its queued work. Chromium tests cover 700 added links, changed hrefs,
+  popup controls, restart/stop/teardown and zero provider requests.
+- [ ] **Next: extend optional continued adaptation to resources.** Preserve page
+  edits during retrieval, release resources on teardown and avoid repeated media
+  loads. Add optional per-site persistence only with explicit site permissions
+  and a disable control; current link watching is confined to this document.
 - [ ] Define frame and open-shadow-root coverage; report inaccessible frames,
   protected browser pages, restrictive CSP and local-network permission failures.
   Link-only adaptation already works without granting local provider access.
@@ -450,6 +456,17 @@ the viewer's fragment, and the viewer waits for a resolution action. The selecte
 viewer can read the identifier and inline bytes after navigation. These actions
 are included in Safari conversion source; signed Safari installation remains a
 release check.
+
+**Keep adapting links on this page** also handles new HTML anchors and changed
+`href` values after the popup closes. It scans in batches and fetches nothing.
+Reopen the popup to see its state or select **Stop adapting new links**. Stopping
+keeps links already adapted, cancels queued work and leaves subsequent page edits
+alone. Leaving the page stops watching, including navigation through the browser's
+back/forward cache; returning requires enabling it again. Starting it again
+replaces the previous watcher. A changed viewer applies to subsequently processed
+`t256:` links; already rewritten viewer links retain their existing destination.
+This option covers the top document's HTML anchors. Frames, shadow roots and
+dynamic images/scripts/media remain separate plan items.
 
 “Adapt images, media, and links” handles current images (including `srcset` and
 picture sources), audio/video sources, posters, caption tracks, stylesheets, and

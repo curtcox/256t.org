@@ -36,7 +36,7 @@ try {
     } finally { await browser.close(); }
     if (name === 'chromium') {
       await extensionSmoke(chromium, root, state, runtime, fixture);
-      console.log('Chromium extension: images, responsive candidates, media, captions, page changes, provider diagnostics, gateway navigation, and helper-free viewer links passed');
+      console.log('Chromium extension: images, media, captions, page changes, diagnostics, gateway/viewer links, and opt-in dynamic link lifecycle passed');
     }
   }
 } finally {

@@ -106,6 +106,51 @@ export async function extensionSmoke(chromium, root, state, runtime, fixture) {
     assert.equal(await page.locator('#untouched-image').getAttribute('src'), fixture.image);
     assert.equal(await page.locator('#invalid-link').getAttribute('href'), 't256:AAAAAAABeB');
     assert.equal(await page.locator('#standalone').getAttribute('rel'), 'external noopener noreferrer');
+    const watch = async mode => worker.evaluate(async ({ origin, viewer, mode }) => {
+      const tab = (await chrome.tabs.query({})).find(item => item.url === origin + '/links');
+      if (mode === 'start') await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['uri.js', 'navigation.js', 'content.js', 'watch-links.js'] });
+      return (await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: ({ mode, viewer }) => {
+        if (mode === 'start') return globalThis.t256WatchLinks(viewer);
+        if (mode === 'stop') return globalThis.t256StopLinks();
+        return globalThis.t256LinkWatch?.summary() ?? { watching: false };
+      }, args: [{ mode, viewer }] }))[0].result;
+    }, { origin, viewer: runtime.origin + '/resolve.html', mode });
+    assert.equal((await watch('start')).watching, true);
+    assert.equal((await watch('state')).viewer, runtime.origin + '/resolve.html');
+    await page.evaluate(() => {
+      const container = document.createElement('section'); container.id = 'dynamic-links';
+      container.innerHTML = '<a id="dynamic" href="t256:AAAAAAAFaGVsbG8.txt">Dynamic</a><a id="page-edit" href="t256:AAAAAAAFaGVsbG8.txt">Changed by page</a>';
+      document.body.append(container);
+      document.querySelector('#page-edit').href = 'https://example.org/keep';
+      const removed = document.createElement('a'); removed.href = 't256:AAAAAAAFaGVsbG8.txt';
+      document.body.append(removed); removed.remove();
+    });
+    await page.waitForFunction(() => document.querySelector('#dynamic').getAttribute('href').includes('/resolve.html#uri='));
+    assert.equal(await page.locator('#page-edit').getAttribute('href'), 'https://example.org/keep');
+    await page.locator('#dynamic').evaluate(link => { link.href = 'T256:AAAAAAABeA.TXT'; });
+    await page.waitForFunction(expected => document.querySelector('#dynamic').getAttribute('href').endsWith(expected), encodeURIComponent('t256:AAAAAAABeA.txt'));
+    await page.evaluate(() => {
+      const container = document.querySelector('#dynamic-links');
+      for (let index = 0; index < 700; index++) {
+        const link = document.createElement('a'); link.className = 'bulk'; link.href = 't256:AAAAAAAFaGVsbG8.txt'; container.append(link);
+      }
+    });
+    await page.waitForFunction(() => [...document.querySelectorAll('a.bulk')].every(link => link.getAttribute('href').includes('/resolve.html#uri=')));
+    assert.equal((await watch('state')).adapted, 702);
+    assert.equal(providerRequests, 0);
+    // Reinjection/restart replaces the previous observer, including pending work.
+    await watch('start');
+    assert.equal((await watch('state')).adapted, 0);
+    assert.equal(await watch('stop'), true);
+    assert.equal((await watch('state')).watching, false);
+    await page.locator('#dynamic').evaluate(link => { link.href = 't256:AAAAAAAFaGVsbG8.txt'; });
+    // Queue a real DOM task, rather than assume an observer fires synchronously.
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 20)));
+    assert.equal(await page.locator('#dynamic').getAttribute('href'), 't256:AAAAAAAFaGVsbG8.txt');
+    await watch('start');
+    await page.waitForFunction(() => document.querySelector('#dynamic').getAttribute('href').includes('/resolve.html#uri='));
+    await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+    assert.equal((await watch('state')).watching, false);
     await page.locator('#standalone').click();
     await page.waitForFunction(() => document.querySelector('#uri')?.value === 't256:AAAAAAAFaGVsbG8.txt');
     assert.equal(providerRequests, 0);
@@ -125,6 +170,24 @@ export async function extensionSmoke(chromium, root, state, runtime, fixture) {
     const viewer = await opened;
     await viewer.waitForFunction(() => document.querySelector('#uri')?.value === 't256:AAAAAAAFaGVsbG8.txt');
     assert.equal(await viewer.locator('#download').isHidden(), true);
+    await page.goto(origin + '/links');
+    const tab = await worker.evaluate(async origin => (await chrome.tabs.query({})).find(item => item.url === origin + '/links'), origin);
+    // An extension page used as a popup is itself the active tab in automation.
+    // Route the active-tab query to the website, as a real toolbar popup would.
+    await popup.evaluate(tab => { chrome.tabs.query = async () => [tab]; }, tab);
+    await popup.getByRole('button', { name: 'Keep adapting links on this page' }).click();
+    await popup.locator('#status').filter({ hasText: 'Adapting new and changed links' }).waitFor();
+    assert.equal(await popup.locator('#stop-links').isEnabled(), true);
+    await page.evaluate(() => {
+      document.body.innerHTML = '<a id="popup-watched" href="t256:AAAAAAAFaGVsbG8.txt">Watched</a>';
+    });
+    await page.waitForFunction(() => document.querySelector('#popup-watched').getAttribute('href').includes('/resolve.html#uri='));
+    await popup.getByRole('button', { name: 'Stop adapting new links' }).click();
+    await popup.locator('#status').filter({ hasText: 'Stopped adapting' }).waitFor();
+    assert.equal(await popup.locator('#stop-links').isDisabled(), true);
+    await page.locator('#popup-watched').evaluate(link => { link.href = 't256:AAAAAAABeA.txt'; });
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 20)));
+    assert.equal(await page.locator('#popup-watched').getAttribute('href'), 't256:AAAAAAABeA.txt');
     return { images: true, media: true, captions: true, navigation: true, standaloneLinks: true };
   } finally {
     try {

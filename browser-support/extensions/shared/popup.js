@@ -36,6 +36,38 @@ document.querySelector('#adapt-links').addEventListener('click', () => action(as
   if (result?.error) throw new Error(`Adapted ${result.adapted} links.\n${result.error}`);
   return `Adapted ${result?.adapted ?? 0} links. No provider access needed.`;
 }, false));
+async function watchTab() {
+  const [tab] = await api.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.url || !/^https?:/.test(tab.url)) throw new Error('Use this on an HTTP(S) page');
+  return tab;
+}
+async function refreshWatch() {
+  try {
+    const tab = await watchTab();
+    const results = await api.scripting.executeScript({ target: { tabId: tab.id }, func: () => globalThis.t256LinkWatch?.summary() ?? { watching: false } });
+    const result = results[0]?.result;
+    document.querySelector('#stop-links').disabled = !result?.watching;
+    if (result?.watching) {
+      document.querySelector('#viewer').value = result.viewer;
+      status.textContent = `Adapting new links on this page. Adapted ${result.adapted} links.` + (result.error ? `\n${result.error}` : '');
+    }
+  } catch { document.querySelector('#stop-links').disabled = true; }
+}
+document.querySelector('#watch-links').addEventListener('click', () => action(async () => {
+  const tab = await watchTab();
+  const viewer = document.querySelector('#viewer').value.trim();
+  globalThis.t256ViewerUrl(viewer, 't256:AAAAAAAA');
+  await api.scripting.executeScript({ target: { tabId: tab.id }, files: ['uri.js', 'navigation.js', 'content.js', 'watch-links.js'] });
+  await api.scripting.executeScript({ target: { tabId: tab.id }, func: value => globalThis.t256WatchLinks(value), args: [viewer] });
+  document.querySelector('#stop-links').disabled = false;
+  return 'Adapting new and changed links on this page. No provider access needed.';
+}, false));
+document.querySelector('#stop-links').addEventListener('click', () => action(async () => {
+  const tab = await watchTab();
+  await api.scripting.executeScript({ target: { tabId: tab.id }, func: () => globalThis.t256StopLinks?.() ?? false });
+  document.querySelector('#stop-links').disabled = true;
+  return 'Stopped adapting new links. Existing adapted links stay in place.';
+}, false));
 document.querySelector('#adapt').addEventListener('click', () => action(async () => {
   const [tab] = await api.tabs.query({ active: true, currentWindow: true });
   if (!tab?.url || !/^https?:/.test(tab.url)) throw new Error('Use this on an HTTP(S) page');
@@ -54,3 +86,4 @@ if (!api.runtime.getManifest().permissions.includes('nativeMessaging')) {
   document.querySelector('#settings').disabled = true;
   status.textContent = 'Use the browser viewer for public/inline content, or copy a website connection URL for local/private content. Native launch requires containing app integration in Safari.';
 }
+refreshWatch();
