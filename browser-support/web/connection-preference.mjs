@@ -1,0 +1,18 @@
+import { T256Client } from './loader.mjs';
+
+const key = 't256.resolver.connection.v1';
+function checked(value) {
+  const client = new T256Client(value);
+  const base = client.base; client.dispose();
+  return base;
+}
+export function loadConnection(storage) {
+  const value = storage.getItem(key);
+  return value === null ? null : checked(value);
+}
+export function saveConnection(storage, value) {
+  const base = checked(value);
+  storage.setItem(key, base);
+  return base;
+}
+export function forgetConnection(storage) { storage.removeItem(key); }

@@ -240,9 +240,11 @@ windows. Resource tests must verify bytes before use and script execution order.
   downloads and shared links retain canonical `t256:` identifiers.
 - [ ] **Next: validate real consent and dispatch** in installed Firefox/Chrome/
   Edge, including denied prompts, private windows and browser-settings removal.
-- [ ] Add an explicitly selected saved-helper connection option so repeat alias
-  navigation can reuse a local/private provider choice without sharing the
-  connection in registration templates or alias links.
+- [x] Add explicit **Remember connection in this browser** and **Forget
+  remembered connection** controls. Restore a validated loopback connection on
+  subsequent visits without retrieving anything automatically or including it
+  in registration templates/shared links. Browser checks cover save/reload,
+  removal and blocked storage; invalid credential-bearing URLs are rejected.
 - [ ] Test Firefox's optional
   [`protocol_handlers` extension manifest](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers)
   route to an extension viewer. Keep browser-specific manifest fields separate
@@ -508,7 +510,14 @@ connection or credentials. A successful API call reports a request sent rather
 than claiming approval; the browser controls confirmation and defaults. Incoming
 links populate the canonical URI field and wait for **Resolve and verify** before
 accessing providers. Existing providers and a pasted helper connection can be
-selected for that visit; connections are not saved automatically.
+selected for that visit. **Remember connection in this browser** explicitly
+saves the validated connection in this site's browser storage and restores it
+for subsequent visits, including alias navigation. Connections are not saved
+automatically, and restoration does not fetch content. Replace a remembered URL
+after restarting the helper; stale/revoked grants still fail at retrieval.
+**Forget remembered connection** removes the saved URL and clears the field;
+revoking provider access requires removing the site's grant in helper settings.
+If browser storage is blocked, manual connection entry and resolution still work.
 
 Use **Remove browser link handler** where the browser exposes removal, or change
 the handler in browser settings. Unsupported/blocked registration leaves manual

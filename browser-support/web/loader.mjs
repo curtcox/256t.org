@@ -4,7 +4,7 @@ import { parseUri, readVerified } from '../../implementations/ecmascript/uri.mjs
 export class T256Client {
   constructor(base, { timeout = 20000, maxBytes = 64 * 1024 * 1024 } = {}) {
     const url = new URL(base);
-    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !/^\/s\/[A-Za-z0-9_-]+$/.test(url.pathname) || url.search || url.hash) {
+    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password || !/^\/s\/[A-Za-z0-9_-]+$/.test(url.pathname) || url.search || url.hash) {
       throw new TypeError('Use the loopback connection URL supplied by the desktop helper');
     }
     this.base = url.href.replace(/\/$/, '');

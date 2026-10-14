@@ -8,6 +8,22 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { computeCid } from '../../implementations/ecmascript/uri.mjs';
 import { browserScheme, handlerTemplate, parseBrowserUri, parseHandlerFragment } from '../web/protocol-handler.mjs';
+import { loadConnection, saveConnection, forgetConnection } from '../web/connection-preference.mjs';
+
+test('remembering helper access is explicit, validated and independent of URI transport', () => {
+  const entries = new Map();
+  const storage = { getItem: key => entries.get(key) ?? null, setItem: (key, value) => entries.set(key, value), removeItem: key => entries.delete(key) };
+  assert.equal(loadConnection(storage), null);
+  const base = 'http://127.0.0.1:25600/s/private-capability';
+  assert.equal(saveConnection(storage, base), base);
+  assert.equal(loadConnection(storage), base);
+  for (const invalid of ['http://user:secret@127.0.0.1:25600/s/key', 'https://remote.example/s/key', base + '?credential=secret', base + '#secret', base + '/view/URI']) {
+    assert.throws(() => saveConnection(storage, invalid));
+    assert.equal(loadConnection(storage), base);
+  }
+  forgetConnection(storage); assert.equal(loadConnection(storage), null);
+  assert.throws(() => saveConnection({ setItem() { throw new Error('Blocked storage'); } }, base), /Blocked storage/);
+});
 
 test('browser alias preserves canonical identity and handler transport decodes exactly once', async () => {
   const cid = await computeCid('mixed case payload'.repeat(10));

@@ -149,7 +149,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.json(200, {"service": "t256-helper", "version": 1})
         assets = {"/": "settings.html", "/settings.mjs": "settings.mjs", "/loader.mjs": "loader.mjs", "/loader.js": "loader.js", "/demo.html": "demo.html", "/demo.js": "demo.js"}
         cid_assets = {"/implementations/ecmascript/cid.js", "/implementations/ecmascript/uri.mjs"}
-        public_assets = {"/resolve.html", "/browser-support/web/resolver.mjs", "/browser-support/web/web-client.mjs", "/browser-support/web/loader.mjs", "/browser-support/web/protocol-handler.mjs"}
+        public_assets = {"/resolve.html", "/browser-support/web/resolver.mjs", "/browser-support/web/web-client.mjs", "/browser-support/web/loader.mjs", "/browser-support/web/protocol-handler.mjs", "/browser-support/web/connection-preference.mjs"}
         if parts.path in public_assets:
             path = ASSETS.parents[1] / parts.path.lstrip("/")
             return self.response(200, path.read_bytes(), "text/html; charset=utf-8" if path.suffix == ".html" else "text/javascript; charset=utf-8")

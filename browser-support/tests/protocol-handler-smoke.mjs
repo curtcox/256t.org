@@ -20,13 +20,23 @@ export async function protocolHandlerSmoke(page, runtime, fixture) {
     assert.equal(retrievals, 0);
     await page.getByText('Content providers', { exact: true }).click();
     await page.locator('#connection').fill(`${runtime.origin}/s/${runtime.view}`);
+    assert.equal(await page.evaluate(() => localStorage.getItem('t256.resolver.connection.v1')), null);
+    await page.getByRole('button', { name: 'Remember connection in this browser' }).click();
+    await page.locator('#connection-status').filter({ hasText: 'Connection remembered' }).waitFor();
+    await page.reload();
+    await page.waitForFunction(expected => document.querySelector('#connection').value === expected, `${runtime.origin}/s/${runtime.view}`);
+    assert.equal(retrievals, 0);
     await page.getByRole('button', { name: 'Resolve and verify' }).click();
     await page.locator('#status').filter({ hasText: 'Verified' }).waitFor();
     assert.ok(retrievals > 0);
+    assert.ok(!(await page.locator('#share').getAttribute('href')).includes(runtime.view));
     await page.locator('#alias-example').click();
     await page.waitForFunction(() => document.querySelector('#uri').value === 't256:AAAAAAAFaGVsbG8.txt');
     assert.equal(await page.locator('#download').isHidden(), true);
-    await page.locator('#connection').fill('');
+    await page.getByText('Content providers', { exact: true }).click();
+    await page.getByRole('button', { name: 'Forget remembered connection' }).click();
+    assert.equal(await page.locator('#connection').inputValue(), '');
+    assert.equal(await page.evaluate(() => localStorage.getItem('t256.resolver.connection.v1')), null);
     await page.getByRole('button', { name: 'Resolve and verify' }).click();
     await page.locator('#status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
     assert.equal(await page.locator('#preview').textContent(), 'hello');
@@ -59,4 +69,15 @@ export async function protocolHandlerSmoke(page, runtime, fixture) {
   await page.locator('#handler-status').filter({ hasText: 'did not allow' }).waitFor();
   await page.getByRole('button', { name: 'Resolve and verify' }).click();
   await page.locator('#status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
+  await page.addInitScript(() => {
+    Storage.prototype.getItem = Storage.prototype.setItem = () => { throw new DOMException('Storage unavailable', 'SecurityError'); };
+  });
+  await page.goto(address + '#uri=' + encodeURIComponent('t256:AAAAAAAFaGVsbG8.txt'));
+  await page.locator('#connection-status').filter({ hasText: 'No saved connection' }).waitFor({ state: 'attached' });
+  await page.getByRole('button', { name: 'Resolve and verify' }).click();
+  await page.locator('#status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
+  await page.getByText('Content providers', { exact: true }).click();
+  await page.locator('#connection').fill(`${runtime.origin}/s/${runtime.view}`);
+  await page.getByRole('button', { name: 'Remember connection in this browser' }).click();
+  await page.locator('#connection-status').filter({ hasText: 'Could not remember' }).waitFor();
 }
