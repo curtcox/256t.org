@@ -11,11 +11,12 @@ import re
 import secrets
 from concurrent.futures import Future
 from copy import deepcopy
+from http.client import HTTPException
 from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 
 from .providers import ProviderError, build_index, retrieve
-from .uri import parse_uri
+from .uri import parse_uri, VerificationError
 
 
 DEFAULT_CONFIG = {
@@ -106,6 +107,43 @@ class ResolutionError(RuntimeError):
     def __init__(self, failures):
         self.failures = failures
         super().__init__("No selected provider returned matching content")
+
+
+def failure_details(error):
+    """Only fixed diagnostic text can cross the provider/browser boundary."""
+    messages = {
+        "provider_error": "Provider retrieval failed",
+        "redirect_refused": "Provider redirected outside its allowed origin or supplied URL credentials",
+        "size_mismatch": "Provider returned more bytes than the content identifier allows",
+        "invalid_provider": "Provider URL is invalid",
+        "path_escape": "File index points outside the selected provider",
+        "auth_missing": "Selected credential environment variable is not set",
+        "auth_unavailable": "Selected GitHub CLI login is unavailable; sign in and retry",
+        "auth_requires_https": "Authenticated providers require HTTPS",
+        "repository_unavailable": "Git could not read the selected repository or revision",
+        "verification_failed": "Content did not match its identifier",
+        "not_found": "Content or provider location was not found",
+        "access_denied": "Provider access was denied",
+        "timeout": "Provider retrieval timed out",
+        "network_error": "Provider network connection failed",
+        "invalid_data": "Provider data or file index is invalid",
+    }
+    if isinstance(error, HTTPError) and type(error.code) is int:
+        status = error.code
+        reason = {401: "Authentication was rejected", 403: "Access was denied or rate limited",
+                  404: "Content was not found or repository access was not granted", 429: "Provider rate limit was reached",
+                  451: "Content is unavailable for legal reasons"}.get(status, "Provider request failed")
+        return {"code": "http_" + str(status), "status": status, "reason": "HTTP " + str(status) + ": " + reason}
+    if isinstance(error, VerificationError): code = "verification_failed"
+    elif isinstance(error, ProviderError): code = error.code if error.code in messages else "provider_error"
+    elif isinstance(error, FileNotFoundError): code = "not_found"
+    elif isinstance(error, PermissionError): code = "access_denied"
+    elif isinstance(error, (TimeoutError, subprocess.TimeoutExpired)): code = "timeout"
+    elif isinstance(error, URLError): code = "timeout" if isinstance(error.reason, TimeoutError) else "network_error"
+    elif isinstance(error, HTTPException): code = "network_error"
+    elif isinstance(error, ValueError): code = "invalid_data"
+    else: code = "provider_error"
+    return {"code": code, "reason": messages[code]}
 
 
 def validate_index(mapping):
@@ -227,10 +265,8 @@ class Resolver:
                 with self.lock:
                     self.store(uri.cid, content, self.config["cache_bytes"])
                 return content, {"provider": provider["id"], "cache": False, "failures": failures}
-            except (OSError, ValueError, ProviderError, HTTPError, URLError, TimeoutError, subprocess.SubprocessError) as error:
-                # Avoid leaking provider paths, URLs, or credentials through browser diagnostics.
-                reason = "HTTP " + str(error.code) if isinstance(error, HTTPError) else type(error).__name__
-                failures.append({"provider": provider["id"], "reason": reason})
+            except (OSError, ValueError, ProviderError, HTTPError, URLError, TimeoutError, subprocess.SubprocessError, HTTPException) as error:
+                failures.append({"provider": provider["id"], **failure_details(error)})
         raise ResolutionError(failures)
 
     def store(self, cid, content, budget):

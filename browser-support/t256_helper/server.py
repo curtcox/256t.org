@@ -259,7 +259,12 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/open":
                 uri = parse_uri(value["uri"])
                 return self.json(200, {"url": self.server.content_url(uri, navigation=True)})
+            if self.path == "/api/check":
+                uri, _, provenance = self.server.resolver.resolve(value["uri"])
+                return self.json(200, {"uri": uri.text, "length": uri.length, "type": media_type(uri), **provenance})
             return self.json(404, {"error": "Unknown management operation"})
+        except ResolutionError as error:
+            self.json(404, {"error": str(error), "failures": error.failures})
         except (ValueError, KeyError, StopIteration) as error:
             self.json(400, {"error": str(error) or "Provider not found"})
         except (OSError, RuntimeError):

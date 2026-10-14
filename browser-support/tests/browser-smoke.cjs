@@ -53,6 +53,14 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   assert.deepEqual(JSON.parse(await readFile(await download.path(), 'utf8')), { [fixture.image.slice(5, -4)]: fixture.image.slice(5, -4) });
   await page.getByRole('button', { name: 'Enable', exact: true }).click();
   await page.getByRole('button', { name: 'Disable', exact: true }).waitFor();
+  await page.locator('#open-content [name="uri"]').fill(fixture.image);
+  await page.getByRole('button', { name: 'Check providers' }).click();
+  await page.locator('#check-result').filter({ hasText: 'Verified' }).waitFor();
+  assert.equal(await page.locator('#provider-diagnostics li').count(), 0);
+  await page.locator('#open-content [name="uri"]').fill(fixture.missing);
+  await page.getByRole('button', { name: 'Check providers' }).click();
+  await page.locator('#provider-diagnostics').filter({ hasText: 'fixtures: Content or provider location was not found' }).waitFor();
+  assert.match(await page.locator('#check-result').textContent(), /No selected provider/);
   const content = `${runtime.origin}/s/${runtime.view}/view/${fixture.root.slice(5)}`;
   await page.goto(content);
   await page.waitForFunction(() => document.querySelector('#order').textContent === 'first,second');
@@ -133,11 +141,16 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   }, { runtime });
   assert.deepEqual(lifecycle, { ready: 'rgb(12, 34, 56)', failed: true, retried: 1, retained: 1, observers: 0, released: 0 });
   await page.goto(runtime.origin + '/resolve.html');
+  await page.getByText('Content providers', { exact: true }).click();
+  await page.locator('#connection').fill(`${runtime.origin}/s/${runtime.view}`);
+  await page.locator('#uri').fill(fixture.missing);
+  await page.getByRole('button', { name: 'Resolve and verify' }).click();
+  await page.getByRole('status').filter({ hasText: 'fixtures: Content or provider location was not found' }).waitFor();
+  await page.locator('#connection').fill('');
   await page.locator('#uri').fill('t256:AAAAAAAFaGVsbG8.txt');
   await page.getByRole('button', { name: 'Resolve and verify' }).click();
   await page.waitForFunction(() => document.querySelector('#status').textContent.startsWith('Verified 5 bytes'));
   assert.equal(await page.locator('#preview').textContent(), 'hello');
-  await page.getByText('Content providers', { exact: true }).click();
   for (const helper of [false, true]) {
     const pattern = helper ? '**/s/*/resolve?*' : '**/cancel-test/*';
     let release, received, completed;

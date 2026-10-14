@@ -336,7 +336,12 @@ class T256Client {
     const timer = setTimeout(() => controller.abort(new Error('t256 retrieval timed out')), this.timeout);
     try {
       const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
-      if (!response.ok) throw new Error(`t256 resolver returned HTTP ${response.status}`);
+      if (!response.ok) {
+        const details = await response.json().catch(() => ({}));
+        const error = new Error(typeof details?.error === 'string' ? details.error : `t256 resolver returned HTTP ${response.status}`);
+        error.failures = Array.isArray(details?.failures) ? details.failures : [];
+        throw error;
+      }
       return await consume(response, controller.signal);
     } finally {
       clearTimeout(timer);

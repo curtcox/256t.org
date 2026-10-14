@@ -29,26 +29,28 @@ element('resolve-form').addEventListener('submit', async event => {
   try {
     const uri = parseUri(element('uri').value.trim());
     const connection = element('connection').value.trim();
-    let bytes, provider, type;
+    let bytes, provider, type, failures = [];
     if (connection) {
       client = new T256Client(connection);
-      provider = (await client.resolve(uri.uri, options)).provider;
+      ({ provider, failures = [] } = await client.resolve(uri.uri, options));
       bytes = await client.bytes(uri.uri, options);
       type = mediaType(uri);
       element('gateway').href = `${client.base}/view/${uri.cid}${uri.suffix}`;
       element('gateway').hidden = false;
     } else {
       client = new T256WebClient(element('providers').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean));
-      ({ bytes, provider, type } = await client.read(uri.uri, options));
+      ({ bytes, provider, type, failures } = await client.read(uri.uri, options));
     }
-    element('status').textContent = `Verified ${bytes.length} bytes · ${provider}`;
+    element('status').textContent = `Verified ${bytes.length} bytes · ${provider}` + failures.map(failure => `\n${failure.provider}: ${failure.reason}`).join('');
     objectUrl = URL.createObjectURL(new Blob([bytes], { type }));
     if (type.startsWith('image/')) { element('image').src = objectUrl; element('image').hidden = false; }
     else if (type.startsWith('text/') || type === 'application/json') element('preview').textContent = new TextDecoder().decode(bytes.slice(0, 100000));
     element('download').href = objectUrl; element('download').download = uri.cid + uri.suffix; element('download').hidden = false;
     const share = new URL(location.pathname, location.origin); share.hash = `uri=${encodeURIComponent(uri.uri)}`;
     element('share').href = share.href; element('share').hidden = false;
-  } catch (error) { element('status').textContent = controller.signal.aborted ? 'Retrieval cancelled.' : error.message; }
+  } catch (error) {
+    element('status').textContent = controller.signal.aborted ? 'Retrieval cancelled.' : error.message + (error.failures ?? []).map(failure => `\n${failure.provider}: ${failure.reason}`).join('');
+  }
   finally {
     client?.dispose?.(); active = undefined;
     element('submit').disabled = false; element('cancel').hidden = true;

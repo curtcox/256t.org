@@ -8,7 +8,7 @@ const providerForm = document.querySelector('#add-provider');
 async function request(path, body) {
   const response = await fetch(path, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error);
+  if (!response.ok) { const error = new Error(result.error); error.failures = result.failures ?? []; throw error; }
   return result;
 }
 async function action(work) {
@@ -127,6 +127,27 @@ document.querySelector('#open-content').addEventListener('submit', event => {
     const result = await request('/api/open', { uri: new FormData(event.target).get('uri').trim() });
     const link = document.createElement('a'); link.href = result.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Open verified content';
     document.querySelector('#connection').replaceChildren(link); link.click();
+  });
+});
+document.querySelector('#check-providers').addEventListener('click', () => {
+  const form = document.querySelector('#open-content');
+  if (!form.reportValidity()) return;
+  action(async () => {
+    const output = document.querySelector('#check-result'); output.textContent = 'Checking…';
+    document.querySelector('#provider-diagnostics').replaceChildren();
+    const showFailures = failures => {
+      const items = failures.map(failure => {
+        const item = document.createElement('li'); item.textContent = `${failure.provider}: ${failure.reason}`; return item;
+      });
+      document.querySelector('#provider-diagnostics').replaceChildren(...items);
+    };
+    try {
+      const result = await request('/api/check', { uri: new FormData(form).get('uri').trim() });
+      output.textContent = `Verified ${result.length} bytes · ${result.type} · ${result.provider}`;
+      showFailures(result.failures);
+    } catch (error) {
+      output.textContent = error.message; showFailures(error.failures ?? []); throw error;
+    }
   });
 });
 document.querySelector('#grant').addEventListener('submit', event => {

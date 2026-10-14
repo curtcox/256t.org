@@ -19,6 +19,12 @@ python3 browser-support/run.py serve --open
 The provider settings page lets you add, edit, reorder, disable, remove, and index
 providers, import/export file indexes, and view or clear cached content.
 Hashbin's public content origin, `https://256t.us`, is selected initially.
+**Check providers** verifies a pasted URI without opening it and lists provider
+failures encountered before a match, or all failures if none matched. Diagnostics
+use fixed descriptions and status codes; provider paths, credential values, raw
+network errors, and GitHub CLI output are never included. The page loader exposes
+the same structured diagnostics on `error.failures`, and the public resolver shows
+helper failures and successful fallback details.
 Use `python` in place of `python3` on Windows if that is your Python command.
 Keep this checkout in a stable location if you install desktop registration.
 

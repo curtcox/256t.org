@@ -141,3 +141,17 @@ test('cleanup failures do not replace a verification error', async () => {
   await assert.rejects(readVerified(new Response(stream), uri), /exceeds CID length/);
   assert.equal(stream.locked, false);
 });
+
+test('helper retrieval errors expose structured provider diagnostics', async () => {
+  const original = globalThis.fetch;
+  const failures = [{ provider: 'private', code: 'auth_missing', reason: 'Selected credential environment variable is not set' }];
+  try {
+    globalThis.fetch = async () => Response.json({ error: 'No selected provider returned matching content', failures }, { status: 404 });
+    const client = new T256Client('http://127.0.0.1:25600/s/test-key');
+    await assert.rejects(client.resolve('t256:AAAAAAAFaGVsbG8.txt'), error => {
+      assert.deepEqual(error.failures, failures); return /No selected provider/.test(error.message);
+    });
+    globalThis.fetch = async () => Response.json(null, { status: 502 });
+    await assert.rejects(client.resolve('t256:AAAAAAAFaGVsbG8.txt'), /HTTP 502/);
+  } finally { globalThis.fetch = original; }
+});

@@ -31,7 +31,8 @@ def setup(state):
     config["providers"] = [{"id": "fixtures", "type": "folder", "path": str(directory)}]
     request = Request(runtime["origin"] + "/api/config", data=json.dumps(config).encode(), headers={"Authorization": "Bearer " + runtime["admin"], "Content-Type": "application/json"})
     with urlopen(request) as response: response.read()
-    fixture = {"root": root, "image": image, "first": first, "second": second, "module": module, "dependency": dependency}
+    fixture = {"root": root, "image": image, "first": first, "second": second, "module": module, "dependency": dependency,
+               "missing": "t256:" + compute_cid(b"missing fixture resource" * 8) + ".png"}
     (state / "fixture.json").write_text(json.dumps(fixture))
     print("Created browser fixtures")
 

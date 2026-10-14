@@ -6,6 +6,10 @@ import re
 from dataclasses import dataclass
 
 
+class VerificationError(ValueError):
+    pass
+
+
 def encode(data):
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
 
@@ -37,7 +41,7 @@ class URI:
 
     def verify(self, content):
         if compute_cid(content) != self.cid:
-            raise ValueError("Content does not match its CID")
+            raise VerificationError("Content does not match its CID")
 
 
 def parse_uri(value):

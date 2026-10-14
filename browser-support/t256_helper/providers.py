@@ -11,7 +11,9 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 class ProviderError(RuntimeError):
-    pass
+    def __init__(self, message, code="provider_error"):
+        self.code = code
+        super().__init__(message)
 
 
 class SameOriginRedirects(HTTPRedirectHandler):
@@ -19,7 +21,7 @@ class SameOriginRedirects(HTTPRedirectHandler):
         old, new = urlsplit(request.full_url), urlsplit(new_url)
         origin = lambda url: (url.scheme, url.hostname, url.port if url.port is not None else (443 if url.scheme == "https" else 80))
         if origin(old) != origin(new) or new.username is not None or new.password is not None:
-            raise ProviderError("Cross-origin redirect refused")
+            raise ProviderError("Cross-origin redirect refused", "redirect_refused")
         return super().redirect_request(request, fp, code, msg, headers, new_url)
 
 
@@ -31,14 +33,14 @@ def read_bounded(stream, limit):
             return b"".join(chunks)
         total += len(chunk)
         if total > limit:
-            raise ProviderError("Provider returned more bytes than allowed")
+            raise ProviderError("Provider returned more bytes than allowed", "size_mismatch")
         chunks.append(chunk)
 
 
 def get_url(url, limit, timeout, headers=None):
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https") or not parts.hostname or parts.username is not None or parts.password is not None:
-        raise ProviderError("Provider must use an HTTP(S) URL without embedded credentials")
+        raise ProviderError("Provider must use an HTTP(S) URL without embedded credentials", "invalid_provider")
     request_headers = {"User-Agent": "t256-helper/0.1", "Accept-Encoding": "identity"}
     request_headers.update(headers or {})
     with build_opener(SameOriginRedirects()).open(Request(url, headers=request_headers), timeout=timeout) as response:
@@ -51,7 +53,7 @@ def inside(root, relative):
     try:
         target.relative_to(root)
     except ValueError:
-        raise ProviderError("Path escapes the selected provider directory")
+        raise ProviderError("Path escapes the selected provider directory", "path_escape")
     return target
 
 
@@ -59,7 +61,7 @@ def github_headers(provider):
     headers = {"Accept": "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28"}
     token = os.environ.get(provider.get("token_env", "GH_TOKEN"))
     if provider.get("token_env") and not token:
-        raise ProviderError("Provider credential environment variable is not set")
+        raise ProviderError("Provider credential environment variable is not set", "auth_missing")
     host = urlsplit(provider.get("api_url", "https://api.github.com")).hostname
     if not token and provider.get("use_gh", False):
         executable = shutil.which("gh")
@@ -69,13 +71,13 @@ def github_headers(provider):
             result = subprocess.run([executable, "auth", "token", "--hostname", "github.com" if host == "api.github.com" else host],
                                     capture_output=True, text=True, timeout=provider.get("timeout", 15))
         except (OSError, subprocess.SubprocessError):
-            raise ProviderError("GitHub CLI login is unavailable") from None
+            raise ProviderError("GitHub CLI login is unavailable", "auth_unavailable") from None
         if result.returncode != 0 or not result.stdout.strip():
-            raise ProviderError("GitHub CLI login is unavailable")
+            raise ProviderError("GitHub CLI login is unavailable", "auth_unavailable")
         token = result.stdout.strip()
     if token:
         if urlsplit(provider.get("api_url", "https://api.github.com")).scheme != "https":
-            raise ProviderError("Authenticated GitHub providers require HTTPS")
+            raise ProviderError("Authenticated GitHub providers require HTTPS", "auth_requires_https")
         headers["Authorization"] = "Bearer " + token
     return headers
 
@@ -89,7 +91,7 @@ def git_output(provider, args, limit=None):
             # stdout is drained before waiting; cap file reads independently of repository size.
             result = read_bounded(process.stdout, limit) if limit is not None else process.stdout.read()
             if process.wait(timeout=provider.get("timeout", 20)):
-                raise ProviderError("Git could not read the selected repository revision")
+                raise ProviderError("Git could not read the selected repository revision", "repository_unavailable")
             return result
         except BaseException:
             process.kill()
@@ -113,9 +115,9 @@ def retrieve(provider, uri, index):
         if provider.get("token_env"):
             token = os.environ.get(provider["token_env"])
             if not token:
-                raise ProviderError("Provider credential environment variable is not set")
+                raise ProviderError("Provider credential environment variable is not set", "auth_missing")
             if urlsplit(base).scheme != "https":
-                raise ProviderError("Authenticated providers require HTTPS")
+                raise ProviderError("Authenticated providers require HTTPS", "auth_requires_https")
             headers["Authorization"] = "Bearer " + token
         return get_url(base + "/" + uri.cid, uri.length, timeout, headers)
     if kind == "github":

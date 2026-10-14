@@ -7,11 +7,13 @@ import threading
 import unittest
 from concurrent.futures import Future, ThreadPoolExecutor
 from copy import deepcopy
+from http.client import IncompleteRead
+from urllib.error import HTTPError, URLError
 from unittest.mock import patch
 
 from t256_helper.resolver import Resolver, ResolutionError
 from t256_helper.providers import ProviderError
-from t256_helper.uri import compute_cid, encode, parse_uri, media_type
+from t256_helper.uri import compute_cid, encode, parse_uri, media_type, VerificationError
 
 
 class ResolverTests(unittest.TestCase):
@@ -68,6 +70,7 @@ class ResolverTests(unittest.TestCase):
         self.assertEqual(actual, content)
         self.assertEqual(provenance["provider"], "folder1")
         self.assertEqual(len(provenance["failures"]), 1)
+        self.assertEqual(provenance["failures"][0]["code"], "verification_failed")
         (self.resolver.cache / cid).write_bytes(b"broken cache")
         self.assertEqual(self.resolver.resolve("t256:" + cid)[1], content)
         self.assertTrue(self.resolver.resolve("t256:" + cid)[2]["cache"])
@@ -142,6 +145,36 @@ class ResolverTests(unittest.TestCase):
             with self.subTest(config=str(config)[:160]), self.assertRaises(ValueError): self.resolver.configure(config)
             self.assertEqual(self.resolver.config, original)
             self.assertEqual(json.loads(self.resolver.config_path.read_text()), original)
+
+    def test_provider_diagnostics_never_include_raw_errors_or_secrets(self):
+        secret = "fixture-private-path-or-credential"
+        errors = [(ProviderError(secret, "auth_missing"), "auth_missing"),
+                  (ProviderError(secret, "auth_unavailable"), "auth_unavailable"),
+                  (ProviderError(secret, "unrecognized"), "provider_error"),
+                  (VerificationError(secret), "verification_failed"), (PermissionError(secret), "access_denied"),
+                  (FileNotFoundError(secret), "not_found"), (URLError(secret), "network_error"),
+                  (URLError(TimeoutError(secret)), "timeout"), (ValueError(secret), "invalid_data"),
+                  (IncompleteRead(secret.encode(), 200), "network_error"),
+                  (subprocess.TimeoutExpired(["git", secret], 2), "timeout"),
+                  (HTTPError("https://" + secret, 429, secret, {}, None), "http_429")]
+        for error, code in errors:
+            with self.subTest(code=code), patch("t256_helper.resolver.retrieve", side_effect=error):
+                with self.assertRaises(ResolutionError) as failure:
+                    self.resolver.resolve("t256:" + compute_cid(bytes(100)))
+                details = failure.exception.failures
+                self.assertEqual(details[0]["code"], code)
+                self.assertNotIn(secret, json.dumps(details))
+
+    def test_truncated_network_response_falls_back_to_next_provider(self):
+        config = deepcopy(self.resolver.config)
+        config["providers"].append({"id": "backup", "type": "http", "url": "https://backup.example"})
+        self.resolver.configure(config)
+        data = bytes(100)
+        with patch("t256_helper.resolver.retrieve", side_effect=[IncompleteRead(b"partial", 100), data]):
+            result = self.resolver.resolve("t256:" + compute_cid(data))
+        self.assertEqual(result[1], data)
+        self.assertEqual(result[2]["provider"], "backup")
+        self.assertEqual(result[2]["failures"][0]["code"], "network_error")
 
     def test_cache_budget_changes_and_clear_preserve_indexes(self):
         folder = self.root / "cache-fixture"; folder.mkdir()

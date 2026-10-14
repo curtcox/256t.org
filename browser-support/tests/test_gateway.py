@@ -57,11 +57,16 @@ class GatewayTests(unittest.TestCase):
         config["providers"] = [{"id": "documents", "type": "folder", "path": str(folder)}]
         self.resolver.configure(config)
         for path, body in [("/api/import-index", {"id": "documents", "mapping": {cid: "report.txt"}}),
+                           ("/api/check", {"uri": "t256:" + cid}),
                            ("/api/cache/clear", {}), ("/api/cache", None), ("/api/index?id=documents", None)]:
             with self.assertRaises(HTTPError) as failure: self.request(path, body=body)
             self.assertEqual(failure.exception.code, 403)
         result = json.load(self.request("/api/import-index", admin=True, body={"id": "documents", "mapping": {cid: "report.txt"}}))
         self.assertEqual(result, {"indexed": 1})
+        checked = json.load(self.request("/api/check", admin=True, body={"uri": "t256:" + cid + ".txt"}))
+        self.assertEqual(checked["length"], len(content))
+        self.assertEqual(checked["provider"], "documents")
+        self.assertEqual(checked["failures"], [])
         self.assertEqual(json.load(self.request("/api/index?id=documents", admin=True)), {cid: "report.txt"})
         with self.assertRaises(HTTPError) as failure:
             self.request("/api/index?id=missing", admin=True)
@@ -79,6 +84,13 @@ class GatewayTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as failure:
             self.request("/api/import-index", admin=True, body=[])
         self.assertEqual(failure.exception.code, 400)
+        self.resolver.clear_cache(); (folder / "report.txt").write_bytes(bytes(len(content)))
+        with self.assertRaises(HTTPError) as failure:
+            self.request("/api/check", admin=True, body={"uri": "t256:" + cid})
+        details = json.load(failure.exception)
+        self.assertEqual(failure.exception.code, 404)
+        self.assertEqual(details["failures"][0]["code"], "verification_failed")
+        self.assertNotIn(str(folder), json.dumps(details))
 
     def test_startup_does_not_depend_on_reverse_dns(self):
         with patch('socket.getfqdn', side_effect=AssertionError('Unexpected DNS lookup')):
