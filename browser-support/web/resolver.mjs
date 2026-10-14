@@ -5,7 +5,7 @@ import { mediaType, parseUri } from '../../implementations/ecmascript/uri.mjs';
 const element = id => document.getElementById(id);
 const initial = new URLSearchParams(location.hash.slice(1)).get('uri');
 if (initial) element('uri').value = initial;
-let objectUrl;
+const objectUrls = new Set();
 let active;
 function clearPreview() {
   element('preview').textContent = ''; element('image').hidden = true;
@@ -13,8 +13,8 @@ function clearPreview() {
   for (const id of ['download', 'share', 'gateway']) {
     element(id).hidden = true; element(id).removeAttribute('href');
   }
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-  objectUrl = undefined;
+  for (const url of objectUrls) URL.revokeObjectURL(url);
+  objectUrls.clear();
 }
 element('cancel').addEventListener('click', () => active?.abort(new DOMException('Retrieval cancelled', 'AbortError')));
 window.addEventListener('pagehide', () => { active?.abort(); clearPreview(); });
@@ -42,9 +42,14 @@ element('resolve-form').addEventListener('submit', async event => {
       ({ bytes, provider, type, failures } = await client.read(uri.uri, options));
     }
     element('status').textContent = `Verified ${bytes.length} bytes · ${provider}` + failures.map(failure => `\n${failure.provider}: ${failure.reason}`).join('');
-    objectUrl = URL.createObjectURL(new Blob([bytes], { type }));
-    if (type.startsWith('image/')) { element('image').src = objectUrl; element('image').hidden = false; }
-    else if (type.startsWith('text/') || type === 'application/json') element('preview').textContent = new TextDecoder().decode(bytes.slice(0, 100000));
+    const objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+    objectUrls.add(objectUrl);
+    if (type.startsWith('image/') && type !== 'image/svg+xml') {
+      const preview = URL.createObjectURL(new Blob([bytes], { type })); objectUrls.add(preview);
+      element('image').src = preview; element('image').hidden = false;
+    } else if (type.startsWith('text/') || type === 'application/json' || type === 'image/svg+xml') {
+      element('preview').textContent = new TextDecoder().decode(bytes.slice(0, 100000));
+    }
     element('download').href = objectUrl; element('download').download = uri.cid + uri.suffix; element('download').hidden = false;
     const share = new URL(location.pathname, location.origin); share.hash = `uri=${encodeURIComponent(uri.uri)}`;
     element('share').href = share.href; element('share').hidden = false;

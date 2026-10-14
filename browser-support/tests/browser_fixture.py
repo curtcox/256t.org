@@ -32,13 +32,14 @@ def setup(state):
     wave = struct.pack("<4sI4s4sIHHIIHH4sI", b"RIFF", 36 + len(samples), b"WAVE", b"fmt ", 16, 1, 1, 8000, 16000, 2, 16, b"data", len(samples)) + samples
     audio = store(wave, ".wav")
     captions = store("WEBVTT\n\n00:00.000 --> 00:00.050\nVerified caption\n", ".vtt")
+    active_svg = store('<svg xmlns="http://www.w3.org/2000/svg"><script><![CDATA[window.__svgOrigin=window.origin;document.documentElement.setAttribute("data-ready","yes");]]></script><text y="20">SVG document</text></svg>', ".svg")
     config = json.loads((state / "config.json").read_text())
     config["providers"] = [{"id": "fixtures", "type": "folder", "path": str(directory)}]
     request = Request(runtime["origin"] + "/api/config", data=json.dumps(config).encode(), headers={"Authorization": "Bearer " + runtime["admin"], "Content-Type": "application/json"})
     with urlopen(request) as response: response.read()
     fixture = {"root": root, "image": image, "first": first, "second": second, "module": module, "dependency": dependency,
                "missing": "t256:" + compute_cid(b"missing fixture resource" * 8) + ".png",
-               "audio": audio, "captions": captions, "stylesheet": stylesheet}
+               "audio": audio, "captions": captions, "stylesheet": stylesheet, "active_svg": active_svg}
     (state / "fixture.json").write_text(json.dumps(fixture))
     print("Created browser fixtures")
 

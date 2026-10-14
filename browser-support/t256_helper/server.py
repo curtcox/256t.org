@@ -205,7 +205,7 @@ class Handler(BaseHTTPRequestHandler):
             if transformed:
                 mime += "; charset=utf-8"
             headers = {"X-T256-Source-CID": uri.cid, "X-T256-Representation": "transformed" if transformed else "original"}
-            if media_type(uri) == "text/html":
+            if media_type(uri) in ("text/html", "image/svg+xml"):
                 # Content has an opaque origin and cannot acquire management access.
                 origin = self.server.origin
                 headers["Content-Security-Policy"] = "sandbox allow-scripts allow-downloads allow-top-navigation-by-user-activation; default-src 'none'; script-src " + origin + " 'unsafe-inline'; style-src " + origin + " 'unsafe-inline'; img-src " + origin + " data: blob:; font-src " + origin + "; media-src " + origin + "; frame-src " + origin + "; connect-src " + origin

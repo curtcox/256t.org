@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const { readFile } = require('node:fs/promises');
+const { computeCid } = require('../../implementations/ecmascript/cid.js');
 
 module.exports = async function browserSmoke(page, runtime, fixture) {
   const errors = [];
@@ -77,6 +78,9 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   assert.match(gateway.background, /\/s\/[^/]+\/resource\//);
   assert.match(gateway.responsive, /\/s\/[^/]+\/resource\//);
   assert.equal(gateway.opaque, 'null');
+  await page.goto(`${runtime.origin}/s/${runtime.view}/view/${fixture.active_svg.slice(5)}`);
+  await page.waitForFunction(() => document.documentElement.getAttribute('data-ready') === 'yes');
+  assert.equal(await page.evaluate(() => window.__svgOrigin), 'null');
 
   // The publisher loader also runs as an ordinary same-origin cooperating page.
   await page.goto(runtime.origin + '/demo.html');
@@ -181,6 +185,29 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   await page.getByRole('button', { name: 'Resolve and verify' }).click();
   await page.getByRole('status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
   assert.equal(await page.locator('#preview').textContent(), 'hello');
+  for (const uri of [fixture.active_svg, fixture.root]) {
+    await page.locator('#connection').fill(`${runtime.origin}/s/${runtime.view}`);
+    await page.locator('#uri').fill(uri);
+    await page.getByRole('button', { name: 'Resolve and verify' }).click();
+    await page.getByRole('status').filter({ hasText: 'Verified' }).waitFor();
+    assert.equal(await page.locator('#image').isHidden(), true);
+    assert.ok((await page.locator('#preview').textContent()).startsWith(uri.endsWith('.svg') ? '<svg' : '<!doctype html>'));
+    assert.equal(await page.evaluate(() => typeof window.__svgOrigin), 'undefined');
+    const href = await page.locator('#download').getAttribute('href');
+    assert.equal(await page.evaluate(async value => (await fetch(value)).headers.get('Content-Type'), href), 'application/octet-stream');
+    const saved = page.waitForEvent('download', { timeout: 15000 });
+    await page.locator('#download').click();
+    const actualDownload = await saved;
+    assert.equal(await computeCid(await readFile(await actualDownload.path())), uri.slice(5, uri.lastIndexOf('.')));
+    const probe = await page.context().newPage();
+    try {
+      await probe.goto(href).catch(() => {});
+      const state = await probe.evaluate(() => ({ url: location.href, type: document.contentType, svg: typeof window.__svgOrigin, html: !!document.querySelector('#module') }));
+      assert.equal(state.svg, 'undefined');
+      assert.equal(state.html, false);
+      assert.ok(state.url === 'about:blank' || ['text/plain', 'application/octet-stream'].includes(state.type), JSON.stringify(state));
+    } finally { await probe.close(); }
+  }
   assert.deepEqual(errors, []);
   return { gateway, loader, extras, errors };
 };

@@ -229,7 +229,8 @@ An existing page can use standard import maps with t256 targets:
 <script type="module" src="t256:ENTRY_CID.mjs"></script>
 ```
 
-Content documents have a sandboxed, opaque origin. They can run their selected
+HTML and SVG content documents have a sandboxed, opaque origin, including direct
+navigation to original/raw representations. They can run their selected
 scripts but cannot read helper management settings or authenticate to providers.
 Their CSP limits resource and connection destinations to the gateway. Verified
 source bytes remain in the CID cache; generated HTML/CSS are labeled with
@@ -296,7 +297,10 @@ separate signed-containing-app process.
 The site's [URI resolver](../resolve.html) extracts inline content and verifies
 bytes from public CORS-enabled providers without installation. Its optional
 connection field uses the desktop resolver for selected private/local providers.
-HTML and JavaScript previews are text, and shared links contain only the URI in
+HTML, JavaScript, and SVG previews are text. Downloads use a binary media type,
+preserve the original verified bytes, and cannot create an HTML/SVG document under
+the resolver page's origin. Bitmap previews use separate temporary URLs.
+Shared links contain only the URI in
 their fragment, never a helper capability or provider credential.
 Use **Cancel retrieval** to stop a pending provider or helper request and retry.
 Cancellation clears stale previews/download links, and leaving the page releases

@@ -157,6 +157,16 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(response.read(), uri.inline)
         self.assertEqual(self.request("/implementations/ecmascript/uri.mjs").status, 200)
 
+    def test_svg_source_is_unchanged_and_all_operations_are_sandboxed(self):
+        content = b'<svg xmlns="http://www.w3.org/2000/svg"/>'
+        cid = compute_cid(content)
+        for operation in ("view", "resource", "raw"):
+            response = self.request("/s/" + self.server.view + "/" + operation + "/" + cid + ".svg")
+            self.assertEqual(response.read(), content)
+            self.assertIn("sandbox allow-scripts", response.headers["Content-Security-Policy"])
+            self.assertNotIn("allow-same-origin", response.headers["Content-Security-Policy"])
+            self.assertEqual(response.headers["X-T256-Representation"], "original")
+
     def test_provider_http_size_and_redirect(self):
         payload = b"remote verified content" * 8
         cid = compute_cid(payload)
