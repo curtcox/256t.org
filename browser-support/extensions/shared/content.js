@@ -1,4 +1,18 @@
-// Runs only after the user selects the page adaptation action (activeTab).
+// Runs only after the user selects a page adaptation action (activeTab).
+globalThis.t256AdaptLinks = destination => {
+  // Validate the destination even if this page has no matching links.
+  globalThis.t256ViewerUrl(destination, 't256:AAAAAAAA');
+  const failures = new Set(); let adapted = 0;
+  for (const element of document.querySelectorAll('a[href]')) {
+    const value = element.getAttribute('href').trim();
+    if (!/^t256:/i.test(value)) continue;
+    try {
+      element.href = globalThis.t256ViewerUrl(destination, value);
+      element.relList.add('noopener', 'noreferrer'); adapted++;
+    } catch (error) { failures.add(error.message); }
+  }
+  return failures.size ? { adapted, error: [...failures].join('\n') } : { adapted };
+};
 globalThis.t256AdaptPage = async base => {
   const connection = new URL(base);
   if (connection.protocol !== 'http:' || connection.hostname !== '127.0.0.1' || connection.username || connection.password || connection.search || connection.hash || !/^\/s\/[A-Za-z0-9_-]+$/.test(connection.pathname)) throw new Error('Invalid helper connection URL');

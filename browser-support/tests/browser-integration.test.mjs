@@ -41,6 +41,7 @@ test('built extension keyword accepts CIDs/full URIs and rejects invalid input b
     execFileSync(process.env.T256_PYTHON ?? 'python3', [fileURLToPath(new URL('../build_extensions.py', import.meta.url)), '--output', destination]);
     const background = await readFile(new URL('../extensions/shared/background.js', import.meta.url), 'utf8');
     const uriScript = await readFile(path.join(destination, 'chromium/uri.js'), 'utf8');
+    const navigation = await readFile(path.join(destination, 'chromium/navigation.js'), 'utf8');
     const cid = await computeCid('hash content'.repeat(20));
     for (const browser of ['chromium', 'firefox']) {
       const events = {}, messages = [], opened = [], hints = [];
@@ -67,6 +68,12 @@ test('built extension keyword accepts CIDs/full URIs and rejects invalid input b
         vm.runInContext(uriScript, context);
       }
       vm.runInContext(background, context);
+      vm.runInContext(navigation, context);
+      assert.equal(context.t256ViewerUrl('https://viewer.example/project/resolve.html', `T256:${cid}.TXT`), `https://viewer.example/project/resolve.html#uri=${encodeURIComponent(`t256:${cid}.txt`)}`);
+      for (const viewer of ['javascript:alert(1)', 'http://remote.example/resolve.html', 'https://user:secret@viewer.example/', 'https://viewer.example/?capability=secret', 'https://viewer.example/#secret']) {
+        assert.throws(() => context.t256ViewerUrl(viewer, 't256:AAAAAAAFaGVsbG8'));
+      }
+      assert.throws(() => context.t256ViewerUrl('https://viewer.example/', 't256:AAAAAAABeB'));
       events.started(); assert.match(hints.at(-1), /CID or a full t256 URI/);
       for (const value of [' AAA AAA ', 't256://AAAAAAAFaGVsbG8', 'AAAAAAABeB', 'web+t256:AAAAAAAFaGVsbG8', 'AAAAAAAFaGVsbG8#fragment', '']) {
         events.changed(value, suggestions => assert.equal(suggestions.length, 0));

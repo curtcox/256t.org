@@ -88,7 +88,44 @@ export async function extensionSmoke(chromium, root, state, runtime, fixture) {
     assert.match(await page.locator('#changing').getAttribute('src'), /^data:/);
     await page.locator('#link').click();
     await page.waitForFunction(() => document.querySelector('#module')?.textContent === '42');
-    return { images: true, media: true, captions: true, navigation: true };
+    await page.goto(origin + '/links');
+    await page.evaluate(({ image }) => {
+      document.body.innerHTML = `<a id="standalone" href="t256:AAAAAAAFaGVsbG8.TXT" rel="external">Hello</a><a id="invalid-link" href="t256:AAAAAAABeB">Invalid</a><img id="untouched-image" src="${image}">`;
+    }, fixture);
+    let providerRequests = 0;
+    const requests = request => { if (request.url().includes('/resolve?') || request.url().includes('/resource/')) providerRequests++; };
+    page.on('request', requests);
+    const links = await worker.evaluate(async ({ origin, viewer }) => {
+      const tab = (await chrome.tabs.query({})).find(item => item.url === origin + '/links');
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['uri.js', 'navigation.js', 'content.js'] });
+      return (await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: value => globalThis.t256AdaptLinks(value), args: [viewer] }))[0].result;
+    }, { origin, viewer: runtime.origin + '/resolve.html' });
+    assert.equal(links.adapted, 1);
+    assert.match(links.error, /Noncanonical/);
+    assert.equal(providerRequests, 0);
+    assert.equal(await page.locator('#untouched-image').getAttribute('src'), fixture.image);
+    assert.equal(await page.locator('#invalid-link').getAttribute('href'), 't256:AAAAAAABeB');
+    assert.equal(await page.locator('#standalone').getAttribute('rel'), 'external noopener noreferrer');
+    await page.locator('#standalone').click();
+    await page.waitForFunction(() => document.querySelector('#uri')?.value === 't256:AAAAAAAFaGVsbG8.txt');
+    assert.equal(providerRequests, 0);
+    await page.getByRole('button', { name: 'Resolve and verify' }).click();
+    await page.locator('#status').filter({ hasText: 'Verified 5 bytes' }).waitFor();
+    assert.equal(await page.locator('#preview').textContent(), 'hello');
+    page.off('request', requests);
+    const popup = await context.newPage();
+    await popup.goto(new URL('popup.html', worker.url()).href);
+    await popup.locator('#viewer').fill(runtime.origin + '/resolve.html');
+    await popup.locator('#uri').fill('t256:AAAAAAABeB');
+    await popup.getByRole('button', { name: 'Open in browser viewer' }).click();
+    await popup.locator('#status').filter({ hasText: 'Noncanonical' }).waitFor();
+    await popup.locator('#uri').fill('t256:AAAAAAAFaGVsbG8.TXT');
+    const opened = context.waitForEvent('page');
+    await popup.getByRole('button', { name: 'Open in browser viewer' }).click();
+    const viewer = await opened;
+    await viewer.waitForFunction(() => document.querySelector('#uri')?.value === 't256:AAAAAAAFaGVsbG8.txt');
+    assert.equal(await viewer.locator('#download').isHidden(), true);
+    return { images: true, media: true, captions: true, navigation: true, standaloneLinks: true };
   } finally {
     try {
       await context?.close();

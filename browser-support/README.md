@@ -153,7 +153,7 @@ do not establish that result.
 
 | Mechanism | Status and existing work | Strengths | Limitations | Next deliverable |
 |---|---|---|---|---|
-| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add a viewer/public fallback and opt-in dynamic adaptation; validate each extension package. |
+| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, helper-free viewer navigation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add opt-in dynamic adaptation and validate each installed extension package. |
 | Web protocol handler, including the requested `web+t256:` spelling | **In progress: implementation and browser validation.** Strict alias conversion and explicit website registration/removal controls exist; engine checks cover transport and rejection. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Validate installed-browser consent/dispatch; add saved-helper choices, Firefox manifest handling and optional PWA support. |
 | OS registration of `t256:` with a desktop helper | **In progress: implementation and distribution validation.** macOS app wrapper, Windows per-user registry registration, Linux desktop entry, startup, native messaging and uninstall exist. | Preserves the exact scheme; opens content with user-selected folders, mounted shares, HTTP bases and authenticated repositories; offers Safari an external navigation route. | Requires installation and browser approval where prompted. Typed/pasted address-bar dispatch varies. Current runtime needs Python at a stable path. Does not turn `t256:` into a browser resource protocol. | Validate real browser dispatch and clean installation/removal on all three OSes; build convenient platform packages. |
 
@@ -191,17 +191,19 @@ for the exact scheme in Safari; it is not the only practical Safari integration.
   launch, and show input guidance. Unit tests exercise the built Chromium and
   Firefox background scripts; installed Firefox checks remain alongside Chrome's
   [keyword API](https://developer.chrome.com/docs/extensions/reference/api/omnibox).
-- [ ] **Next: add an extension viewer or a configured gateway destination** so link
-  navigation can work without a running native host. Offer the public HTTPS
-  resolver for public/inline content and the helper for private/local providers;
-  preserve normal link opening, copying, keyboard access and new-tab behavior.
-- [ ] Add optional continued adaptation for new or changed links/resources on
+- [x] Add a configurable viewer destination and **Open in browser viewer** /
+  **Adapt links without helper** actions. Default to the public HTTPS resolver
+  for public/inline content; private/local content retains the helper route.
+  Strictly validate URIs and viewer locations, preserve existing link relations
+  and leave invalid links/resources unchanged. Chromium tests cover popup opening,
+  link navigation, no provider requests during adaptation and verified bytes.
+- [ ] **Next: add optional continued adaptation** for new or changed links/resources on
   the active page. Bound observation, preserve page edits made during retrieval,
   release resources on teardown, and avoid repeated media loads. Add optional
   per-site persistence only with explicit site permissions and a disable control.
 - [ ] Define frame and open-shadow-root coverage; report inaccessible frames,
   protected browser pages, restrictive CSP and local-network permission failures.
-  Support link-only adaptation without granting a page access to local content.
+  Link-only adaptation already works without granting local provider access.
 - [ ] Validate Firefox installation/signing, Edge/Brave/Opera compatibility and
   a built Safari extension. For Safari, retain the manual connection option and
   plan containing-app messaging; do not assume Python native-host registration
@@ -316,8 +318,8 @@ from page-resource tests: resource loading uses the loader or transformed gatewa
 | Brave / Opera on macOS, Windows, Linux | Shared Chromium source; branded-browser permission/store tests | Probe website/PWA support under default settings | Actual dispatch and browser-specific native-host discovery |
 | Safari on macOS | Built containing app, link adaptation and manual/native connection choices; no current keyword route | Feature detection and HTTPS fallback; no website API support promised | LaunchServices, Safari prompts, signing/notarization and real Safari tests |
 
-Delivery order: keyword input and explicit alias registration are implemented;
-next add extension viewer fallback, then validate installed
+Delivery order: keyword input, explicit alias registration and extension viewer
+fallback are implemented; next validate installed
 browser/OS combinations and package the helper/Safari app. Dynamic adaptation,
 Firefox manifest handling and PWA installation can follow as separate increments.
 Update this checklist with each increment and link its test or manual-check
@@ -435,6 +437,18 @@ Packages are created under `browser-support/dist/extensions`:
   messaging. The page loader/gateway also work without a Safari extension.
 
 The extension uses `activeTab`; it does not automatically read every website.
+**Open in browser viewer** sends a validated URI to the selected viewer (the
+public HTTPS resolver by default) without invoking a native host.
+**Adapt links without helper** rewrites only current `t256:` anchors to that
+viewer. It does not retrieve content, rewrite page resources, or require a helper
+connection/provider grant. Invalid URIs remain unchanged and report an error;
+existing link relations are retained. Only HTTPS or loopback HTTP viewer URLs
+without credentials, queries or fragments are accepted. The URI is carried in
+the viewer's fragment, and the viewer waits for a resolution action. The selected
+viewer can read the identifier and inline bytes after navigation. These actions
+are included in Safari conversion source; signed Safari installation remains a
+release check.
+
 “Adapt images, media, and links” handles current images (including `srcset` and
 picture sources), audio/video sources, posters, caption tracks, stylesheets, and
 navigation references after an explicit click. Source changes reload the affected
