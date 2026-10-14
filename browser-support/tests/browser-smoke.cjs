@@ -41,7 +41,8 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
     declaration.type = 'application/t256';
     declaration.dataset.t256Src = `t256:${await computeCid('window.hydratedCount=(window.hydratedCount||0)+1')}.js`;
     document.body.append(declaration);
-    await client.hydrate(document); await client.hydrate(document);
+    await Promise.all([client.hydrate(document), client.hydrate(document), client.hydrate(document)]);
+    await client.hydrate(document);
     const observer = client.observe(document);
     const ready = new Promise(resolve => document.addEventListener('t256-dynamic-ready', resolve, { once: true }));
     const dynamic = document.createElement('script'); dynamic.type = 'application/t256';
@@ -53,6 +54,33 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
     return { hydrated: window.hydratedCount, dynamic: true, worker: workerResult };
   }, { runtime, fixture });
   assert.deepEqual(extras, { hydrated: 1, dynamic: true, worker: 'worker-ready' });
+  const lifecycle = await page.evaluate(async ({ runtime }) => {
+    const client = new T256Client(`${runtime.origin}/s/${runtime.view}`);
+    const css = document.createElement('link'); css.rel = 'stylesheet';
+    css.dataset.t256Href = `t256:${await t256URI.computeCid('#cssMarker { color: rgb(12, 34, 56) }')}.css`;
+    const marker = document.createElement('p'); marker.id = 'cssMarker';
+    const script = document.createElement('script'); script.type = 'application/t256';
+    script.dataset.t256Src = `t256:${await t256URI.computeCid('window.cssBeforeScript=getComputedStyle(cssMarker).color')}.js`;
+    document.body.append(css, marker, script);
+    await Promise.all([client.hydrate(document), client.hydrate(document)]);
+    const ready = window.cssBeforeScript;
+    const retry = document.createElement('script'); retry.type = 'application/t256';
+    const retryCid = await t256URI.computeCid('window.retryCount=(window.retryCount||0)+1');
+    retry.dataset.t256Src = `t256:${retryCid}.txt`; document.body.append(retry);
+    let failed = false;
+    try { await client.hydrate(document); } catch { failed = true; }
+    retry.dataset.t256Src = `t256:${retryCid}.js`;
+    await Promise.all([client.hydrate(document), client.hydrate(document)]);
+    // Replacing an image releases its prior object URL instead of accumulating blobs.
+    const image = document.createElement('img'); document.body.append(image);
+    const picture = `t256:${await t256URI.computeCid('<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"/>')}.svg`;
+    await client.image(image, picture); await client.image(image, picture);
+    const retained = client.objectUrls.size;
+    client.observe(document); client.dispose();
+    const observers = client.observers.size;
+    return { ready, failed, retried: window.retryCount, retained, observers, released: client.objectUrls.size };
+  }, { runtime });
+  assert.deepEqual(lifecycle, { ready: 'rgb(12, 34, 56)', failed: true, retried: 1, retained: 1, observers: 0, released: 0 });
   await page.goto(runtime.origin + '/resolve.html');
   await page.locator('#uri').fill('t256:AAAAAAAFaGVsbG8.txt');
   await page.getByRole('button', { name: 'Resolve and verify' }).click();

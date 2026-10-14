@@ -23,6 +23,36 @@ test('inline content does not contact providers', async () => {
   assert.deepEqual(await client.bytes(`t256:${await computeCid(data)}.txt`), data);
 });
 
+test('disposed clients and already aborted calls reject even inline content', async () => {
+  const client = new T256Client('http://127.0.0.1:25600/s/test-key');
+  const uri = `t256:${await computeCid('inline')}.txt`;
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(client.bytes(uri, { signal: controller.signal }), { name: 'AbortError' });
+  client.dispose();
+  await assert.rejects(client.bytes(uri), { name: 'AbortError' });
+  await assert.rejects(client.hydrate({}), { name: 'AbortError' });
+  assert.throws(() => client.observe({}), { name: 'AbortError' });
+});
+
+test('disposal cancels a request while consuming its body', async () => {
+  const uri = `t256:${await computeCid(new Uint8Array(100))}.txt`;
+  const original = globalThis.fetch;
+  let reading;
+  const started = new Promise(resolve => { reading = resolve; });
+  try {
+    globalThis.fetch = async (_, { signal }) => new Response(new ReadableStream({
+      start(controller) {
+        signal.addEventListener('abort', () => controller.error(signal.reason));
+        reading();
+      },
+    }));
+    const client = new T256Client('http://127.0.0.1:25600/s/test-key');
+    const pending = client.bytes(uri);
+    await started; client.dispose();
+    await assert.rejects(pending, { name: 'AbortError' });
+  } finally { globalThis.fetch = original; }
+});
+
 test('loader rejects mismatched and oversized provider bytes', async () => {
   const data = new TextEncoder().encode('a'.repeat(100));
   const uri = `t256:${await computeCid(data)}.js`;

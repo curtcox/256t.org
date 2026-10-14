@@ -127,8 +127,12 @@ URLs in publicly distributed source or share links.
 
 Inert declarations avoid races with the browser's parser. Classic scripts run
 sequentially in document order; they are verified again in the browser and loaded
-as blobs, without `eval`. Repeated hydration does not rerun unchanged declarations.
-Dynamic opt-in declarations can be handled with `observe()`.
+as blobs, without `eval`. Repeated or overlapping hydration does not rerun unchanged
+declarations. Stylesheets finish loading before declared scripts run. Dynamic opt-in
+declarations can be handled with `observe()`. Load events are bounded by the client
+timeout, and `dispose()` cancels pending retrieval/loading, disconnects observers,
+and releases owned blob URLs. Script execution already started cannot be undone;
+workers returned to the page must be terminated by the caller.
 
 For modules, supply the whole dependency graph before loading any modules:
 
@@ -271,5 +275,5 @@ Manual release checks: clicked and pasted URIs; browser launch prompts; private
 windows; provider grants/revocation; disconnected shares; GitHub login/SSO and
 credential renewal; signed Safari extension; branded Brave/Opera; installation
 and removal on each OS. Native transparent `fetch('t256:…')`, arbitrary dynamic
-imports, CSS escape forms, SVG-internal resources, media ranges, and upstream
+imports, CSS escape forms, SVG-internal resources, multipart media ranges, and upstream
 browser-engine implementation remain future work.
