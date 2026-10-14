@@ -133,7 +133,7 @@ def build_index(provider, max_bytes):
         for target in sorted(root.rglob("*")):
             if not target.is_file() or target.is_symlink() or target.stat().st_size > max_bytes:
                 continue
-            relative = str(target.relative_to(root))
+            relative = target.relative_to(root).as_posix()
             with inside(root, relative).open("rb") as stream:
                 result[compute_cid(read_bounded(stream, max_bytes))] = relative
     elif provider["type"] == "git":

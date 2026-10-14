@@ -91,6 +91,19 @@ class ResolverTests(unittest.TestCase):
         with self.assertRaises(ResolutionError):
             self.resolver.resolve("t256:" + compute_cid(other))
 
+    def test_export_index_round_trip_preserves_portable_nested_paths(self):
+        folder = self.root / "nested"; (folder / "articles").mkdir(parents=True)
+        data = b"nested repository content" * 5
+        (folder / "articles/report.txt").write_bytes(data)
+        self.folders(folder)
+        with self.assertRaises(ValueError): self.resolver.export_index("folder0")
+        self.resolver.index("folder0")
+        mapping = self.resolver.export_index("folder0")
+        self.assertEqual(mapping, {compute_cid(data): "articles/report.txt"})
+        self.assertEqual(self.resolver.import_index("folder0", mapping), 1)
+        self.assertEqual(self.resolver.resolve("t256:" + compute_cid(data))[1], data)
+        with self.assertRaises(ValueError): self.resolver.export_index("missing")
+
     def test_git_provider_indexes_committed_files(self):
         repo = self.root / "repo"; repo.mkdir()
         subprocess.run(["git", "init", "-q", str(repo)], check=True)

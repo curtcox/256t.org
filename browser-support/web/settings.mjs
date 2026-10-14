@@ -3,6 +3,8 @@ history.replaceState(null, '', '/');
 const status = document.querySelector('#status');
 let config;
 let busy = false;
+let editing;
+const providerForm = document.querySelector('#add-provider');
 async function request(path, body) {
   const response = await fetch(path, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const result = await response.json();
@@ -25,13 +27,46 @@ function button(label, work) {
   const element = document.createElement('button'); element.type = 'button'; element.textContent = label;
   element.addEventListener('click', () => action(work)); return element;
 }
+function resetProviderForm() {
+  editing = undefined; providerForm.reset();
+  providerForm.elements.namedItem('id').readOnly = false;
+  providerForm.elements.namedItem('type').disabled = false;
+  document.querySelector('#provider-form-title').textContent = 'Add a provider';
+  document.querySelector('#save-provider').textContent = 'Add provider';
+  document.querySelector('#cancel-edit').hidden = true;
+}
+function editProvider(provider) {
+  editing = provider.id;
+  const values = { id: provider.id, type: provider.type, location: provider.path ?? provider.url ?? provider.repo,
+    ref: provider.ref ?? 'HEAD', directory: provider.directory ?? 'cids', token_env: provider.token_env ?? '',
+    api_url: provider.api_url ?? 'https://api.github.com', timeout: provider.timeout ?? 15 };
+  for (const [name, value] of Object.entries(values)) providerForm.elements.namedItem(name).value = value;
+  providerForm.elements.namedItem('use_gh').checked = provider.use_gh === true;
+  providerForm.elements.namedItem('id').readOnly = true;
+  providerForm.elements.namedItem('type').disabled = true;
+  document.querySelector('#provider-form-title').textContent = `Edit ${provider.id}`;
+  document.querySelector('#save-provider').textContent = 'Save provider';
+  document.querySelector('#cancel-edit').hidden = false;
+  providerForm.elements.namedItem('location').focus();
+  providerForm.scrollIntoView({ block: 'nearest' });
+}
+async function exportIndex(provider) {
+  const mapping = await request(`/api/index?id=${encodeURIComponent(provider.id)}`);
+  const url = URL.createObjectURL(new Blob([JSON.stringify(mapping, null, 2) + '\n'], { type: 'application/json' }));
+  const link = document.createElement('a'); link.href = url; link.download = `${provider.id}-cids.json`;
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return `Exported ${Object.keys(mapping).length} content identifiers for ${provider.id}`;
+}
 function render() {
+  if (editing && !config.providers.some(provider => provider.id === editing)) resetProviderForm();
   const rows = config.providers.map((provider, index) => {
     const row = document.createElement('tr');
     for (const text of [`${provider.id} · ${provider.type}${provider.enabled === false ? ' (disabled)' : ''}`, provider.path ?? provider.url ?? provider.repo]) {
       const cell = document.createElement('td'); cell.textContent = text; row.append(cell);
     }
     const controls = document.createElement('td');
+    controls.append(button('Edit', () => editProvider(provider)));
     controls.append(button(provider.enabled === false ? 'Enable' : 'Disable', () => edit(next => { next.providers[index].enabled = provider.enabled === false; })));
     if (index) controls.append(button('Move up', () => edit(next => { [next.providers[index - 1], next.providers[index]] = [next.providers[index], next.providers[index - 1]]; })));
     if (['folder', 'git'].includes(provider.type)) controls.append(button('Index files', async () => { const result = await request('/api/index', { id: provider.id }); return `Indexed ${result.indexed} content identifiers`; }));
@@ -48,6 +83,7 @@ function render() {
         } finally { upload.value = ''; }
       }));
       controls.append(label);
+      controls.append(button('Export index', () => exportIndex(provider)));
     }
     controls.append(button('Remove', () => edit(next => { next.providers.splice(index, 1); })));
     row.append(controls); return row;
@@ -69,17 +105,23 @@ async function edit(change) {
   await request('/api/config', next); config = next; render();
   await refreshCache();
 }
-document.querySelector('#add-provider').addEventListener('submit', event => {
+providerForm.addEventListener('submit', event => {
   event.preventDefault(); action(async () => {
-    const form = new FormData(event.target); const type = form.get('type');
-    const provider = { id: form.get('id'), type, enabled: true };
+    const form = new FormData(event.target); const type = providerForm.elements.namedItem('type').value;
+    const provider = editing ? { ...config.providers.find(value => value.id === editing) } : { id: form.get('id'), type, enabled: true };
     provider[type === 'http' ? 'url' : type === 'github' ? 'repo' : 'path'] = form.get('location');
     if (['git', 'github'].includes(type)) Object.assign(provider, { ref: form.get('ref'), directory: form.get('directory') });
     if (form.get('token_env')) provider.token_env = form.get('token_env');
+    else delete provider.token_env;
+    provider.timeout = Number(form.get('timeout'));
     if (type === 'github') Object.assign(provider, { use_gh: form.has('use_gh'), api_url: form.get('api_url') });
-    await edit(next => { next.providers.push(provider); }); event.target.reset();
+    await edit(next => {
+      if (editing) next.providers[next.providers.findIndex(value => value.id === editing)] = provider;
+      else next.providers.push(provider);
+    }); resetProviderForm();
   });
 });
+document.querySelector('#cancel-edit').addEventListener('click', resetProviderForm);
 document.querySelector('#open-content').addEventListener('submit', event => {
   event.preventDefault(); action(async () => {
     const result = await request('/api/open', { uri: new FormData(event.target).get('uri').trim() });

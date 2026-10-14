@@ -98,6 +98,17 @@ class ResolutionError(RuntimeError):
         super().__init__("No selected provider returned matching content")
 
 
+def validate_index(mapping):
+    if not isinstance(mapping, dict):
+        raise ValueError("Index must map CIDs to relative filenames")
+    for cid, path in mapping.items():
+        if not isinstance(cid, str) or parse_uri("t256:" + cid).cid != cid:
+            raise ValueError("Index keys must be CIDs without a scheme or suffix")
+        if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts or "\\" in path or ":" in path:
+            raise ValueError("Index paths must be relative and cannot escape the provider")
+    return mapping
+
+
 class Resolver:
     def __init__(self, directory):
         self.directory = Path(directory)
@@ -140,17 +151,20 @@ class Resolver:
     def import_index(self, identifier, mapping):
         if not any(p["id"] == identifier for p in self.config["providers"]):
             raise ValueError("Provider not found")
-        if not isinstance(mapping, dict):
-            raise ValueError("Index must map CIDs to relative filenames")
-        for cid, path in mapping.items():
-            if not isinstance(cid, str) or parse_uri("t256:" + cid).cid != cid:
-                raise ValueError("Index keys must be CIDs without a scheme or suffix")
-            if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts or "\\" in path or ":" in path:
-                raise ValueError("Index paths must be relative and cannot escape the provider")
+        validate_index(mapping)
         with self.lock:
             save_json(self.directory / "indexes" / (identifier + ".json"), mapping)
             self.generation += 1
         return len(mapping)
+
+    def export_index(self, identifier):
+        with self.lock:
+            if not any(p["id"] == identifier for p in self.config["providers"]):
+                raise ValueError("Provider not found")
+            path = self.directory / "indexes" / (identifier + ".json")
+            if not path.exists():
+                raise ValueError("Index files or import an index before exporting")
+            return validate_index(self.load_index(identifier))
 
     def resolve(self, value):
         uri = parse_uri(value)

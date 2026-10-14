@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { readFile } = require('node:fs/promises');
 
 module.exports = async function browserSmoke(page, runtime, fixture) {
   const errors = [];
@@ -29,6 +30,27 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   await page.getByRole('button', { name: 'Disable', exact: true }).click();
   await page.getByRole('button', { name: 'Enable', exact: true }).waitFor();
   assert.equal(await page.locator('#providers tr').count(), 1);
+  const originalLocation = await page.locator('#providers tr td').nth(1).textContent();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  assert.equal(await page.locator('#add-provider [name="id"]').evaluate(element => element.readOnly), true);
+  assert.equal(await page.locator('#add-provider [name="type"]').isDisabled(), true);
+  await page.locator('#add-provider [name="location"]').fill('discard-this-draft');
+  await page.getByRole('button', { name: 'Cancel edit' }).click();
+  assert.equal(await page.locator('#providers tr td').nth(1).textContent(), originalLocation);
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.locator('#add-provider [name="timeout"]').fill('2.5');
+  await page.getByRole('button', { name: 'Save provider' }).click();
+  await page.getByRole('status').filter({ hasText: 'Ready' }).waitFor();
+  assert.equal(await page.locator('#providers tr').count(), 1);
+  assert.match(await page.locator('#providers').textContent(), /disabled/);
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  assert.equal(await page.locator('#add-provider [name="timeout"]').inputValue(), '2.5');
+  await page.getByRole('button', { name: 'Cancel edit' }).click();
+  const downloadReady = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export index' }).click();
+  const download = await downloadReady;
+  assert.equal(download.suggestedFilename(), 'fixtures-cids.json');
+  assert.deepEqual(JSON.parse(await readFile(await download.path(), 'utf8')), { [fixture.image.slice(5, -4)]: fixture.image.slice(5, -4) });
   await page.getByRole('button', { name: 'Enable', exact: true }).click();
   await page.getByRole('button', { name: 'Disable', exact: true }).waitFor();
   const content = `${runtime.origin}/s/${runtime.view}/view/${fixture.root.slice(5)}`;

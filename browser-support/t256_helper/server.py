@@ -67,6 +67,8 @@ class Gateway(ThreadingHTTPServer):
         self.settings_url = self.origin + "/#" + self.admin
 
     def grant(self, origin):
+        if not isinstance(origin, str):
+            raise ValueError("Expected a website origin")
         with self.resolver.lock:
             epoch = self.resolver.origin_epochs.get(origin)
             if epoch is None:
@@ -167,6 +169,16 @@ class Handler(BaseHTTPRequestHandler):
             return self.json(200, self.server.resolver.config) if self.admin() else self.json(403, {"error": "Management access required"})
         if parts.path == "/api/cache":
             return self.json(200, self.server.resolver.cache_stats()) if self.admin() else self.json(403, {"error": "Management access required"})
+        if parts.path == "/api/index":
+            if not self.admin():
+                return self.json(403, {"error": "Management access required"})
+            try:
+                identifier = parse_qs(parts.query).get("id", [""])[0]
+                return self.json(200, self.server.resolver.export_index(identifier))
+            except ValueError as error:
+                return self.json(400, {"error": str(error)})
+            except OSError:
+                return self.json(502, {"error": "Index could not be read"})
         route = parts.path.split("/")
         if len(route) < 4 or route[1] != "s" or not self.content_access(route[2]):
             return self.json(403, {"error": "A valid content access capability is required"})

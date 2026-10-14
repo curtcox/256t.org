@@ -41,6 +41,21 @@ class DesktopTests(unittest.TestCase):
                 self.assertEqual(main(), 0)
                 host.assert_called_once()
 
+    def test_cli_exports_index_to_selected_file(self):
+        from t256_helper.__main__ import main
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); folder = root / "files"; folder.mkdir()
+            content = b"repository index export fixture" * 4
+            (folder / "article.txt").write_bytes(content)
+            resolver = Resolver(root / "state")
+            config = dict(resolver.config)
+            config["providers"] = [{"id": "articles", "type": "folder", "path": str(folder)}]
+            resolver.configure(config); resolver.index("articles")
+            output = root / "export/cids.json"
+            with patch.object(sys, "argv", ["run.py", "--state", str(resolver.directory), "export-index", "articles", "--output", str(output)]), patch("sys.stdout", io.StringIO()):
+                self.assertEqual(main(), 0)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8")), {compute_cid(content): "article.txt"})
+
     def test_native_process_starts_and_reuses_gateway(self):
         with tempfile.TemporaryDirectory() as directory:
             payload = json.dumps({"action": "settings"}).encode()

@@ -56,11 +56,15 @@ class GatewayTests(unittest.TestCase):
         config["providers"] = [{"id": "documents", "type": "folder", "path": str(folder)}]
         self.resolver.configure(config)
         for path, body in [("/api/import-index", {"id": "documents", "mapping": {cid: "report.txt"}}),
-                           ("/api/cache/clear", {}), ("/api/cache", None)]:
+                           ("/api/cache/clear", {}), ("/api/cache", None), ("/api/index?id=documents", None)]:
             with self.assertRaises(HTTPError) as failure: self.request(path, body=body)
             self.assertEqual(failure.exception.code, 403)
         result = json.load(self.request("/api/import-index", admin=True, body={"id": "documents", "mapping": {cid: "report.txt"}}))
         self.assertEqual(result, {"indexed": 1})
+        self.assertEqual(json.load(self.request("/api/index?id=documents", admin=True)), {cid: "report.txt"})
+        with self.assertRaises(HTTPError) as failure:
+            self.request("/api/index?id=missing", admin=True)
+        self.assertEqual(failure.exception.code, 400)
         self.assertEqual(self.request("/s/" + self.server.view + "/raw/" + cid).read(), content)
         self.assertEqual(json.load(self.request("/api/cache", admin=True))["entries"], 1)
         result = json.load(self.request("/api/cache/clear", admin=True, body={}))
@@ -109,6 +113,9 @@ class GatewayTests(unittest.TestCase):
         config["allowed_origins"] = ["https://two.example"]; self.resolver.configure(config)
         self.assertEqual(self.server.grant("https://two.example"), token)
         with self.assertRaises(ValueError): self.server.grant("https://one.example")
+        with self.assertRaises(HTTPError) as failure:
+            self.request("/api/grant", admin=True, body={"origin": {"unexpected": True}})
+        self.assertEqual(failure.exception.code, 400)
 
     def test_gateway_verifies_before_serving_and_transforms_html(self):
         folder = self.root / "files"; folder.mkdir()

@@ -40,6 +40,8 @@ def main():
         command = commands.add_parser(name); command.add_argument("id")
     import_index = commands.add_parser("import-index", help="Import a JSON object mapping CIDs to relative provider paths")
     import_index.add_argument("id"); import_index.add_argument("file", type=Path)
+    export_index = commands.add_parser("export-index", help="Export a portable CID-to-path index for another provider")
+    export_index.add_argument("id"); export_index.add_argument("--output", type=Path, required=True)
     allow = commands.add_parser("allow", help="Grant a website origin read access to selected provider content")
     allow.add_argument("origin")
     fetch = commands.add_parser("resolve", help="Resolve and verify content")
@@ -87,6 +89,11 @@ def main():
             print("Indexed " + str(resolver.index(args.id)) + " CIDs")
         elif args.command == "import-index":
             print("Imported " + str(resolver.import_index(args.id, json.loads(args.file.read_text(encoding="utf-8")))) + " CIDs")
+        elif args.command == "export-index":
+            from .resolver import save_json
+            mapping = resolver.export_index(args.id)
+            save_json(args.output, mapping)
+            print("Exported " + str(len(mapping)) + " CIDs")
         elif args.command == "allow":
             if args.origin not in config["allowed_origins"]:
                 config["allowed_origins"].append(args.origin)

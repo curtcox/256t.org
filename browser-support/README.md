@@ -16,8 +16,8 @@ From the repository root:
 python3 browser-support/run.py serve --open
 ```
 
-The provider settings page lets you add, reorder, disable, remove, and index
-providers, import file indexes, and view or clear cached content.
+The provider settings page lets you add, edit, reorder, disable, remove, and index
+providers, import/export file indexes, and view or clear cached content.
 Hashbin's public content origin, `https://256t.us`, is selected initially.
 Use `python` in place of `python3` on Windows if that is your Python command.
 Keep this checkout in a stable location if you install desktop registration.
@@ -70,10 +70,26 @@ a JSON object mapping full CIDs to relative paths:
 python3 browser-support/run.py import-index github cid-paths.json
 ```
 
+Generate that mapping from a local clone or folder without reading helper state
+files manually, then import it into a GitHub provider for the same file layout:
+
+```sh
+python3 browser-support/run.py export-index clone --output cid-paths.json
+```
+
 Use **Import index** beside a folder, local clone, or GitHub provider in settings
 to select the same JSON file. Keys are bare CIDs; paths are relative to the folder
 or repository root (include repository directories in imported paths). The settings
-upload is limited to 1000 KiB; use the command above for larger manifests.
+upload is limited to 1000 KiB; use the command above for larger manifests. **Export
+index** downloads the current mapping. Folder indexes use forward slashes on all
+operating systems so exported manifests can be reused on other desktop platforms.
+Older Windows indexes should be rebuilt before export.
+
+**Edit** preserves a provider's name, type, order, enabled state, index, and any
+unshown options while updating its location, revision, authentication choices, or
+timeout. Reindex after changes that affect filenames or revisions; use **Cancel
+edit** to discard a draft. HTTP timeouts currently apply to individual socket
+operations, rather than an overall download deadline.
 
 Indexes never establish trust: the returned bytes still have to match the CID.
 Reindex after changing files or repository revisions. Local clones are not
