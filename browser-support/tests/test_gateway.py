@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 from t256_helper.providers import get_url, github_headers
 from t256_helper.resolver import Resolver, ResolutionError
 from t256_helper.server import Gateway
-from t256_helper.transform import css_urls, transform_page
+from t256_helper.transform import css_urls, srcset_urls, transform_page
 from t256_helper.uri import compute_cid, parse_uri
 
 
@@ -219,6 +219,37 @@ class GatewayTests(unittest.TestCase):
 
 
 class TransformTests(unittest.TestCase):
+    def test_css_escapes_in_urls_keywords_and_imports(self):
+        uri = "t256:" + compute_cid(b"escaped resource") + ".png"
+        escaped = uri.replace(":", r"\3a ")
+        make_url = lambda item, navigation=False: "https://gateway.example/" + item.cid + item.suffix
+        for keyword in ["url", r"\75 rl", r"\000075rl", r"\55 \52 \4c ", r"\u\r\l"]:
+            for value in [escaped, '"' + escaped + '"', "'" + escaped + "'"]:
+                with self.subTest(keyword=keyword, value=value):
+                    result = css_urls("p{background:" + keyword + "(" + value + ")}", make_url)
+                    self.assertIn('url("https://gateway.example/', result)
+        self.assertIn('"https://gateway.example/', css_urls(r'@\69mport/**/"' + escaped + '";', make_url))
+        continuation = uri[:5] + "\\\n" + uri[5:]
+        self.assertIn('url("https://gateway.example/', css_urls('url("' + continuation + '")', make_url))
+        untouched = ['/* url(' + escaped + ') */', 'p{content:"' + escaped + '"}',
+                     '/* url(' + escaped + ')', '@url(' + escaped + ')', '#url(' + escaped + ')',
+                     'myurl(' + escaped + ')', 'url(' + continuation + ')', 'url("' + uri + '-bad")',
+                     'url(t256\\0 ' + uri[5:] + ')', 'url("' + uri + '\n")']
+        for source in untouched:
+            with self.subTest(source=source): self.assertEqual(css_urls(source, make_url), source)
+
+    def test_srcset_rewrites_only_complete_url_candidates(self):
+        uri = "t256:" + compute_cid(b"responsive image") + ".png"
+        make_url = lambda item, navigation=False: "https://gateway.example/" + item.cid + item.suffix
+        target = make_url(parse_uri(uri))
+        source = f"  {uri} 1x, {uri},  https://example.org/image.png 2x"
+        self.assertEqual(srcset_urls(source, make_url), source.replace(uri, target))
+        for source in [uri + "-invalid 1x", uri + "/extra 2x", "data:image/svg+xml," + uri + " 1x",
+                       "https://example.org/x 1x(" + uri + "), other.png 2x"]:
+            self.assertEqual(srcset_urls(source, make_url), source)
+        page = '<link rel="preload" as="image" imagesrcset="' + uri + ' 1x"><picture><source srcset="' + uri + ' 1x"></picture>'
+        self.assertEqual(transform_page(page, make_url).count(target), 2)
+
     def test_css_and_import_map_without_rewriting_javascript(self):
         uri = "t256:" + compute_cid(b"test") + ".png"
         make_url = lambda item, navigation=False: "https://gateway.example/" + item.cid + item.suffix

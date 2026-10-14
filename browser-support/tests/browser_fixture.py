@@ -24,8 +24,8 @@ def setup(state):
     dependency = store('export const answer = 42; // a module dependency verified before the browser receives it', ".mjs")
     module = store('import { answer } from "' + dependency + '"; document.querySelector("#module").textContent = String(answer);', ".mjs")
     imported_css = store('#css { color: rgb(20, 80, 160); }', ".css")
-    stylesheet = store('@import "' + imported_css + '"; #css { background-image: url("' + image + '"); }', ".css")
-    page = '<!doctype html><html><head><link rel="stylesheet" href="' + stylesheet + '"><script type="importmap">' + json.dumps({"imports": {dependency: dependency}}) + '</script></head><body><img id="image" src="' + image + '"><p id="order">waiting</p><p id="module">waiting</p><p id="css">CSS</p><script src="' + first + '"></script><script src="' + second + '"></script><script type="module" src="' + module + '"></script></body></html>'
+    stylesheet = store('@\\69mport "' + imported_css.replace(":", "\\3a ") + '"; #css { background-image: \\75rl("' + image.replace(":", "\\3a ") + '"); }', ".css")
+    page = '<!doctype html><html><head><link rel="stylesheet" href="' + stylesheet + '"><script type="importmap">' + json.dumps({"imports": {dependency: dependency}}) + '</script></head><body><picture><source srcset="' + image + ' 1x"><img id="image" src="' + image + '"></picture><p id="order">waiting</p><p id="module">waiting</p><p id="css">CSS</p><script src="' + first + '"></script><script src="' + second + '"></script><script type="module" src="' + module + '"></script></body></html>'
     root = store(page, ".html")
     config = json.loads((state / "config.json").read_text())
     config["providers"] = [{"id": "fixtures", "type": "folder", "path": str(directory)}]

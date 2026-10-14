@@ -196,8 +196,13 @@ and CORS checks are preserved. The helper's `/demo.html` is a runnable example.
 
 Open a `.html` URI with the helper or settings page. The gateway verifies the
 original HTML, then transforms URL-bearing attributes, inline CSS, and import-map
-values before the browser parses it. External CSS `url()` and quoted `@import`
-references are also transformed. Nested HTML frames and t256 navigation links use
+values before the browser parses it. Responsive image candidates in `srcset` and
+`imagesrcset` are transformed as complete URLs, preserving data URLs and descriptors.
+External CSS `url()` and quoted `@import` references are also transformed, including
+CSS character escapes, escaped keywords, and quoted line continuations. Comments
+and ordinary CSS strings remain unchanged. These use the standard
+[CSS escape syntax](https://www.w3.org/TR/css-syntax-3/#escaping).
+Nested HTML frames and t256 navigation links use
 the gateway. Original JavaScript is not changed.
 
 Transformed HTML and CSS must be UTF-8 and are served explicitly as UTF-8.
@@ -305,5 +310,5 @@ Manual release checks: clicked and pasted URIs; browser launch prompts; private
 windows; provider grants/revocation; disconnected shares; GitHub login/SSO and
 credential renewal; signed Safari extension; branded Brave/Opera; installation
 and removal on each OS. Native transparent `fetch('t256:…')`, arbitrary dynamic
-imports, CSS escape forms, SVG-internal resources, multipart media ranges, and upstream
+imports, SVG-internal resources, multipart media ranges, and upstream
 browser-engine implementation remain future work.
