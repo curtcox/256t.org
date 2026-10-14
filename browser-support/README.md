@@ -154,7 +154,7 @@ do not establish that result.
 | Mechanism | Status and existing work | Strengths | Limitations | Next deliverable |
 |---|---|---|---|---|
 | Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and validated CID/URI keyword input exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Add a viewer/public fallback and opt-in dynamic adaptation; validate each extension package. |
-| Web protocol handler, including the requested `web+t256:` spelling | **In progress: compatibility design.** Standards investigation is complete; registration and alias handling are not implemented. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Implement an explicit registration flow and a strict, reversible `web+tcontent:` → `t256:` bridge; test exact-spelling rejection. |
+| Web protocol handler, including the requested `web+t256:` spelling | **In progress: implementation and browser validation.** Strict alias conversion and explicit website registration/removal controls exist; engine checks cover transport and rejection. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Validate installed-browser consent/dispatch; add saved-helper choices, Firefox manifest handling and optional PWA support. |
 | OS registration of `t256:` with a desktop helper | **In progress: implementation and distribution validation.** macOS app wrapper, Windows per-user registry registration, Linux desktop entry, startup, native messaging and uninstall exist. | Preserves the exact scheme; opens content with user-selected folders, mounted shares, HTTP bases and authenticated repositories; offers Safari an external navigation route. | Requires installation and browser approval where prompted. Typed/pasted address-bar dispatch varies. Current runtime needs Python at a stable path. Does not turn `t256:` into a browser resource protocol. | Validate real browser dispatch and clean installation/removal on all three OSes; build convenient platform packages. |
 
 The [HTML custom-handler rules](https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers)
@@ -222,20 +222,25 @@ windows. Resource tests must verify bytes before use and script execution order.
 
 - [x] Establish the standards restriction on `web+t256:` and identify the
   letters-only `web+tcontent:` route. No change to the canonical RFC is needed.
-- [ ] **Next: implement one shared alias adapter and handler entry point.**
-  Convert only the recognized alias's scheme to `t256:` and then use the strict
-  RFC parser. Preserve CID case and reject hierarchy, queries, fragments,
-  malformed encodings and unknown aliases. Decode the handler transport exactly
-  once; never treat the CID as a URL hostname or lowercase the complete URI.
-- [ ] Add a user-triggered HTTPS registration button using a same-origin handler
-  URL with `%s`. Prefer a fragment transport to keep the identifier out of HTTP
-  requests, and test browser substitution/encoding. Feature-detect the API,
-  handle rejection/cancellation, and always keep a usable fallback link.
-- [ ] Give the handler page public/inline and saved-helper resolution choices.
-  Reuse verified retrieval and provider selection; do not put credentials or
-  helper capabilities in registration templates or shared alias links. Explain
-  that the chosen handler page can read the identifier, including inline bytes,
-  even when it is transported in a fragment.
+- [x] Implement the shared alias adapter and handler entry point in
+  `web/protocol-handler.mjs` and the public resolver. Convert only the recognized
+  alias's scheme, preserve CID case, use the strict RFC parser and decode the
+  transport once. Unit tests cover inline/hashed IDs, compound suffixes,
+  malformed encodings, unknown aliases and duplicate URI parameters.
+- [x] Add explicit website registration and supported removal buttons. Use a
+  same-origin `%s` fragment template without existing query parameters or helper
+  capabilities; support HTTPS and secure loopback development. Feature detection,
+  rejection feedback and manual resolution remain available. Engine tests check
+  template forwarding and explicit invocation with simulated browser APIs.
+- [x] Reuse verified public/inline and pasted-helper resolution. Explain that
+  this page can read the identifier, including inline bytes, and wait for the
+  user's provider choice before fetching. Hash changes clear old previews;
+  downloads and shared links retain canonical `t256:` identifiers.
+- [ ] **Next: validate real consent and dispatch** in installed Firefox/Chrome/
+  Edge, including denied prompts, private windows and browser-settings removal.
+- [ ] Add an explicitly selected saved-helper connection option so repeat alias
+  navigation can reuse a local/private provider choice without sharing the
+  connection in registration templates or alias links.
 - [ ] Test Firefox's optional
   [`protocol_handlers` extension manifest](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers)
   route to an extension viewer. Keep browser-specific manifest fields separate
@@ -245,14 +250,15 @@ windows. Resource tests must verify bytes before use and script execution order.
   separately from website registration; keep the basic resolver usable without
   PWA installation. Probe Edge, Brave and Opera rather than inheriting Chrome's
   support claim.
-- [ ] Record exact `web+t256:` registration results and any documented
-  browser-specific exception or required flag in isolated profiles. Maintain
-  negative tests for standard rejection. Explore an upstream scheme-rule or
-  allowlist change only as a long-term route; never silently enable browser flags.
-- [ ] Publish canonical/alias/HTTPS examples and a lossless conversion convention.
-  Document default-handler changes, declined prompts, private browsing and
-  browser-settings removal; use settings instructions where unregister APIs
-  are unavailable. Provide Safari with extension/OS/HTTPS alternatives.
+- [x] Add negative engine checks for exact `web+t256:` registration (standard
+  rejection or API unavailability). Chromium and WebKit checks pass locally;
+  Firefox checks run in CI. Valid-registration consent is not bypassed.
+- [ ] Investigate any documented browser-specific exception or required flag
+  in isolated profiles. Explore an upstream scheme-rule or allowlist change
+  only as a long-term route; never silently enable browser flags.
+- [x] Publish canonical/alias/HTTPS examples and the conversion convention below.
+  Provide removal controls where available and settings guidance otherwise;
+  retain extension/OS/manual alternatives for unsupported browsers.
 
 Acceptance: a clicked valid alias arrives as the exact canonical identifier;
 invalid aliases never retrieve content; registration requires explicit action;
@@ -310,8 +316,8 @@ from page-resource tests: resource loading uses the loader or transformed gatewa
 | Brave / Opera on macOS, Windows, Linux | Shared Chromium source; branded-browser permission/store tests | Probe website/PWA support under default settings | Actual dispatch and browser-specific native-host discovery |
 | Safari on macOS | Built containing app, link adaptation and manual/native connection choices; no current keyword route | Feature detection and HTTPS fallback; no website API support promised | LaunchServices, Safari prompts, signing/notarization and real Safari tests |
 
-Delivery order: keyword input is implemented; next add viewer fallback and implement
-the shared alias adapter and explicit website registration; then validate installed
+Delivery order: keyword input and explicit alias registration are implemented;
+next add extension viewer fallback, then validate installed
 browser/OS combinations and package the helper/Safari app. Dynamic adaptation,
 Firefox manifest handling and PWA installation can follow as separate increments.
 Update this checklist with each increment and link its test or manual-check
@@ -474,6 +480,30 @@ separate signed-containing-app process.
 The site's [URI resolver](../resolve.html) extracts inline content and verifies
 bytes from public CORS-enabled providers without installation. Its optional
 connection field uses the desktop resolver for selected private/local providers.
+The resolver also accepts the compatibility alias `web+tcontent:<CID>[.suffix]`.
+It replaces that scheme with `t256:` before parsing or retrieving content; CID
+case is preserved and suffixes follow the canonical parser's normalization.
+For example, `web+tcontent:AAAAAAAFaGVsbG8.txt` maps to
+`t256:AAAAAAAFaGVsbG8.txt`. No other alias is accepted, and the RFC parser/helper
+continue to require `t256:`.
+
+Select **Enable browser links** on the HTTPS resolver (or a secure local helper
+page) to request website registration, then approve it in the browser. The
+template uses `resolve.html#uri=%s` on that same origin, with no existing query,
+connection or credentials. A successful API call reports a request sent rather
+than claiming approval; the browser controls confirmation and defaults. Incoming
+links populate the canonical URI field and wait for **Resolve and verify** before
+accessing providers. Existing providers and a pasted helper connection can be
+selected for that visit; connections are not saved automatically.
+
+Use **Remove browser link handler** where the browser exposes removal, or change
+the handler in browser settings. Unsupported/blocked registration leaves manual
+resolution usable. PWA and Firefox extension-manifest registration are separate
+pending plan items. Engine tests simulate valid-registration UI outcomes and
+exercise real invalid-scheme rejection without registering a handler in the
+user's browser; installed-browser consent and external dispatch remain release
+checks.
+
 HTML, JavaScript, and SVG previews are text. Downloads use a binary media type,
 preserve the original verified bytes, and cannot create an HTML/SVG document under
 the resolver page's origin. Bitmap previews use separate temporary URLs.

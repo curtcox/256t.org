@@ -1,12 +1,45 @@
 import { T256Client } from './loader.mjs';
 import { T256WebClient } from './web-client.mjs';
-import { mediaType, parseUri } from '../../implementations/ecmascript/uri.mjs';
+import { mediaType } from '../../implementations/ecmascript/uri.mjs';
+import { browserScheme, handlerTemplate, parseBrowserUri, parseHandlerFragment } from './protocol-handler.mjs';
 
 const element = id => document.getElementById(id);
-const initial = new URLSearchParams(location.hash.slice(1)).get('uri');
-if (initial) element('uri').value = initial;
 const objectUrls = new Set();
 let active;
+function applyFragment() {
+  active?.abort(); clearPreview();
+  element('uri').value = '';
+  try {
+    const initial = parseHandlerFragment(location.hash);
+    if (initial) element('uri').value = initial.uri;
+    element('status').textContent = 'Ready. Choose providers and resolve the content.';
+  } catch (error) { element('status').textContent = error.message; }
+}
+applyFragment();
+window.addEventListener('hashchange', applyFragment);
+let template;
+try { if (window.isSecureContext) template = handlerTemplate(location.href); }
+catch { /* Manual resolution remains available on other origins. */ }
+const canRegister = template && typeof navigator.registerProtocolHandler === 'function';
+element('register-handler').disabled = !canRegister;
+element('remove-handler').hidden = !(canRegister && typeof navigator.unregisterProtocolHandler === 'function');
+element('handler-status').textContent = canRegister
+  ? 'Enable browser links, then approve the request in your browser. You can change the handler in browser settings.'
+  : 'This browser or page cannot enable browser links. Paste a URI here, or use the desktop helper or extension.';
+element('register-handler').addEventListener('click', () => {
+  try {
+    navigator.registerProtocolHandler(browserScheme, template);
+    element('handler-status').textContent = 'Request sent. Approve it in your browser to open compatible links here; a dismissed request leaves your current handler unchanged.';
+  } catch {
+    element('handler-status').textContent = 'Your browser did not allow the request. Paste links here or use the desktop helper or extension.';
+  }
+});
+element('remove-handler').addEventListener('click', () => {
+  try {
+    navigator.unregisterProtocolHandler(browserScheme, template);
+    element('handler-status').textContent = 'Removal requested. Check browser settings to confirm your preferred handler.';
+  } catch { element('handler-status').textContent = 'Remove this handler in browser settings. Manual resolution is still available.'; }
+});
 function clearPreview() {
   element('preview').textContent = ''; element('image').hidden = true;
   element('image').removeAttribute('src');
@@ -27,7 +60,8 @@ element('resolve-form').addEventListener('submit', async event => {
   element('status').textContent = 'Retrieving and verifying…';
   clearPreview();
   try {
-    const uri = parseUri(element('uri').value.trim());
+    const uri = parseBrowserUri(element('uri').value.trim());
+    element('uri').value = uri.uri;
     const connection = element('connection').value.trim();
     let bytes, provider, type, failures = [];
     if (connection) {

@@ -7,6 +7,33 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { computeCid } from '../../implementations/ecmascript/uri.mjs';
+import { browserScheme, handlerTemplate, parseBrowserUri, parseHandlerFragment } from '../web/protocol-handler.mjs';
+
+test('browser alias preserves canonical identity and handler transport decodes exactly once', async () => {
+  const cid = await computeCid('mixed case payload'.repeat(10));
+  const canonical = `t256:${cid}.tar.gz`;
+  const alias = `WEB+TCONTENT:${cid}.TAR.GZ`;
+  assert.equal(browserScheme, 'web+tcontent');
+  assert.equal(parseBrowserUri(alias).uri, canonical);
+  assert.equal(parseBrowserUri(canonical).uri, canonical);
+  assert.equal(parseHandlerFragment('#uri=' + encodeURIComponent(alias)).uri, canonical);
+  assert.equal(parseHandlerFragment(''), null);
+  for (const uri of ['web+t256:AAAAAAAFaGVsbG8', 'web+other:AAAAAAAFaGVsbG8', 'web+tcontent://AAAAAAAFaGVsbG8', 'web+tcontent:AAAAAAABeB', alias + '?q=1', alias + '#private', alias.replace(cid, '%41' + cid.slice(1))]) {
+    assert.throws(() => parseBrowserUri(uri));
+  }
+  for (const fragment of ['#uri=' + encodeURIComponent(encodeURIComponent(alias)), '#uri=' + encodeURIComponent(alias) + '&uri=' + encodeURIComponent(canonical), '#other=value']) {
+    assert.throws(() => parseHandlerFragment(fragment));
+  }
+});
+
+test('registration templates retain the hosting path without credentials, queries or capabilities', () => {
+  assert.equal(handlerTemplate('https://example.org/project/resolve.html?secret=credential#connection=capability'), 'https://example.org/project/resolve.html#uri=%s');
+  assert.equal(handlerTemplate('http://127.0.0.1:25600/resolve.html#uri=old'), 'http://127.0.0.1:25600/resolve.html#uri=%s');
+  assert.equal(handlerTemplate('http://[::1]/resolve.html'), 'http://[::1]/resolve.html#uri=%s');
+  for (const url of ['http://example.org/resolve.html', 'http://localhost.evil/resolve.html', 'https://user:credential@example.org/resolve.html', 'file:///resolve.html']) {
+    assert.throws(() => handlerTemplate(url));
+  }
+});
 
 test('built extension keyword accepts CIDs/full URIs and rejects invalid input before native launch', async () => {
   const destination = await mkdtemp(path.join(tmpdir(), 't256-extension-unit-'));
