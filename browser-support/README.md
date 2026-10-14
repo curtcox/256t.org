@@ -141,7 +141,182 @@ Engine tests do not establish installed-browser protocol prompts, address-bar
 behavior, extension-store approval, or Safari signing. These require the manual
 checks below. A browser extension does not register a general `t256:` network
 scheme. Website/PWA registration cannot register bare `t256:` or `web+t256:`;
-an optional letters-only alias remains a future compatibility choice.
+the active web-handler plan below uses an optional letters-only alias.
+
+### Active implementation plan
+
+Updated 2026-10-13. All three mechanisms are active workstreams. Checked items
+record existing implementation or completed investigation; unchecked items are
+remaining work. A mechanism is release-ready only after its acceptance checks
+pass in installed browsers. Engine tests and generated extension packages alone
+do not establish that result.
+
+| Mechanism | Status and existing work | Strengths | Limitations | Next deliverable |
+|---|---|---|---|---|
+| Content script rewrites `t256:` links to a viewer/gateway; optional address-bar keyword | **In progress: implementation and browser validation.** Explicit-click adaptation, Chromium/Firefox packages, Safari conversion source, native context menus and keyword plumbing exist. | Preserves the RFC URI; can adapt existing links and selected page resources; can use the helper's private/local providers. | Requires permission to access the page; current adaptation is a single pass. Extension-store/signing and installed Firefox/Safari checks remain. A keyword is a separate address-bar gesture. | Accept bare CIDs after the keyword; add a viewer/public fallback and opt-in dynamic adaptation; validate each extension package. |
+| Web protocol handler, including the requested `web+t256:` spelling | **In progress: compatibility design.** Standards investigation is complete; registration and alias handling are not implemented. | A valid alias can open a browser viewer without an extension; website, Firefox extension, and installed Chromium PWA registration are separate options. | `web+t256:` fails the standard's scheme rules; an alias differs from the RFC. Registration does not enable custom-scheme subresources. Safari needs another route. | Implement an explicit registration flow and a strict, reversible `web+tcontent:` → `t256:` bridge; test exact-spelling rejection. |
+| OS registration of `t256:` with a desktop helper | **In progress: implementation and distribution validation.** macOS app wrapper, Windows per-user registry registration, Linux desktop entry, startup, native messaging and uninstall exist. | Preserves the exact scheme; opens content with user-selected folders, mounted shares, HTTP bases and authenticated repositories; offers Safari an external navigation route. | Requires installation and browser approval where prompted. Typed/pasted address-bar dispatch varies. Current runtime needs Python at a stable path. Does not turn `t256:` into a browser resource protocol. | Validate real browser dispatch and clean installation/removal on all three OSes; build convenient platform packages. |
+
+The [HTML custom-handler rules](https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers)
+allow `web+` followed by lowercase ASCII letters, so neither bare `t256` nor
+`web+t256` can be registered through the standard website API. Keep `t256:` as
+the canonical RFC scheme. Use `web+tcontent:` as the working compatibility alias;
+document the convention before publishing alias links. Exact `web+t256:` support
+requires a browser-specific exception or an upstream change and is an
+investigation item, not a promised shipping capability.
+
+Desktop Firefox and Chromium support
+[`navigator.registerProtocolHandler()`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/registerProtocolHandler)
+for eligible schemes; do not describe the Chromium website API as generally
+flag-only. Chrome also documents
+[installed-PWA protocol handlers](https://developer.chrome.com/docs/web-platform/best-practices/url-protocol-handler)
+as available from Chrome 96. Test website registration, extension manifest
+registration and PWA installation independently, with default browser settings.
+
+Safari can also adapt page links through a
+[Safari Web Extension](https://developer.apple.com/documentation/safariservices/safari-web-extensions)
+or use the loader/gateway. The OS helper is the primary planned external route
+for the exact scheme in Safari; it is not the only practical Safari integration.
+
+#### 1. Extension links, viewer and keyword
+
+- [x] Build Chromium and Firefox extensions and Safari conversion source from
+  shared code (`extensions/shared`, `build_extensions.py`).
+- [x] Rewrite existing page navigation links to the verified helper gateway
+  after an explicit user action; adapt images, stylesheets and media too.
+- [x] Provide native-host context menus and keyword event handling on browsers
+  with those APIs; exercise page adaptation in the Chromium extension smoke test.
+- [ ] **Next: make `t256 <CID>[.suffix]` work in keyword mode.** The current
+  background handler expects a full `t256:` URI after the keyword. Accept both
+  forms, preserve CID case, validate strictly, and provide useful invalid-input
+  feedback. Test Firefox's omnibox API separately from Chrome's
+  [keyword API](https://developer.chrome.com/docs/extensions/reference/api/omnibox).
+- [ ] Add an extension viewer or a configured gateway destination so link
+  navigation can work without a running native host. Offer the public HTTPS
+  resolver for public/inline content and the helper for private/local providers;
+  preserve normal link opening, copying, keyboard access and new-tab behavior.
+- [ ] Add optional continued adaptation for new or changed links/resources on
+  the active page. Bound observation, preserve page edits made during retrieval,
+  release resources on teardown, and avoid repeated media loads. Add optional
+  per-site persistence only with explicit site permissions and a disable control.
+- [ ] Define frame and open-shadow-root coverage; report inaccessible frames,
+  protected browser pages, restrictive CSP and local-network permission failures.
+  Support link-only adaptation without granting a page access to local content.
+- [ ] Validate Firefox installation/signing, Edge/Brave/Opera compatibility and
+  a built Safari extension. For Safari, retain the manual connection option and
+  plan containing-app messaging; do not assume Python native-host registration
+  or an omnibox API works there.
+- [ ] Connect page-resource improvements to the existing loader and gateway:
+  scripts need ordered loading, module dependency maps and CSP handling, beyond
+  link rewriting. Track module workers, computed imports and SVG dependencies
+  as separate capability work rather than claiming transparent script support.
+
+Acceptance: unmodified `t256:` anchors navigate after activation; keyword mode
+accepts bare CIDs and full URIs where available; dynamic adaptation stops when
+disabled; copied/shared links contain no helper capability; unavailable content
+has a useful failure state. Validate inline and hashed CIDs, mixed CID case,
+compound suffixes, invalid input, missing helper, revoked grants and private
+windows. Resource tests must verify bytes before use and script execution order.
+
+#### 2. Web handler and compatibility alias
+
+- [x] Establish the standards restriction on `web+t256:` and identify the
+  letters-only `web+tcontent:` route. No change to the canonical RFC is needed.
+- [ ] **Next: implement one shared alias adapter and handler entry point.**
+  Convert only the recognized alias's scheme to `t256:` and then use the strict
+  RFC parser. Preserve CID case and reject hierarchy, queries, fragments,
+  malformed encodings and unknown aliases. Decode the handler transport exactly
+  once; never treat the CID as a URL hostname or lowercase the complete URI.
+- [ ] Add a user-triggered HTTPS registration button using a same-origin handler
+  URL with `%s`. Prefer a fragment transport to keep the identifier out of HTTP
+  requests, and test browser substitution/encoding. Feature-detect the API,
+  handle rejection/cancellation, and always keep a usable fallback link.
+- [ ] Give the handler page public/inline and saved-helper resolution choices.
+  Reuse verified retrieval and provider selection; do not put credentials or
+  helper capabilities in registration templates or shared alias links. Explain
+  that the chosen handler page can read the identifier, including inline bytes,
+  even when it is transported in a fragment.
+- [ ] Test Firefox's optional
+  [`protocol_handlers` extension manifest](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/protocol_handlers)
+  route to an extension viewer. Keep browser-specific manifest fields separate
+  from the Chromium/Safari packages and avoid competing registrations by default.
+- [ ] Add an optional installable Chromium PWA with `protocol_handlers`, scoped
+  handler URLs and clear installation/removal instructions. Test OS integration
+  separately from website registration; keep the basic resolver usable without
+  PWA installation. Probe Edge, Brave and Opera rather than inheriting Chrome's
+  support claim.
+- [ ] Record exact `web+t256:` registration results and any documented
+  browser-specific exception or required flag in isolated profiles. Maintain
+  negative tests for standard rejection. Explore an upstream scheme-rule or
+  allowlist change only as a long-term route; never silently enable browser flags.
+- [ ] Publish canonical/alias/HTTPS examples and a lossless conversion convention.
+  Document default-handler changes, declined prompts, private browsing and
+  browser-settings removal; use settings instructions where unregister APIs
+  are unavailable. Provide Safari with extension/OS/HTTPS alternatives.
+
+Acceptance: a clicked valid alias arrives as the exact canonical identifier;
+invalid aliases never retrieve content; registration requires explicit action;
+declining or removing registration leaves the fallback usable. Test the website
+flow in installed Firefox/Chrome/Edge and PWA/extension flows only where supported.
+Record address-bar results independently from link activation. Do not count
+navigation-handler success as `fetch`, image or script protocol support.
+
+#### 3. OS registration, native helper and distribution
+
+- [x] Implement per-user scheme registration for macOS, Windows and Linux in
+  `t256_helper/install.py`, plus automatic helper startup and strict URI parsing.
+- [x] Launch a verified gateway page; provide Chrome-family/Firefox native-host
+  registration restricted to the specified extension ID.
+- [x] Implement ownership-aware removal, Linux previous-handler restoration,
+  provider configuration, verification and private/local content access.
+- [x] Run helper and registration unit tests across all three OSes in CI. These
+  do not exercise every installed desktop/browser registration service.
+- [ ] **Next: perform fresh-profile installation and dispatch checks.** Exercise
+  clicked links, typed and pasted URIs, prompt acceptance/denial, browser closed,
+  helper stopped, repeated launches and private windows. Record browser build,
+  OS version and default settings; classify address-bar input that becomes a
+  search as a limitation and provide keyword/paste-into-viewer alternatives.
+- [ ] Package an embedded runtime or standalone helper for each platform, with
+  installation, update and removal UI. Test paths containing spaces/non-ASCII
+  characters, moved installs, existing handler ownership and uninstall after
+  the default handler changes. Keep the existing Python source package usable.
+- [ ] For macOS, validate LaunchServices delivery and create a distributable
+  signed/notarized app; include the Safari extension/containing-app connection
+  path. Treat the current generated ad-hoc wrapper as a development installation.
+- [ ] For Windows, validate per-user registry delivery, safe argument forwarding,
+  browser/native-host discovery and a signed installer. Avoid administrator
+  requirements and avoid replacing another handler without a deliberate choice.
+- [ ] For Linux, validate desktop entry and `xdg-mime` behavior on GNOME/KDE,
+  desktop portals and packaged browsers such as Flatpak/Snap. Document dependency
+  and sandbox access limits for mounted shares, launchers and native hosts.
+- [ ] Improve launch feedback and destination selection: distinguish invalid
+  URI, missing provider/authentication, blocked browser launch and expired helper
+  connection. Support opening in the requesting extension where available, with
+  the default browser/gateway as the OS-handler fallback.
+
+Acceptance: installation routes the unchanged URI to one running helper and a
+verified viewer without a launch loop; denying a browser prompt does not open
+content; uninstall leaves user settings intact and respects subsequent handler
+changes. Verify inline/hashed content and selected filesystem, mounted share,
+HTTP, Hashbin and authorized GitHub providers. Keep OS navigation tests separate
+from page-resource tests: resource loading uses the loader or transformed gateway.
+
+#### Browser coverage and delivery order
+
+| Target | Extension plan | Web-handler plan | OS-handler release gate |
+|---|---|---|---|
+| Chrome / Edge on macOS, Windows, Linux | Shared package, native host, keyword; test each installed browser | HTTPS website alias; optional PWA, tested separately | Actual click/typed/pasted dispatch and install/removal on each OS |
+| Firefox on macOS, Windows, Linux | Signed package, native host, keyword; actual extension tests | HTTPS website alias; optional extension manifest handler | Actual dispatch, prompts and native-host discovery on each OS |
+| Brave / Opera on macOS, Windows, Linux | Shared Chromium source; branded-browser permission/store tests | Probe website/PWA support under default settings | Actual dispatch and browser-specific native-host discovery |
+| Safari on macOS | Built containing app, link adaptation and manual/native connection choices; no current keyword route | Feature detection and HTTPS fallback; no website API support promised | LaunchServices, Safari prompts, signing/notarization and real Safari tests |
+
+Delivery order: first fix keyword input and add viewer fallback; then implement
+the shared alias adapter and explicit website registration; then validate installed
+browser/OS combinations and package the helper/Safari app. Dynamic adaptation,
+Firefox manifest handling and PWA installation can follow as separate increments.
+Update this checklist with each increment and link its test or manual-check
+evidence. Every supported combination needs a recorded pass or a documented
+limitation before being advertised as release-ready.
 
 ### Cooperating pages
 
@@ -274,7 +449,9 @@ Use `edge`, `brave`, or `opera` for other native-host locations. The installed
 native manifests allow only the specified extension. Context menus and the
 `t256` address-bar keyword open content through the gateway. The keyword requires
 the browser's keyword activation gesture; it does not make bare address-bar URIs
-universally recognized.
+universally recognized. Currently enter a full URI after activating the keyword
+(for example, `t256 t256:AAAAAAAFaGVsbG8.txt`); bare-CID input is the next extension
+plan item above.
 
 ### OS registration
 

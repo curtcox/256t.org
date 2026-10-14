@@ -103,6 +103,7 @@ These things are beyond the scope of this text.
 - [CID Download](download.html) — download and verify content from a 256t.org compatible server using a CID.
 - [t256 URI Resolver](resolve.html) — open a t256 URI using inline content, public providers, or your desktop helper.
 - [Desktop and browser support](browser-support/README.md) — selectable folders, network drives, authenticated GitHub repositories, a verified page loader, gateway, and optional extensions.
+- [Active browser support plan](browser-support/README.md#active-implementation-plan) — extension link rewriting and keywords, web-handler compatibility aliases, and native OS scheme registration across desktop browsers.
 
 ## Example Files
 
