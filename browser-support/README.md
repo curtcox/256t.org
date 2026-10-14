@@ -63,6 +63,9 @@ python3 browser-support/run.py resolve t256:AAAAAAAFaGVsbG8.txt --output hello.t
 
 Public, private, and organization repositories use the access granted to the user's
 credentials. `--api-url https://github.example/api/v3` supports GitHub Enterprise.
+An explicitly selected credential variable or GitHub CLI login must be available;
+missing credentials fail that provider and allow the next selected provider to run.
+Leaving both options unset allows public access, or the default `GH_TOKEN` if set.
 API providers default to `cids/<CID>`. To use ordinary filenames remotely, import
 a JSON object mapping full CIDs to relative paths:
 
@@ -90,6 +93,10 @@ unshown options while updating its location, revision, authentication choices, o
 timeout. Reindex after changes that affect filenames or revisions; use **Cancel
 edit** to discard a draft. HTTP timeouts currently apply to individual socket
 operations, rather than an overall download deadline.
+Timeouts must be positive and at most 3600 seconds. Credential variable names use
+letters, digits, and underscores, beginning with a letter or underscore. Providers
+with explicitly selected authentication require HTTPS. Invalid settings are rejected
+before they replace the saved configuration.
 
 Indexes never establish trust: the returned bytes still have to match the CID.
 Reindex after changing files or repository revisions. Local clones are not

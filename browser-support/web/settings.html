@@ -17,7 +17,7 @@
     <p><small>Import a JSON index to find repository files stored under ordinary names. It maps content identifiers to relative file paths; retrieved content is still verified.</small></p>
     <h3 id="provider-form-title">Add a provider</h3><form id="add-provider"><div class="grid"><label>Name<input name="id" required pattern="[A-Za-z0-9_-]+" placeholder="my-files"></label><label>Type<select name="type"><option value="folder">Folder or network drive</option><option value="http">HTTP(S) base URL</option><option value="github">GitHub repository</option><option value="git">Local Git clone</option></select></label></div>
       <label>Location<input name="location" required placeholder="Folder path, base URL, or owner/repository"></label>
-      <label>Provider timeout (seconds)<input name="timeout" type="number" min="0.1" step="0.1" value="15" required></label>
+      <label>Provider timeout (seconds)<input name="timeout" type="number" min="0.1" max="3600" step="0.1" value="15" required></label>
       <details><summary>Repository and authentication options</summary><label>Revision<input name="ref" value="HEAD"></label><label>Directory inside repository<input name="directory" value="cids"></label><label>Credential environment variable<input name="token_env" placeholder="GH_TOKEN (leave blank for public access)"></label><label><input type="checkbox" name="use_gh" style="width:auto"> Use existing GitHub CLI login</label><label>GitHub API URL<input name="api_url" value="https://api.github.com"></label></details>
       <button id="save-provider" class="primary">Add provider</button> <button id="cancel-edit" type="button" hidden>Cancel edit</button></form>
   </section>

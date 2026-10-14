@@ -2,6 +2,7 @@ import base64
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+import subprocess
 from pathlib import Path
 import tempfile
 import threading
@@ -10,7 +11,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from t256_helper.providers import get_url, github_headers
+from t256_helper.providers import get_url, github_headers, SameOriginRedirects
 from t256_helper.resolver import Resolver, ResolutionError
 from t256_helper.server import Gateway
 from t256_helper.transform import css_urls, srcset_urls, transform_page
@@ -170,6 +171,29 @@ class GatewayTests(unittest.TestCase):
         with patch.dict(os.environ, {"T256_TEST_CREDENTIAL": "test-secret"}):
             self.assertEqual(github_headers(provider)["Authorization"], "Bearer test-secret")
             with self.assertRaises(RuntimeError): github_headers({**provider, "api_url": "http://api.example"})
+
+    def test_explicit_github_auth_never_silently_becomes_public(self):
+        with patch.dict(os.environ, {}, clear=True), patch("t256_helper.providers.shutil.which", return_value="gh"):
+            self.assertNotIn("Authorization", github_headers({}))
+            with self.assertRaisesRegex(RuntimeError, "environment variable"):
+                github_headers({"token_env": "UNAVAILABLE_TOKEN", "use_gh": True})
+            for result in [subprocess.CompletedProcess([], 1, "", "secret fixture diagnostic"),
+                           subprocess.CompletedProcess([], 0, "\n", "")]:
+                with patch("t256_helper.providers.subprocess.run", return_value=result):
+                    with self.assertRaisesRegex(RuntimeError, "login is unavailable"):
+                        github_headers({"use_gh": True})
+            with patch("t256_helper.providers.subprocess.run", side_effect=FileNotFoundError("private path")):
+                with self.assertRaisesRegex(RuntimeError, "login is unavailable"): github_headers({"use_gh": True})
+            with patch("t256_helper.providers.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "test-token\n", "")):
+                self.assertEqual(github_headers({"use_gh": True})["Authorization"], "Bearer test-token")
+
+    def test_redirect_origins_use_effective_ports_and_reject_userinfo(self):
+        handler = SameOriginRedirects()
+        request = Request("https://provider.example/content", headers={"Authorization": "Bearer fixture"})
+        result = handler.redirect_request(request, None, 302, "", {}, "https://provider.example:443/moved")
+        self.assertEqual(result.get_header("Authorization"), "Bearer fixture")
+        for url in ["https://@provider.example/moved", "https://user:secret@provider.example/moved", "https://provider.example:0/moved"]:
+            with self.assertRaises(RuntimeError): handler.redirect_request(request, None, 302, "", {}, url)
 
     def test_verified_ranges_and_head(self):
         content = bytes(range(128))

@@ -7,7 +7,7 @@ from pathlib import PurePosixPath
 import tempfile
 import threading
 import subprocess
-import math
+import re
 import secrets
 from concurrent.futures import Future
 from copy import deepcopy
@@ -44,42 +44,51 @@ def save_json(path, value):
 def validate_config(config):
     if not isinstance(config, dict) or not isinstance(config.get("providers"), list):
         raise ValueError("Configuration must contain a providers array")
-    if config.get("version") != 1:
+    if type(config.get("version")) is not int or config["version"] != 1:
         raise ValueError("Unsupported configuration version")
     for key in ("max_bytes", "cache_bytes"):
-        if not isinstance(config.get(key), int) or config[key] <= 0:
+        if type(config.get(key)) is not int or config[key] <= 0:
             raise ValueError(key + " must be a positive byte count")
     ids = set()
     for provider in config.get("providers", []):
         if not isinstance(provider, dict):
             raise ValueError("Each provider must be an object")
         identifier = provider.get("id", "")
-        if not isinstance(identifier, str) or not identifier or not identifier.replace("-", "").replace("_", "").isalnum() or identifier in ids:
+        if not isinstance(identifier, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", identifier) or identifier in ids:
             raise ValueError("Provider IDs must be unique letters, digits, hyphens, or underscores")
         ids.add(identifier)
         kind = provider.get("type")
         if kind not in ("folder", "http", "github", "git"):
             raise ValueError("Unknown provider type")
         required = "url" if kind == "http" else "repo" if kind == "github" else "path"
-        if not isinstance(provider.get(required), str) or not provider[required]:
+        if not isinstance(provider.get(required), str) or not provider[required] or "\0" in provider[required]:
             raise ValueError("Provider requires " + required)
-        if kind == "github" and len(provider["repo"].split("/")) != 2:
+        if kind == "github" and (len(provider["repo"].split("/")) != 2 or not all(provider["repo"].split("/"))):
             raise ValueError("GitHub repository must be owner/repo")
+        for flag in ("enabled", "use_gh"):
+            if flag in provider and type(provider[flag]) is not bool:
+                raise ValueError(flag + " must be true or false")
+        if "token_env" in provider and (not isinstance(provider["token_env"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", provider["token_env"])):
+            raise ValueError("Credential environment variable must be a portable variable name")
         if kind in ("http", "github"):
             raw_url = provider["url"] if kind == "http" else provider.get("api_url", "https://api.github.com")
             if not isinstance(raw_url, str):
                 raise ValueError("Provider URLs must be strings")
             url = urlsplit(raw_url)
-            if url.scheme not in ("http", "https") or not url.hostname or url.username or url.password or url.query or url.fragment:
+            if url.scheme not in ("http", "https") or not url.hostname or url.username is not None or url.password is not None or url.query or url.fragment or "\0" in raw_url or any(char.isspace() for char in raw_url):
                 raise ValueError("Provider URL must be an HTTP(S) base without credentials, query, or fragment")
-        if not isinstance(provider.get("timeout", 15), (float, int)) or not math.isfinite(provider.get("timeout", 15)) or provider.get("timeout", 15) <= 0:
-            raise ValueError("Provider timeout must be positive")
+            url.port  # Validate malformed and out-of-range ports before saving.
+            if (provider.get("token_env") or kind == "github" and provider.get("use_gh")) and url.scheme != "https":
+                raise ValueError("Authenticated providers require HTTPS")
+        timeout = provider.get("timeout", 15)
+        if type(timeout) not in (float, int) or not 0 < timeout <= 3600:
+            raise ValueError("Provider timeout must be between 0 and 3600 seconds")
         if kind in ("git", "github"):
             ref = provider.get("ref", "HEAD")
-            if not isinstance(ref, str) or not ref or ref.startswith("-"):
+            if not isinstance(ref, str) or not ref or ref.startswith("-") or "\0" in ref:
                 raise ValueError("Repository revision must be a nonempty string without a leading hyphen")
             directory = provider.get("directory", "cids")
-            if not isinstance(directory, str) or PurePosixPath(directory).is_absolute() or ".." in PurePosixPath(directory).parts or "\\" in directory:
+            if not isinstance(directory, str) or PurePosixPath(directory).is_absolute() or ".." in PurePosixPath(directory).parts or any(char in directory for char in ("\\", ":", "\0")):
                 raise ValueError("Repository directory must be a relative path")
     if not isinstance(config.get("allowed_origins", []), list):
         raise ValueError("allowed_origins must be an array")
@@ -87,8 +96,9 @@ def validate_config(config):
         if not isinstance(origin, str):
             raise ValueError("Origins must be strings")
         url = urlsplit(origin)
-        if url.scheme not in ("http", "https") or not url.hostname or origin != url.scheme + "://" + url.netloc or url.username or url.password:
+        if url.scheme not in ("http", "https") or not url.hostname or origin != url.scheme + "://" + url.netloc or url.username is not None or url.password is not None or "*" in origin or "\0" in origin or any(char.isspace() for char in origin):
             raise ValueError("Grant a specific HTTP(S) origin without a path or wildcard")
+        url.port
     return config
 
 

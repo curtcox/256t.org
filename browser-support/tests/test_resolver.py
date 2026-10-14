@@ -6,6 +6,7 @@ import tempfile
 import threading
 import unittest
 from concurrent.futures import Future, ThreadPoolExecutor
+from copy import deepcopy
 from unittest.mock import patch
 
 from t256_helper.resolver import Resolver, ResolutionError
@@ -122,6 +123,25 @@ class ResolverTests(unittest.TestCase):
         self.resolver.configure(config)
         with self.assertRaises(ValueError):
             self.resolver.resolve("t256:" + compute_cid(b"x" * 65))
+
+    def test_invalid_configuration_does_not_replace_saved_settings(self):
+        original = deepcopy(self.resolver.config)
+        invalid = []
+        for changes in [{"enabled": "false"}, {"use_gh": 1}, {"token_env": []}, {"token_env": "9BAD"},
+                        {"timeout": True}, {"timeout": float("nan")}, {"timeout": float("inf")}, {"timeout": 10**1000},
+                        {"url": "https://example.org:bad"}, {"url": "https://example.org:99999"},
+                        {"url": "https://@example.org"}, {"url": "https://example.org/\npath"},
+                        {"url": "http://example.org", "token_env": "TOKEN"}]:
+            config = deepcopy(original); config["providers"][0].update(changes); invalid.append(config)
+        for repo in ["owner/", "/repo", "owner/repo/extra"]:
+            config = deepcopy(original); config["providers"] = [{"id": "git", "type": "github", "repo": repo}]; invalid.append(config)
+        for changes in [{"version": True}, {"max_bytes": True}, {"cache_bytes": False},
+                        {"allowed_origins": ["https://*.example.org"]}, {"allowed_origins": ["http://example.org:bad"]}]:
+            config = deepcopy(original); config.update(changes); invalid.append(config)
+        for config in invalid:
+            with self.subTest(config=str(config)[:160]), self.assertRaises(ValueError): self.resolver.configure(config)
+            self.assertEqual(self.resolver.config, original)
+            self.assertEqual(json.loads(self.resolver.config_path.read_text()), original)
 
     def test_cache_budget_changes_and_clear_preserve_indexes(self):
         folder = self.root / "cache-fixture"; folder.mkdir()

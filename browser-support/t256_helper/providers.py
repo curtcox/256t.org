@@ -17,7 +17,8 @@ class ProviderError(RuntimeError):
 class SameOriginRedirects(HTTPRedirectHandler):
     def redirect_request(self, request, fp, code, msg, headers, new_url):
         old, new = urlsplit(request.full_url), urlsplit(new_url)
-        if (old.scheme, old.hostname, old.port) != (new.scheme, new.hostname, new.port):
+        origin = lambda url: (url.scheme, url.hostname, url.port if url.port is not None else (443 if url.scheme == "https" else 80))
+        if origin(old) != origin(new) or new.username is not None or new.password is not None:
             raise ProviderError("Cross-origin redirect refused")
         return super().redirect_request(request, fp, code, msg, headers, new_url)
 
@@ -36,7 +37,7 @@ def read_bounded(stream, limit):
 
 def get_url(url, limit, timeout, headers=None):
     parts = urlsplit(url)
-    if parts.scheme not in ("http", "https") or not parts.hostname or parts.username or parts.password:
+    if parts.scheme not in ("http", "https") or not parts.hostname or parts.username is not None or parts.password is not None:
         raise ProviderError("Provider must use an HTTP(S) URL without embedded credentials")
     request_headers = {"User-Agent": "t256-helper/0.1", "Accept-Encoding": "identity"}
     request_headers.update(headers or {})
@@ -57,15 +58,21 @@ def inside(root, relative):
 def github_headers(provider):
     headers = {"Accept": "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28"}
     token = os.environ.get(provider.get("token_env", "GH_TOKEN"))
+    if provider.get("token_env") and not token:
+        raise ProviderError("Provider credential environment variable is not set")
     host = urlsplit(provider.get("api_url", "https://api.github.com")).hostname
     if not token and provider.get("use_gh", False):
         executable = shutil.which("gh")
         if not executable:
             executable = next((path for path in ("/opt/homebrew/bin/gh", "/usr/local/bin/gh") if Path(path).is_file()), "gh")
-        result = subprocess.run([executable, "auth", "token", "--hostname", "github.com" if host == "api.github.com" else host],
-                                capture_output=True, text=True, timeout=15)
-        if result.returncode == 0:
-            token = result.stdout.strip()
+        try:
+            result = subprocess.run([executable, "auth", "token", "--hostname", "github.com" if host == "api.github.com" else host],
+                                    capture_output=True, text=True, timeout=provider.get("timeout", 15))
+        except (OSError, subprocess.SubprocessError):
+            raise ProviderError("GitHub CLI login is unavailable") from None
+        if result.returncode != 0 or not result.stdout.strip():
+            raise ProviderError("GitHub CLI login is unavailable")
+        token = result.stdout.strip()
     if token:
         if urlsplit(provider.get("api_url", "https://api.github.com")).scheme != "https":
             raise ProviderError("Authenticated GitHub providers require HTTPS")
