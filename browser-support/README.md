@@ -86,6 +86,10 @@ The default per-content limit is 64 MiB; the disk cache budget is 256 MiB.
 These limits are editable in settings. Original objects are currently buffered in
 memory; this version is intended for bounded desktop resources rather than
 multi-gigabyte media. The cache is verified on every read and evicted by last use.
+Simultaneous requests for the same CID share one provider retrieval and verification,
+including when the object exceeds the disk cache budget. Requests for different
+CIDs can resolve in parallel. Provider or file-index changes start a new retrieval
+generation, so new requests do not join work that began under older settings.
 The gateway supports single HTTP byte ranges for original resources, allowing
 audio/video seeking and partial downloads. The entire object is retrieved and
 verified before any range is sent. Transformed HTML/CSS, malformed or multipart

@@ -3,10 +3,13 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
 import unittest
+from concurrent.futures import Future, ThreadPoolExecutor
 from unittest.mock import patch
 
 from t256_helper.resolver import Resolver, ResolutionError
+from t256_helper.providers import ProviderError
 from t256_helper.uri import compute_cid, encode, parse_uri, media_type
 
 
@@ -135,6 +138,84 @@ class ResolverTests(unittest.TestCase):
         with patch("t256_helper.resolver.retrieve", side_effect=shrinking_provider):
             self.assertEqual(self.resolver.resolve("t256:" + compute_cid(content))[1], content)
         self.assertEqual(self.resolver.cache_stats()["entries"], 0)
+
+    def test_overlapping_requests_share_verified_bytes_and_failures_then_retry(self):
+        content = bytes(100); uri = "t256:" + compute_cid(content)
+        config = dict(self.resolver.config); config["cache_bytes"] = 64
+        self.resolver.configure(config)
+        for fail in (False, True):
+            with self.subTest(failure=fail):
+                started, joined, release = threading.Event(), threading.Event(), threading.Event()
+                class WatchedFuture(Future):
+                    def result(inner, *args, **kwargs):
+                        joined.set()
+                        return super().result(*args, **kwargs)
+                calls = []
+                def provider(*args):
+                    calls.append(1); started.set()
+                    if not release.wait(5): raise AssertionError("Test provider was not released")
+                    if fail: raise ProviderError("Unavailable fixture")
+                    return content
+                with patch("t256_helper.resolver.Future", WatchedFuture), patch("t256_helper.resolver.retrieve", side_effect=provider), ThreadPoolExecutor(2) as pool:
+                    first = pool.submit(self.resolver.resolve, uri + ".js")
+                    try:
+                        self.assertTrue(started.wait(3))
+                        second = pool.submit(self.resolver.resolve, uri + ".txt")
+                        self.assertTrue(joined.wait(3), "Second request did not join the first retrieval")
+                    finally:
+                        release.set()
+                    if fail:
+                        for request in (first, second):
+                            with self.assertRaises(ResolutionError): request.result(timeout=3)
+                        fail = False
+                        self.assertEqual(self.resolver.resolve(uri)[1], content)
+                        self.assertEqual(len(calls), 2)
+                    else:
+                        self.assertEqual(first.result(timeout=3)[0].suffix, ".js")
+                        self.assertEqual(second.result(timeout=3)[0].suffix, ".txt")
+                        self.assertEqual(second.result()[1], content)
+                        self.assertEqual(len(calls), 1)
+                self.assertEqual(self.resolver.cache_stats()["entries"], 0)
+
+    def test_different_identifiers_resolve_in_parallel(self):
+        contents = [bytes(100), bytes([1]) * 100]
+        started = [threading.Event(), threading.Event()]; release = threading.Event()
+        def provider(_, uri, index):
+            i = [compute_cid(data) for data in contents].index(uri.cid)
+            started[i].set()
+            if not release.wait(5): raise AssertionError("Test provider was not released")
+            return contents[i]
+        with patch("t256_helper.resolver.retrieve", side_effect=provider), ThreadPoolExecutor(2) as pool:
+            requests = [pool.submit(self.resolver.resolve, "t256:" + compute_cid(data)) for data in contents]
+            try:
+                for event in started: self.assertTrue(event.wait(3), "Unrelated content was blocked")
+            finally:
+                release.set()
+            self.assertEqual([request.result(timeout=3)[1] for request in requests], contents)
+
+    def test_new_settings_do_not_join_old_retrieval(self):
+        content = bytes(100); uri = "t256:" + compute_cid(content)
+        config = dict(self.resolver.config)
+        config["providers"] = [{"id": "old", "type": "http", "url": "https://old.example"}]
+        self.resolver.configure(config)
+        started, release = threading.Event(), threading.Event()
+        def provider(item, *args):
+            if item["id"] == "old":
+                started.set()
+                if not release.wait(5): raise AssertionError("Test provider was not released")
+                raise ProviderError("Old provider unavailable")
+            return content
+        with patch("t256_helper.resolver.retrieve", side_effect=provider), ThreadPoolExecutor(2) as pool:
+            old = pool.submit(self.resolver.resolve, uri)
+            try:
+                self.assertTrue(started.wait(3))
+                config["providers"] = [{"id": "new", "type": "http", "url": "https://new.example"}]
+                self.resolver.configure(config)
+                new = pool.submit(self.resolver.resolve, uri)
+                self.assertEqual(new.result(timeout=3)[2]["provider"], "new")
+            finally:
+                release.set()
+            with self.assertRaises(ResolutionError): old.result(timeout=3)
 
 
 if __name__ == "__main__":

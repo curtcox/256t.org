@@ -9,6 +9,8 @@ import threading
 import subprocess
 import math
 import secrets
+from concurrent.futures import Future
+from copy import deepcopy
 from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 
@@ -102,6 +104,8 @@ class Resolver:
         self.config_path = self.directory / "config.json"
         self.cache = self.directory / "cache"
         self.lock = threading.RLock()
+        self.generation = 0
+        self.inflight = {}
         self.directory.mkdir(parents=True, exist_ok=True)
         if os.name != "nt":
             self.directory.chmod(0o700)
@@ -118,12 +122,15 @@ class Resolver:
             self.origin_epochs = {origin: self.origin_epochs.get(origin, secrets.token_urlsafe(16))
                                   for origin in config.get("allowed_origins", [])}
             self.config = config
+            self.generation += 1
             self.trim_cache(config["cache_bytes"])
 
     def index(self, identifier):
         provider = next(p for p in self.config["providers"] if p["id"] == identifier)
         result = build_index(provider, self.config["max_bytes"])
-        save_json(self.directory / "indexes" / (identifier + ".json"), result)
+        with self.lock:
+            save_json(self.directory / "indexes" / (identifier + ".json"), result)
+            self.generation += 1
         return len(result)
 
     def load_index(self, identifier):
@@ -140,18 +147,20 @@ class Resolver:
                 raise ValueError("Index keys must be CIDs without a scheme or suffix")
             if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts or "\\" in path or ":" in path:
                 raise ValueError("Index paths must be relative and cannot escape the provider")
-        save_json(self.directory / "indexes" / (identifier + ".json"), mapping)
+        with self.lock:
+            save_json(self.directory / "indexes" / (identifier + ".json"), mapping)
+            self.generation += 1
         return len(mapping)
 
     def resolve(self, value):
         uri = parse_uri(value)
-        config = self.config
-        if uri.length > config["max_bytes"]:
-            raise ValueError("Content exceeds the configured size limit")
-        if uri.inline is not None:
-            return uri, uri.inline, {"provider": "inline", "cache": False, "failures": []}
         path = self.cache / uri.cid
         with self.lock:
+            config = self.config
+            if uri.length > config["max_bytes"]:
+                raise ValueError("Content exceeds the configured size limit")
+            if uri.inline is not None:
+                return uri, uri.inline, {"provider": "inline", "cache": False, "failures": []}
             if path.exists():
                 # Reverify on every read: a corrupt or replaced cache entry cannot be served.
                 if path.stat().st_size == uri.length:
@@ -163,6 +172,27 @@ class Resolver:
                     except ValueError:
                         pass
                 path.unlink()
+            key = (self.generation, uri.cid)
+            pending = self.inflight.get(key)
+            owner = pending is None
+            if owner:
+                pending = self.inflight[key] = Future()
+        if owner:
+            try:
+                pending.set_result(self.fetch(uri, config))
+            except BaseException as error:
+                # Every exit releases waiting requests, including interrupted work.
+                pending.set_exception(error)
+                raise
+            finally:
+                with self.lock:
+                    del self.inflight[key]
+        # Never wait while holding the cache/configuration lock. The result is
+        # verified original bytes; each caller keeps its own interpretation suffix.
+        content, provenance = pending.result()
+        return uri, content, deepcopy(provenance)
+
+    def fetch(self, uri, config):
         failures = []
         for provider in config["providers"]:
             if not provider.get("enabled", True):
@@ -172,7 +202,7 @@ class Resolver:
                 uri.verify(content)
                 with self.lock:
                     self.store(uri.cid, content, self.config["cache_bytes"])
-                return uri, content, {"provider": provider["id"], "cache": False, "failures": failures}
+                return content, {"provider": provider["id"], "cache": False, "failures": failures}
             except (OSError, ValueError, ProviderError, HTTPError, URLError, TimeoutError, subprocess.SubprocessError) as error:
                 # Avoid leaking provider paths, URLs, or credentials through browser diagnostics.
                 reason = "HTTP " + str(error.code) if isinstance(error, HTTPError) else type(error).__name__
