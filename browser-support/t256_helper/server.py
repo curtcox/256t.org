@@ -160,6 +160,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.response(200, path.read_bytes(), mime, headers)
         if parts.path == "/api/config":
             return self.json(200, self.server.resolver.config) if self.admin() else self.json(403, {"error": "Management access required"})
+        if parts.path == "/api/cache":
+            return self.json(200, self.server.resolver.cache_stats()) if self.admin() else self.json(403, {"error": "Management access required"})
         route = parts.path.split("/")
         if len(route) < 4 or route[1] != "s" or not self.content_access(route[2]):
             return self.json(403, {"error": "A valid content access capability is required"})
@@ -220,12 +222,19 @@ class Handler(BaseHTTPRequestHandler):
             if length <= 0 or length > 1024 * 1024:
                 return self.json(413, {"error": "Invalid management request size"})
             value = json.loads(self.rfile.read(length))
+            if not isinstance(value, dict):
+                raise ValueError("Management requests must be JSON objects")
             if self.path == "/api/config":
                 self.server.resolver.configure(value)
                 return self.json(200, {"saved": True})
             if self.path == "/api/index":
                 count = self.server.resolver.index(value["id"])
                 return self.json(200, {"indexed": count})
+            if self.path == "/api/import-index":
+                count = self.server.resolver.import_index(value["id"], value["mapping"])
+                return self.json(200, {"indexed": count})
+            if self.path == "/api/cache/clear":
+                return self.json(200, {"removed": self.server.resolver.clear_cache(), **self.server.resolver.cache_stats()})
             if self.path == "/api/grant":
                 origin = value["origin"]
                 token = self.server.grant(origin)

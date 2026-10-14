@@ -1,8 +1,10 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from t256_helper.resolver import Resolver, ResolutionError
 from t256_helper.uri import compute_cid, encode, parse_uri, media_type
@@ -104,6 +106,35 @@ class ResolverTests(unittest.TestCase):
         self.resolver.configure(config)
         with self.assertRaises(ValueError):
             self.resolver.resolve("t256:" + compute_cid(b"x" * 65))
+
+    def test_cache_budget_changes_and_clear_preserve_indexes(self):
+        folder = self.root / "cache-fixture"; folder.mkdir()
+        self.folders(folder)
+        for i in range(3):
+            content = bytes([i]) * 100; cid = compute_cid(content)
+            (folder / cid).write_bytes(content)
+            self.resolver.resolve("t256:" + cid)
+            os.utime(self.resolver.cache / cid, (100 + i, 100 + i))
+        self.assertEqual(self.resolver.cache_stats()["bytes"], 300)
+        config = dict(self.resolver.config); config["cache_bytes"] = 180
+        self.resolver.configure(config)
+        self.assertEqual(self.resolver.cache_stats(), {"entries": 1, "bytes": 100, "budget": 180})
+        self.assertTrue((self.resolver.cache / compute_cid(bytes([2]) * 100)).exists())
+        self.resolver.index("folder0")
+        self.assertEqual(self.resolver.clear_cache(), 1)
+        self.assertEqual(self.resolver.cache_stats()["bytes"], 0)
+        self.assertEqual(len(self.resolver.load_index("folder0")), 3)
+        self.assertEqual(self.resolver.resolve("t256:" + compute_cid(bytes(100)))[1], bytes(100))
+
+    def test_in_flight_retrieval_uses_current_cache_budget(self):
+        content = bytes(100)
+        def shrinking_provider(*args):
+            config = dict(self.resolver.config); config["cache_bytes"] = 64
+            self.resolver.configure(config)
+            return content
+        with patch("t256_helper.resolver.retrieve", side_effect=shrinking_provider):
+            self.assertEqual(self.resolver.resolve("t256:" + compute_cid(content))[1], content)
+        self.assertEqual(self.resolver.cache_stats()["entries"], 0)
 
 
 if __name__ == "__main__":

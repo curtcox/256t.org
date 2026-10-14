@@ -114,6 +114,7 @@ class Resolver:
         with self.lock:
             save_json(self.config_path, config)
             self.config = config
+            self.trim_cache(config["cache_bytes"])
 
     def index(self, identifier):
         provider = next(p for p in self.config["providers"] if p["id"] == identifier)
@@ -131,7 +132,8 @@ class Resolver:
         if not isinstance(mapping, dict):
             raise ValueError("Index must map CIDs to relative filenames")
         for cid, path in mapping.items():
-            parse_uri("t256:" + cid)
+            if not isinstance(cid, str) or parse_uri("t256:" + cid).cid != cid:
+                raise ValueError("Index keys must be CIDs without a scheme or suffix")
             if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts or "\\" in path or ":" in path:
                 raise ValueError("Index paths must be relative and cannot escape the provider")
         save_json(self.directory / "indexes" / (identifier + ".json"), mapping)
@@ -165,7 +167,7 @@ class Resolver:
                 content = retrieve(provider, uri, self.load_index(provider["id"]))
                 uri.verify(content)
                 with self.lock:
-                    self.store(uri.cid, content, config["cache_bytes"])
+                    self.store(uri.cid, content, self.config["cache_bytes"])
                 return uri, content, {"provider": provider["id"], "cache": False, "failures": failures}
             except (OSError, ValueError, ProviderError, HTTPError, URLError, TimeoutError, subprocess.SubprocessError) as error:
                 # Avoid leaking provider paths, URLs, or credentials through browser diagnostics.
@@ -184,7 +186,26 @@ class Resolver:
         finally:
             if os.path.exists(temporary):
                 os.unlink(temporary)
-        entries = sorted((p for p in self.cache.iterdir() if not p.name.startswith(".")), key=lambda p: p.stat().st_mtime)
+        self.trim_cache(budget)
+
+    def cache_entries(self):
+        return [p for p in self.cache.iterdir() if not p.name.startswith(".") and p.is_file()]
+
+    def cache_stats(self):
+        with self.lock:
+            entries = self.cache_entries()
+            return {"entries": len(entries), "bytes": sum(p.stat().st_size for p in entries),
+                    "budget": self.config["cache_bytes"]}
+
+    def clear_cache(self):
+        with self.lock:
+            entries = self.cache_entries()
+            for entry in entries:
+                entry.unlink()
+            return len(entries)
+
+    def trim_cache(self, budget):
+        entries = sorted(self.cache_entries(), key=lambda p: p.stat().st_mtime)
         total = sum(p.stat().st_size for p in entries)
         for entry in entries:
             if total <= budget:

@@ -6,6 +6,31 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   await page.goto(runtime.settings_url);
   await page.getByRole('status').filter({ hasText: 'Ready' }).waitFor();
   assert.equal(await page.locator('#providers tr').count(), 1);
+  await page.getByLabel('Import index for fixtures').setInputFiles({
+    name: 'index.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ [fixture.image.slice(5, -4)]: fixture.image.slice(5, -4) })),
+  });
+  await page.getByRole('status').filter({ hasText: 'Imported 1' }).waitFor();
+  // Each engine shares the helper, so reset copies left by the preceding engine.
+  await page.getByRole('button', { name: 'Clear cached content' }).click();
+  await page.getByRole('status').filter({ hasText: 'Removed' }).waitFor();
+  await page.evaluate(async ({ runtime, fixture }) => {
+    const response = await fetch(`${runtime.origin}/s/${runtime.view}/raw/${fixture.image.slice(5)}`, { headers: { Range: 'bytes=2-5' } });
+    if (response.status !== 206 || (await response.arrayBuffer()).byteLength !== 4) throw new Error('Browser range request failed');
+  }, { runtime, fixture });
+  await page.getByRole('button', { name: 'Refresh cache usage' }).click();
+  await page.locator('#cache-status').filter({ hasText: '1 cached objects' }).waitFor();
+  await page.getByRole('button', { name: 'Clear cached content' }).click();
+  await page.locator('#cache-status').filter({ hasText: '0 cached objects' }).waitFor();
+  await page.locator('#add-provider [name="id"]').fill('fixtures');
+  await page.locator('#add-provider [name="location"]').fill('unused');
+  await page.getByRole('button', { name: 'Add provider' }).click();
+  await page.getByRole('status').filter({ hasText: 'Provider IDs must be unique' }).waitFor();
+  await page.getByRole('button', { name: 'Disable', exact: true }).click();
+  await page.getByRole('button', { name: 'Enable', exact: true }).waitFor();
+  assert.equal(await page.locator('#providers tr').count(), 1);
+  await page.getByRole('button', { name: 'Enable', exact: true }).click();
+  await page.getByRole('button', { name: 'Disable', exact: true }).waitFor();
   const content = `${runtime.origin}/s/${runtime.view}/view/${fixture.root.slice(5)}`;
   await page.goto(content);
   await page.waitForFunction(() => document.querySelector('#order').textContent === 'first,second');

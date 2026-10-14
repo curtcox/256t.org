@@ -47,6 +47,34 @@ class GatewayTests(unittest.TestCase):
             urlopen(Request(self.server.origin + "/health", headers={"Host": "evil.example"}))
         self.assertEqual(failure.exception.code, 403)
 
+    def test_settings_index_import_and_cache_controls_require_management(self):
+        folder = self.root / "ordinary"; folder.mkdir()
+        content = b"content under an ordinary filename" * 5
+        (folder / "report.txt").write_bytes(content)
+        cid = compute_cid(content)
+        config = dict(self.resolver.config)
+        config["providers"] = [{"id": "documents", "type": "folder", "path": str(folder)}]
+        self.resolver.configure(config)
+        for path, body in [("/api/import-index", {"id": "documents", "mapping": {cid: "report.txt"}}),
+                           ("/api/cache/clear", {}), ("/api/cache", None)]:
+            with self.assertRaises(HTTPError) as failure: self.request(path, body=body)
+            self.assertEqual(failure.exception.code, 403)
+        result = json.load(self.request("/api/import-index", admin=True, body={"id": "documents", "mapping": {cid: "report.txt"}}))
+        self.assertEqual(result, {"indexed": 1})
+        self.assertEqual(self.request("/s/" + self.server.view + "/raw/" + cid).read(), content)
+        self.assertEqual(json.load(self.request("/api/cache", admin=True))["entries"], 1)
+        result = json.load(self.request("/api/cache/clear", admin=True, body={}))
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["bytes"], 0)
+        for mapping in [{cid: "../private"}, {cid + ".txt": "report.txt"}]:
+            with self.assertRaises(HTTPError) as failure:
+                self.request("/api/import-index", admin=True, body={"id": "documents", "mapping": mapping})
+            self.assertEqual(failure.exception.code, 400)
+        self.assertEqual(self.resolver.load_index("documents"), {cid: "report.txt"})
+        with self.assertRaises(HTTPError) as failure:
+            self.request("/api/import-index", admin=True, body=[])
+        self.assertEqual(failure.exception.code, 400)
+
     def test_startup_does_not_depend_on_reverse_dns(self):
         with patch('socket.getfqdn', side_effect=AssertionError('Unexpected DNS lookup')):
             server = Gateway(self.resolver, 0)

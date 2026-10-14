@@ -17,7 +17,8 @@ python3 browser-support/run.py serve --open
 ```
 
 The provider settings page lets you add, reorder, disable, remove, and index
-providers. Hashbin's public content origin, `https://256t.us`, is selected initially.
+providers, import file indexes, and view or clear cached content.
+Hashbin's public content origin, `https://256t.us`, is selected initially.
 Use `python` in place of `python3` on Windows if that is your Python command.
 Keep this checkout in a stable location if you install desktop registration.
 
@@ -69,6 +70,11 @@ a JSON object mapping full CIDs to relative paths:
 python3 browser-support/run.py import-index github cid-paths.json
 ```
 
+Use **Import index** beside a folder, local clone, or GitHub provider in settings
+to select the same JSON file. Keys are bare CIDs; paths are relative to the folder
+or repository root (include repository directories in imported paths). The settings
+upload is limited to 1000 KiB; use the command above for larger manifests.
+
 Indexes never establish trust: the returned bytes still have to match the CID.
 Reindex after changing files or repository revisions. Local clones are not
 automatically fetched. Mounted shares use the user's existing mount credentials.
@@ -85,7 +91,9 @@ audio/video seeking and partial downloads. The entire object is retrieved and
 verified before any range is sent. Transformed HTML/CSS, malformed or multipart
 ranges, and conditional ranges without a matching validator receive full responses.
 Disabling a provider retains previously verified cached content. Clear the
-settings directory's `cache` folder if you want to remove those copies.
+cache using **Clear cached content** in settings if you want to remove those copies.
+Cache usage is available there too; reducing the budget evicts the oldest copies
+immediately. Provider configuration and file indexes survive clearing the cache.
 
 ## Browser integration choices
 
