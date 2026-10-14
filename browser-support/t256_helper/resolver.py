@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from pathlib import PurePosixPath
 import tempfile
 import threading
 import subprocess
@@ -114,6 +115,18 @@ class Resolver:
     def load_index(self, identifier):
         path = self.directory / "indexes" / (identifier + ".json")
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+    def import_index(self, identifier, mapping):
+        if not any(p["id"] == identifier for p in self.config["providers"]):
+            raise ValueError("Provider not found")
+        if not isinstance(mapping, dict):
+            raise ValueError("Index must map CIDs to relative filenames")
+        for cid, path in mapping.items():
+            parse_uri("t256:" + cid)
+            if not isinstance(path, str) or not path or PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts or "\\" in path or ":" in path:
+                raise ValueError("Index paths must be relative and cannot escape the provider")
+        save_json(self.directory / "indexes" / (identifier + ".json"), mapping)
+        return len(mapping)
 
     def resolve(self, value):
         uri = parse_uri(value)

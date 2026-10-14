@@ -47,3 +47,8 @@ Thumbs.db
 video-series/manim/media/
 video-series/manim/output/
 video-series/media/
+
+# Browser integration development
+node_modules/
+.playwright-mcp/
+browser-support/dist/

@@ -13,10 +13,11 @@ module.exports = async function browserSmoke(page, runtime, fixture) {
   const gateway = await page.evaluate(() => ({
     image: document.querySelector('#image').naturalWidth,
     css: getComputedStyle(document.querySelector('#css')).color,
-    opaque: location.origin,
+    opaque: window.origin,
   }));
   assert.equal(gateway.image, 48);
   assert.equal(gateway.css, 'rgb(20, 80, 160)');
+  assert.equal(gateway.opaque, 'null');
 
   // The publisher loader also runs as an ordinary same-origin cooperating page.
   await page.goto(runtime.origin + '/demo.html');

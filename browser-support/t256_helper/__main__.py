@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import subprocess
 
 from .resolver import Resolver
 
@@ -37,6 +38,8 @@ def main():
     remove = commands.add_parser("remove"); remove.add_argument("id")
     for name in ("enable", "disable", "index"):
         command = commands.add_parser(name); command.add_argument("id")
+    import_index = commands.add_parser("import-index", help="Import a JSON object mapping CIDs to relative provider paths")
+    import_index.add_argument("id"); import_index.add_argument("file", type=Path)
     allow = commands.add_parser("allow", help="Grant a website origin read access to selected provider content")
     allow.add_argument("origin")
     fetch = commands.add_parser("resolve", help="Resolve and verify content")
@@ -47,7 +50,9 @@ def main():
     serve.add_argument("--open", action="store_true", help="Open the settings page")
     open_command = commands.add_parser("open", help="Open a t256 URI in the local browser gateway")
     open_command.add_argument("uri")
-    commands.add_parser("native", help="Browser native messaging host")
+    native = commands.add_parser("native", help="Browser native messaging host")
+    native.add_argument("browser_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
+    commands.add_parser("settings", help="Open settings, starting the helper if necessary")
     install = commands.add_parser("install", help="Install per-user t256 scheme registration")
     install.add_argument("--browser", choices=["chrome", "edge", "brave", "opera", "firefox"])
     install.add_argument("--extension-id", help="Also register a browser native messaging host")
@@ -79,6 +84,8 @@ def main():
             resolver.configure(config)
         elif args.command == "index":
             print("Indexed " + str(resolver.index(args.id)) + " CIDs")
+        elif args.command == "import-index":
+            print("Imported " + str(resolver.import_index(args.id, json.loads(args.file.read_text(encoding="utf-8")))) + " CIDs")
         elif args.command == "allow":
             if args.origin not in config["allowed_origins"]:
                 config["allowed_origins"].append(args.origin)
@@ -92,13 +99,17 @@ def main():
         elif args.command == "serve":
             from .server import serve
             serve(resolver, args.port, args.open)
-        elif args.command in ("open", "native"):
-            from .desktop import open_uri, native_host
-            open_uri(resolver, args.uri) if args.command == "open" else native_host(resolver)
+        elif args.command in ("open", "native", "settings"):
+            from .desktop import open_uri, native_host, ensure_gateway
+            if args.command == "open": open_uri(resolver, args.uri)
+            elif args.command == "native": native_host(resolver)
+            else:
+                import webbrowser
+                webbrowser.open(ensure_gateway(resolver)["settings_url"])
         elif args.command in ("install", "uninstall"):
             from .install import install, uninstall
             install(resolver, args.browser, args.extension_id) if args.command == "install" else uninstall(resolver)
-    except (OSError, ValueError, StopIteration, RuntimeError) as error:
+    except (OSError, ValueError, StopIteration, RuntimeError, subprocess.SubprocessError) as error:
         print("t256: " + (str(error) or "Provider not found"), file=sys.stderr)
         return 1
     return 0

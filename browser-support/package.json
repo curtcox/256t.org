@@ -1,0 +1,13 @@
+{
+  "name": "t256-browser-support",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node --test tests/loader.test.mjs",
+    "test:browsers": "node tests/run-browsers.mjs",
+    "build:extensions": "python3 build_extensions.py"
+  },
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}

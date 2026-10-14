@@ -1,0 +1,62 @@
+name: t256 browser support
+
+on:
+  push:
+    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.github/workflows/browser-support.yml']
+  pull_request:
+    paths: ['browser-support/**', 'implementations/ecmascript/**', 'resolve.html', '.github/workflows/browser-support.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolver:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolver, gateway, and desktop tests
+        env:
+          PYTHONPATH: browser-support
+        run: python -m unittest discover -s browser-support/tests -v
+      - name: Browser loader tests
+        run: node --test browser-support/tests/loader.test.mjs
+      - name: Build extension packages
+        run: python browser-support/build_extensions.py
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: t256-browser-extensions
+          path: browser-support/dist/extensions/*.zip
+
+  browsers:
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+        working-directory: browser-support
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+        working-directory: browser-support
+      - name: Test images, CSS, scripts, and module dependencies
+        run: npm run test:browsers -- ${{ matrix.browser }}
+        working-directory: browser-support

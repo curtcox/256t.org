@@ -11,6 +11,7 @@ export class T256Client {
     this.timeout = timeout;
     this.maxBytes = maxBytes;
     this.objectUrls = new Set();
+    this.hydrated = new WeakMap();
   }
 
   async request(url, signal, consume) {
@@ -103,6 +104,12 @@ export class T256Client {
     return script;
   }
 
+  async worker(value, { signal, name } = {}) {
+    const result = await this.resolve(value, { signal });
+    if (result.type !== 'text/javascript') throw new TypeError('A worker URI needs a JavaScript suffix');
+    return new Worker(await this.blobUrl(value, result.type, { signal }), { type: 'classic', name });
+  }
+
   /** Call before loading any modules. Supply the full graph, including cycles. */
   async imports(mapping, { nonce, signal } = {}) {
     const entries = await Promise.all(Object.entries(mapping).map(async ([specifier, uri]) => [specifier, (await this.resolve(uri, { signal })).url]));
@@ -116,15 +123,35 @@ export class T256Client {
 
   /** Inert data attributes avoid races with the browser's HTML parser. */
   async hydrate(root = document, { nonce, signal } = {}) {
-    await Promise.all([...root.querySelectorAll('img[data-t256-src]')].map(image => this.image(image, image.dataset.t256Src, { signal })));
-    for (const link of root.querySelectorAll('link[data-t256-href]')) {
+    const select = selector => [...(root.matches?.(selector) ? [root] : []), ...root.querySelectorAll(selector)]
+      .filter(element => this.hydrated.get(element) !== (element.dataset.t256Src ?? element.dataset.t256Href));
+    await Promise.all(select('img[data-t256-src]').map(async image => {
+      const uri = image.dataset.t256Src;
+      await this.image(image, uri, { signal }); this.hydrated.set(image, uri);
+    }));
+    for (const link of select('link[data-t256-href]')) {
       if (link.rel !== 'stylesheet') throw new TypeError('Only stylesheet links are supported');
       link.crossOrigin = 'anonymous';
-      link.href = (await this.resolve(link.dataset.t256Href, { signal })).url;
+      const uri = link.dataset.t256Href;
+      link.href = (await this.resolve(uri, { signal })).url;
+      this.hydrated.set(link, uri);
     }
-    for (const placeholder of root.querySelectorAll('script[type="application/t256"][data-t256-src]')) {
-      await this.script(placeholder.dataset.t256Src, { module: placeholder.dataset.t256Module === 'true', nonce, signal });
+    for (const placeholder of select('script[type="application/t256"][data-t256-src]')) {
+      const uri = placeholder.dataset.t256Src;
+      await this.script(uri, { module: placeholder.dataset.t256Module === 'true', nonce, signal });
+      this.hydrated.set(placeholder, uri);
     }
+  }
+
+  /** Opt-in dynamic declarations; arbitrary native t256 attributes are not intercepted. */
+  observe(root = document, { onError = error => console.error(error), ...options } = {}) {
+    let queue = Promise.resolve();
+    const observer = new MutationObserver(() => {
+      queue = queue.then(() => this.hydrate(root, options)).catch(onError);
+    });
+    observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-t256-src', 'data-t256-href'] });
+    options.signal?.addEventListener('abort', () => observer.disconnect(), { once: true });
+    return observer;
   }
 
   dispose() {

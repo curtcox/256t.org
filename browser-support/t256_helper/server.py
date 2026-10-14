@@ -83,7 +83,7 @@ class Handler(BaseHTTPRequestHandler):
             return origin in (None, self.server.origin, "null")
         for allowed in self.server.resolver.config.get("allowed_origins", []):
             if hmac.compare_digest(token, self.server.grant(allowed)):
-                return origin in (None, allowed)
+                return origin in (None, allowed, "null")
         return False
 
     def do_OPTIONS(self):
@@ -116,7 +116,7 @@ class Handler(BaseHTTPRequestHandler):
             mime = "text/html; charset=utf-8" if path.suffix == ".html" else "text/javascript; charset=utf-8"
             headers = {"Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"}
             if parts.path == "/demo.html":
-                headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' blob: 'unsafe-inline'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"
+                headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' blob: 'unsafe-inline'; img-src 'self' blob:; worker-src blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"
             return self.response(200, path.read_bytes(), mime, headers)
         if parts.path == "/api/config":
             return self.json(200, self.server.resolver.config) if self.admin() else self.json(403, {"error": "Management access required"})
@@ -124,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
         if len(route) < 4 or route[1] != "s" or not self.content_access(route[2]):
             return self.json(403, {"error": "A valid content access capability is required"})
         token, operation = route[2:4]
-        self.opaque_content = token == self.server.view and self.headers.get("Origin") == "null"
+        self.opaque_content = self.headers.get("Origin") == "null"
         try:
             if operation == "resolve" and len(route) == 4:
                 value = parse_qs(parts.query).get("uri", [""])[0]

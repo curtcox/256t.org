@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "t256 content resolver",
+  "version": "0.1.0",
+  "description": "Open verified t256 content using your selected local and remote providers.",
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus", "nativeMessaging"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_popup": "popup.html"},
+  "omnibox": {"keyword": "t256"}
+}
