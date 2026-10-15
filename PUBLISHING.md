@@ -1,5 +1,11 @@
 # Publishing and Storage
 
+<!-- i18n:languages -->
+
+**English** · [简体中文](zh-hans/publishing.html) · [Português (Brasil)](pt-br/publishing.html)
+
+<!-- /i18n:languages -->
+
 For deploying content-addressed storage using CIDs, this repository includes tools for uploading to Cloudflare R2 (S3-compatible storage).
 
 ## R2 Upload Script

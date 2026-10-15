@@ -1,5 +1,11 @@
 # [256t.org](https://curtcox.github.io/256t.org/)
 
+<!-- i18n:languages -->
+
+**English** · [简体中文](zh-hans/index.html) · [Português (Brasil)](pt-br/index.html)
+
+<!-- /i18n:languages -->
+
 <p align="center">
   <img src="examples/256t_logo.png" alt="256t.org Logo" width="200">
   &nbsp;&nbsp;&nbsp;&nbsp;

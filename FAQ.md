@@ -1,5 +1,11 @@
 # Frequently Asked Questions
 
+<!-- i18n:languages -->
+
+**English** · [简体中文](zh-hans/faq.html) · [Português (Brasil)](pt-br/faq.html)
+
+<!-- /i18n:languages -->
+
 ## General Questions
 
 ### What is 256t.org?

@@ -1,0 +1,24 @@
+{
+  "documents": {
+    "README.md": "index.html",
+    "FAQ.md": "faq.html",
+    "PUBLISHING.md": "publishing.html"
+  },
+  "pages": [
+    "hash.html",
+    "check.html",
+    "examples.html",
+    "examples-elm.html",
+    "download.html",
+    "resolve.html"
+  ],
+  "scripts": [
+    "browser-support/web/resolver.mjs"
+  ],
+  "deploy_generated": [
+    "index.html",
+    "faq.html",
+    "publishing.html",
+    "browser-support/dist/"
+  ]
+}
