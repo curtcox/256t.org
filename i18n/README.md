@@ -119,3 +119,40 @@ Add the English file to `pages.json` (`documents` for Markdown, `pages` for
 HTML, `scripts` for a page-specific module whose strings need translating), add
 the marker block to the English page, add its entries to each `strings.json` (or
 a translated Markdown file to each language folder), and rebuild.
+
+## Desktop helper and browser extension
+
+The helper's settings and demo pages and the browser extension are not part of
+the generated site; they translate themselves at runtime from the browser's
+language preferences (English when nothing matches).
+
+```
+browser-support/web/locales/<code>.json      catalog: English text -> translation
+browser-support/web/i18n.mjs                 translator used by the helper pages,
+                                             the extension popup and the resolver
+browser-support/t256_helper/i18n.py          Accept-Language negotiation and
+                                             server-side translation of the pages
+browser-support/extensions/shared/_locales/  the extension's own text (standard
+                                             WebExtension messages.json files)
+```
+
+- **Catalog keys are the English text.** Variable parts use `{name}`
+  placeholders, e.g. `"Edit {provider}": "编辑 {provider}"`. The same keys
+  translate messages the helper sends back (configuration errors, provider
+  diagnostics), so the helper's API and command line stay English.
+- **Pages:** the helper translates `settings.html` and `demo.html` before
+  sending them, so English never flashes; scripts call `t('…')` for text they
+  create and `t.message(…)` for messages from the helper or the page loader.
+- **Resolver:** the site resolver uses the catalog only for messages relayed
+  from the desktop helper; its own text comes from `strings.json` above.
+- **Extension:** popup and background text comes from `_locales/<locale>/messages.json`
+  (`en`, `zh_CN`, `pt_BR`); `languageTag` in each file selects the catalog the
+  popup uses for helper messages. `build_extensions.py` packages `i18n.mjs` and
+  the catalogs with each extension.
+
+To add a language, add `locales/<code>.json` with every key from an existing
+catalog, add the code to `languages` in `i18n.mjs` and `LANGUAGES` in
+`t256_helper/i18n.py` (plus its tags in both `negotiate` functions), and add an
+extension `_locales/<locale>/messages.json`. `tests/test_i18n.py` checks that
+catalogs and extension locales have the same keys and cover every string the
+pages and scripts use.

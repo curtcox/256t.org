@@ -1,5 +1,6 @@
 if (typeof importScripts === 'function') importScripts('uri.js');
 const api = globalThis.browser ?? chrome;
+const msg = (key, english) => api.i18n?.getMessage?.(key) || english;
 const native = async message => {
   const result = await api.runtime.sendNativeMessage('org.t256.helper', message);
   if (result?.error) throw new Error(result.error);
@@ -13,7 +14,7 @@ async function openNative(message) {
 }
 api.runtime.onInstalled.addListener(() => {
   if (!api.runtime.getManifest().permissions.includes('nativeMessaging')) return;
-  api.contextMenus.create({ id: 'open-t256', title: 'Open with t256', contexts: ['link', 'selection'] });
+  api.contextMenus.create({ id: 'open-t256', title: msg('contextMenuOpen', 'Open with t256'), contexts: ['link', 'selection'] });
 });
 api.contextMenus.onClicked.addListener(info => {
   const uri = (info.linkUrl ?? info.selectionText ?? '').trim();
@@ -26,16 +27,16 @@ if (api.omnibox) {
     return globalThis.t256URI.parseUri(/^t256:/i.test(value) ? value : `t256:${value}`).uri;
   };
   const hint = description => api.omnibox.setDefaultSuggestion({ description });
-  api.omnibox.onInputStarted.addListener(() => hint('Enter a CID or a full t256 URI to open verified content'));
+  api.omnibox.onInputStarted.addListener(() => hint(msg('omniboxStart', 'Enter a CID or a full t256 URI to open verified content')));
   api.omnibox.onInputChanged.addListener((text, suggest) => {
-    try { inputUri(text); hint('Open verified content with your desktop helper'); }
-    catch { hint('Enter a valid CID or t256 URI, optionally followed by a file suffix'); }
+    try { inputUri(text); hint(msg('omniboxValid', 'Open verified content with your desktop helper')); }
+    catch { hint(msg('omniboxInvalid', 'Enter a valid CID or t256 URI, optionally followed by a file suffix')); }
     suggest([]);
   });
   api.omnibox.onInputEntered.addListener(text => {
     let uri;
     try { uri = inputUri(text); }
-    catch { hint('Enter a valid CID or t256 URI, optionally followed by a file suffix'); return; }
+    catch { hint(msg('omniboxInvalid', 'Enter a valid CID or t256 URI, optionally followed by a file suffix')); return; }
     openNative({ action: 'open', uri }).catch(error => console.warn(error.message));
   });
 }

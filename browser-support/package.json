@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "test": "node --test tests/loader.test.mjs tests/browser-integration.test.mjs",
+    "test": "node --test tests/loader.test.mjs tests/browser-integration.test.mjs tests/i18n.test.mjs",
     "test:browsers": "node tests/run-browsers.mjs",
     "build:extensions": "python3 build_extensions.py"
   },

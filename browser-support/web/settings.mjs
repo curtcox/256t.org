@@ -1,5 +1,8 @@
+import { translator } from './i18n.mjs';
+
 const key = location.hash.slice(1);
 history.replaceState(null, '', '/');
+const t = await translator(document.documentElement.lang);
 const status = document.querySelector('#status');
 let config;
 let busy = false;
@@ -15,9 +18,9 @@ async function action(work) {
   if (busy) return;
   busy = true;
   for (const element of document.querySelectorAll('button, input[type="file"]')) element.disabled = true;
-  status.textContent = 'Working…';
-  try { const message = await work(); status.textContent = message ?? 'Ready. Content is verified before use.'; }
-  catch (error) { status.textContent = error.message; }
+  status.textContent = t('Working…');
+  try { const message = await work(); status.textContent = message ?? t('Ready. Content is verified before use.'); }
+  catch (error) { status.textContent = t.message(error.message); }
   finally {
     busy = false;
     for (const element of document.querySelectorAll('button, input[type="file"]')) element.disabled = false;
@@ -31,8 +34,8 @@ function resetProviderForm() {
   editing = undefined; providerForm.reset();
   providerForm.elements.namedItem('id').readOnly = false;
   providerForm.elements.namedItem('type').disabled = false;
-  document.querySelector('#provider-form-title').textContent = 'Add a provider';
-  document.querySelector('#save-provider').textContent = 'Add provider';
+  document.querySelector('#provider-form-title').textContent = t('Add a provider');
+  document.querySelector('#save-provider').textContent = t('Add provider');
   document.querySelector('#cancel-edit').hidden = true;
 }
 function editProvider(provider) {
@@ -44,8 +47,8 @@ function editProvider(provider) {
   providerForm.elements.namedItem('use_gh').checked = provider.use_gh === true;
   providerForm.elements.namedItem('id').readOnly = true;
   providerForm.elements.namedItem('type').disabled = true;
-  document.querySelector('#provider-form-title').textContent = `Edit ${provider.id}`;
-  document.querySelector('#save-provider').textContent = 'Save provider';
+  document.querySelector('#provider-form-title').textContent = t('Edit {provider}', { provider: provider.id });
+  document.querySelector('#save-provider').textContent = t('Save provider');
   document.querySelector('#cancel-edit').hidden = false;
   providerForm.elements.namedItem('location').focus();
   providerForm.scrollIntoView({ block: 'nearest' });
@@ -56,49 +59,49 @@ async function exportIndex(provider) {
   const link = document.createElement('a'); link.href = url; link.download = `${provider.id}-cids.json`;
   document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return `Exported ${Object.keys(mapping).length} content identifiers for ${provider.id}`;
+  return t('Exported {count} content identifiers for {provider}', { count: Object.keys(mapping).length, provider: provider.id });
 }
 function render() {
   if (editing && !config.providers.some(provider => provider.id === editing)) resetProviderForm();
   const rows = config.providers.map((provider, index) => {
     const row = document.createElement('tr');
-    for (const text of [`${provider.id} · ${provider.type}${provider.enabled === false ? ' (disabled)' : ''}`, provider.path ?? provider.url ?? provider.repo]) {
+    for (const text of [`${provider.id} · ${provider.type}${provider.enabled === false ? ` (${t('disabled')})` : ''}`, provider.path ?? provider.url ?? provider.repo]) {
       const cell = document.createElement('td'); cell.textContent = text; row.append(cell);
     }
     const controls = document.createElement('td');
-    controls.append(button('Edit', () => editProvider(provider)));
-    controls.append(button(provider.enabled === false ? 'Enable' : 'Disable', () => edit(next => { next.providers[index].enabled = provider.enabled === false; })));
-    if (index) controls.append(button('Move up', () => edit(next => { [next.providers[index - 1], next.providers[index]] = [next.providers[index], next.providers[index - 1]]; })));
-    if (['folder', 'git'].includes(provider.type)) controls.append(button('Index files', async () => { const result = await request('/api/index', { id: provider.id }); return `Indexed ${result.indexed} content identifiers`; }));
+    controls.append(button(t('Edit'), () => editProvider(provider)));
+    controls.append(button(t(provider.enabled === false ? 'Enable' : 'Disable'), () => edit(next => { next.providers[index].enabled = provider.enabled === false; })));
+    if (index) controls.append(button(t('Move up'), () => edit(next => { [next.providers[index - 1], next.providers[index]] = [next.providers[index], next.providers[index - 1]]; })));
+    if (['folder', 'git'].includes(provider.type)) controls.append(button(t('Index files'), async () => { const result = await request('/api/index', { id: provider.id }); return t('Indexed {count} content identifiers', { count: result.indexed }); }));
     if (['folder', 'git', 'github'].includes(provider.type)) {
       const upload = document.createElement('input'); upload.type = 'file'; upload.accept = '.json,application/json';
-      upload.setAttribute('aria-label', `Import index for ${provider.id}`);
-      const label = document.createElement('label'); label.className = 'import-index'; label.textContent = 'Import index'; label.append(upload);
+      upload.setAttribute('aria-label', t('Import index for {provider}', { provider: provider.id }));
+      const label = document.createElement('label'); label.className = 'import-index'; label.textContent = t('Import index'); label.append(upload);
       upload.addEventListener('change', () => action(async () => {
         const file = upload.files[0]; if (!file) return;
         try {
-          if (file.size > 1000 * 1024) throw new Error('This index is too large for settings. Import it using the helper command instead.');
+          if (file.size > 1000 * 1024) throw new Error(t('This index is too large for settings. Import it using the helper command instead.'));
           const result = await request('/api/import-index', { id: provider.id, mapping: JSON.parse(await file.text()) });
-          return `Imported ${result.indexed} content identifiers for ${provider.id}`;
+          return t('Imported {count} content identifiers for {provider}', { count: result.indexed, provider: provider.id });
         } finally { upload.value = ''; }
       }));
       controls.append(label);
-      controls.append(button('Export index', () => exportIndex(provider)));
+      controls.append(button(t('Export index'), () => exportIndex(provider)));
     }
-    controls.append(button('Remove', () => edit(next => { next.providers.splice(index, 1); })));
+    controls.append(button(t('Remove'), () => edit(next => { next.providers.splice(index, 1); })));
     row.append(controls); return row;
   });
   document.querySelector('#providers').replaceChildren(...rows);
   const origins = config.allowed_origins.map(origin => {
     const item = document.createElement('li'); item.textContent = origin + ' ';
-    item.append(button('Revoke', async () => { await edit(next => { next.allowed_origins = next.allowed_origins.filter(value => value !== origin); }); document.querySelector('#connection').textContent = ''; })); return item;
+    item.append(button(t('Revoke'), async () => { await edit(next => { next.allowed_origins = next.allowed_origins.filter(value => value !== origin); }); document.querySelector('#connection').textContent = ''; })); return item;
   });
   document.querySelector('#origins').replaceChildren(...origins);
   for (const name of ['max_bytes', 'cache_bytes']) document.querySelector(`[name="${name}"]`).value = config[name] / 1048576;
 }
 async function refreshCache() {
   const cache = await request('/api/cache');
-  document.querySelector('#cache-status').textContent = `${cache.entries} cached objects · ${(cache.bytes / 1048576).toFixed(2)} MiB of ${(cache.budget / 1048576).toFixed(2)} MiB`;
+  document.querySelector('#cache-status').textContent = t('{count} cached objects · {used} MiB of {budget} MiB', { count: cache.entries, used: (cache.bytes / 1048576).toFixed(2), budget: (cache.budget / 1048576).toFixed(2) });
 }
 async function edit(change) {
   const next = structuredClone(config); change(next);
@@ -125,7 +128,7 @@ document.querySelector('#cancel-edit').addEventListener('click', resetProviderFo
 document.querySelector('#open-content').addEventListener('submit', event => {
   event.preventDefault(); action(async () => {
     const result = await request('/api/open', { uri: new FormData(event.target).get('uri').trim() });
-    const link = document.createElement('a'); link.href = result.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Open verified content';
+    const link = document.createElement('a'); link.href = result.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = t('Open verified content');
     document.querySelector('#connection').replaceChildren(link); link.click();
   });
 });
@@ -133,20 +136,20 @@ document.querySelector('#check-providers').addEventListener('click', () => {
   const form = document.querySelector('#open-content');
   if (!form.reportValidity()) return;
   action(async () => {
-    const output = document.querySelector('#check-result'); output.textContent = 'Checking…';
+    const output = document.querySelector('#check-result'); output.textContent = t('Checking…');
     document.querySelector('#provider-diagnostics').replaceChildren();
     const showFailures = failures => {
       const items = failures.map(failure => {
-        const item = document.createElement('li'); item.textContent = `${failure.provider}: ${failure.reason}`; return item;
+        const item = document.createElement('li'); item.textContent = `${failure.provider}: ${t.message(failure.reason)}`; return item;
       });
       document.querySelector('#provider-diagnostics').replaceChildren(...items);
     };
     try {
       const result = await request('/api/check', { uri: new FormData(form).get('uri').trim() });
-      output.textContent = `Verified ${result.length} bytes · ${result.type} · ${result.provider}`;
+      output.textContent = t('Verified {length} bytes · {type} · {provider}', result);
       showFailures(result.failures);
     } catch (error) {
-      output.textContent = error.message; showFailures(error.failures ?? []); throw error;
+      output.textContent = t.message(error.message); showFailures(error.failures ?? []); throw error;
     }
   });
 });
@@ -170,9 +173,9 @@ document.querySelector('#limits').addEventListener('submit', event => {
 document.querySelector('#refresh-cache').addEventListener('click', () => action(refreshCache));
 document.querySelector('#clear-cache').addEventListener('click', () => action(async () => {
   const result = await request('/api/cache/clear', {}); await refreshCache();
-  return `Removed ${result.removed} cached objects. Providers and indexes were retained.`;
+  return t('Removed {count} cached objects. Providers and indexes were retained.', { count: result.removed });
 }));
 action(async () => {
-  if (!key) throw new Error('Open settings using the helper’s serve --open command or browser extension.');
+  if (!key) throw new Error(t('Open settings using the helper’s serve --open command or browser extension.'));
   config = await request('/api/config'); render(); await refreshCache();
 });

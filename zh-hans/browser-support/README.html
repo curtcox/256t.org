@@ -60,15 +60,12 @@
 <!-- /i18n:languages -->
 <h1 id="t256-desktop-and-browser-support">t256 桌面与浏览器支持</h1>
 <p>助手程序使用用户所选的内容提供方来解析 <code>t256:&lt;CID&gt;[.suffix]</code>。它在提供内容之前会验证原始字节，并将设置与内容访问分开。需要 Python 3.9 或更高版本；助手在运行时不依赖任何第三方库。只有浏览器测试才需要 Node.js 和 Playwright。</p>
-<blockquote>
-<p>说明：助手的设置页面和浏览器扩展的界面目前只有英文。下文提到这些界面中的按钮时保留英文名称，并在括号中附上译名。</p>
-</blockquote>
 <h2 id="start">开始使用</h2>
 <p>从已发布的 URI 解析器下载 <code>browser-support/dist/t256-desktop.zip</code> 并解压，或者克隆本仓库。请保持目录结构不变。</p>
 <p>在仓库根目录下运行：</p>
 <pre><code class="language-sh">python3 browser-support/run.py serve --open
 </code></pre>
-<p>在提供方设置页面中，你可以添加、编辑、重新排序、停用、移除提供方并为其建立索引，导入/导出文件索引，以及查看或清除缓存的内容。初始时已选中 Hashbin 的公共内容来源 <code>https://256t.us</code>。<strong>Check providers</strong>（检查提供方）会验证粘贴的 URI 而不打开它，并列出在找到匹配之前遇到的提供方失败；如果没有任何匹配，则列出全部失败。诊断信息使用固定的描述和状态码；绝不会包含提供方路径、凭据值、原始网络错误或 GitHub CLI 的输出。页面加载器会在 <code>error.failures</code> 上提供同样的结构化诊断信息，公共解析器则会显示助手的失败信息以及成功回退的详情。如果在 Windows 上你的 Python 命令是 <code>python</code>，请用它代替 <code>python3</code>。如果要安装桌面注册，请把这个检出目录放在一个固定的位置。</p>
+<p>在提供方设置页面中，你可以添加、编辑、重新排序、停用、移除提供方并为其建立索引，导入/导出文件索引，以及查看或清除缓存的内容。初始时已选中 Hashbin 的公共内容来源 <code>https://256t.us</code>。<strong>检查提供方</strong>会验证粘贴的 URI 而不打开它，并列出在找到匹配之前遇到的提供方失败；如果没有任何匹配，则列出全部失败。诊断信息使用固定的描述和状态码；绝不会包含提供方路径、凭据值、原始网络错误或 GitHub CLI 的输出。页面加载器会在 <code>error.failures</code> 上提供同样的结构化诊断信息，公共解析器则会显示助手的失败信息以及成功回退的详情。如果在 Windows 上你的 Python 命令是 <code>python</code>，请用它代替 <code>python3</code>。如果要安装桌面注册，请把这个检出目录放在一个固定的位置。</p>
 <p>打开一个 URI（会自动启动助手）：</p>
 <pre><code class="language-sh">python3 browser-support/run.py open t256:AAAAAAAFaGVsbG8.txt
 python3 browser-support/run.py settings
@@ -104,10 +101,10 @@ python3 browser-support/run.py resolve t256:AAAAAAAFaGVsbG8.txt --output hello.t
 <p>可以从本地克隆或文件夹生成该映射（无需手动读取助手的状态文件），然后把它导入到具有相同文件布局的 GitHub 提供方中：</p>
 <pre><code class="language-sh">python3 browser-support/run.py export-index clone --output cid-paths.json
 </code></pre>
-<p>在设置中，使用文件夹、本地克隆或 GitHub 提供方旁边的 <strong>Import index</strong>（导入索引）来选择同一个 JSON 文件。键是不带前缀的 CID；路径相对于文件夹或仓库根目录（导入的路径中要包含仓库内的目录）。设置页面的上传限制为 1000 KiB；更大的清单请使用上面的命令。<strong>Export index</strong>（导出索引）会下载当前的映射。文件夹索引在所有操作系统上都使用正斜杠，因此导出的清单可以在其他桌面平台上复用。较早的 Windows 索引应在导出前重新建立。</p>
-<p><strong>Edit</strong>（编辑）会保留提供方的名称、类型、顺序、启用状态、索引以及所有未显示的选项，同时更新其位置、修订版本、身份验证选择或超时设置。在更改了影响文件名或修订版本的设置后，请重新建立索引；使用 <strong>Cancel edit</strong>（取消编辑）可放弃草稿。目前 HTTP 超时作用于单个套接字操作，而不是整个下载的截止时间。超时必须为正数，且不超过 3600 秒。凭据变量名由字母、数字和下划线组成，并以字母或下划线开头。明确选择了身份验证的提供方必须使用 HTTPS。无效的设置会在替换已保存的配置之前被拒绝。</p>
+<p>在设置中，使用文件夹、本地克隆或 GitHub 提供方旁边的 <strong>导入索引</strong>来选择同一个 JSON 文件。键是不带前缀的 CID；路径相对于文件夹或仓库根目录（导入的路径中要包含仓库内的目录）。设置页面的上传限制为 1000 KiB；更大的清单请使用上面的命令。<strong>导出索引</strong>会下载当前的映射。文件夹索引在所有操作系统上都使用正斜杠，因此导出的清单可以在其他桌面平台上复用。较早的 Windows 索引应在导出前重新建立。</p>
+<p><strong>编辑</strong>会保留提供方的名称、类型、顺序、启用状态、索引以及所有未显示的选项，同时更新其位置、修订版本、身份验证选择或超时设置。在更改了影响文件名或修订版本的设置后，请重新建立索引；使用 <strong>取消编辑</strong>可放弃草稿。目前 HTTP 超时作用于单个套接字操作，而不是整个下载的截止时间。超时必须为正数，且不超过 3600 秒。凭据变量名由字母、数字和下划线组成，并以字母或下划线开头。明确选择了身份验证的提供方必须使用 HTTPS。无效的设置会在替换已保存的配置之前被拒绝。</p>
 <p>索引从不建立信任：返回的字节仍然必须与 CID 相匹配。更改文件或仓库修订版本后，请重新建立索引。本地克隆不会自动拉取。挂载的共享使用用户现有的挂载凭据。逃逸出所选根目录的符号链接会被拒绝。Git 索引会排除符号链接和子模块。HTTP 重定向只能停留在所配置的来源上；跨来源重定向会被拒绝，包括对需要身份验证的提供方。</p>
-<p>默认的单个内容大小上限为 64 MiB；磁盘缓存预算为 256 MiB。这些限制可以在设置中修改。原始对象目前会缓冲在内存中；此版本面向资源有限的桌面环境，而不是数 GB 的媒体文件。每次读取缓存时都会进行验证，并按最近使用时间淘汰。对同一 CID 的并发请求会共享一次提供方获取和验证，即使对象超出了磁盘缓存预算也是如此。对不同 CID 的请求可以并行解析。提供方或文件索引的更改会开启新一代的获取，因此新的请求不会加入在旧设置下开始的工作。网关对原始资源支持单个 HTTP 字节范围请求，从而支持音频/视频的拖动播放和部分下载。在发送任何范围之前，会先获取并验证整个对象。经过转换的 HTML/CSS、格式错误或多段的范围请求，以及没有匹配校验器的条件范围请求，都会收到完整响应。停用某个提供方会保留之前已验证的缓存内容。如果要删除这些副本，请在设置中使用 <strong>Clear cached content</strong>（清除缓存内容）清除缓存。缓存用量也可以在那里查看；减小预算会立即淘汰最旧的副本。清除缓存后，提供方配置和文件索引仍会保留。</p>
+<p>默认的单个内容大小上限为 64 MiB；磁盘缓存预算为 256 MiB。这些限制可以在设置中修改。原始对象目前会缓冲在内存中；此版本面向资源有限的桌面环境，而不是数 GB 的媒体文件。每次读取缓存时都会进行验证，并按最近使用时间淘汰。对同一 CID 的并发请求会共享一次提供方获取和验证，即使对象超出了磁盘缓存预算也是如此。对不同 CID 的请求可以并行解析。提供方或文件索引的更改会开启新一代的获取，因此新的请求不会加入在旧设置下开始的工作。网关对原始资源支持单个 HTTP 字节范围请求，从而支持音频/视频的拖动播放和部分下载。在发送任何范围之前，会先获取并验证整个对象。经过转换的 HTML/CSS、格式错误或多段的范围请求，以及没有匹配校验器的条件范围请求，都会收到完整响应。停用某个提供方会保留之前已验证的缓存内容。如果要删除这些副本，请在设置中使用 <strong>清除缓存内容</strong>清除缓存。缓存用量也可以在那里查看；减小预算会立即淘汰最旧的副本。清除缓存后，提供方配置和文件索引仍会保留。</p>
 <h2 id="browser-integration-choices">浏览器集成方式</h2>
 <table>
 <thead>
@@ -191,8 +188,8 @@ python3 browser-support/run.py resolve t256:AAAAAAAFaGVsbG8.txt --output hello.t
 <li>[x] 在用户显式操作之后，把现有的页面导航链接改写为指向经过验证的助手网关；同时适配图像、样式表和媒体。</li>
 <li>[x] 在具备相应 API 的浏览器上提供原生宿主上下文菜单和关键字事件处理；在 Chromium 扩展冒烟测试中演练页面适配。</li>
 <li>[x] 让 <code>t256 &lt;CID&gt;[.suffix]</code> 在关键字模式下可用。接受裸 CID 和完整 URI，保留 CID 的大小写，在原生启动之前用共享的 RFC 解析器进行验证，并显示输入提示。单元测试覆盖了构建好的 Chromium 和 Firefox 后台脚本；已安装 Firefox 上的检查，以及 Chrome 的<a href="https://developer.chrome.com/docs/extensions/reference/api/omnibox">关键字 API</a>，仍有待完成。</li>
-<li>[x] 增加可配置的查看器目标，以及 <strong>Open in browser viewer</strong>（在浏览器查看器中打开）/ <strong>Adapt links without helper</strong>（不使用助手适配链接）操作。对公共/内联内容默认使用公共 HTTPS 解析器；私有/本地内容保留助手途径。严格验证 URI 和查看器位置，保留现有的链接关系，并让无效的链接/资源保持不变。Chromium 测试覆盖了弹出窗口的打开、链接导航、适配期间没有提供方请求以及经过验证的字节。</li>
-<li>[x] 增加 <strong>Keep adapting links on this page</strong>（持续适配本页链接）和 <strong>Stop adapting new links</strong>（停止适配新链接）。监视顶层文档中新增/更改的 HTML 锚点，按有界批次扫描，合并大量突发的变动，忽略已移除的元素，并保留页面的普通编辑。重新注入会替换之前的观察器；停止或离开页面会清除其排队的工作。Chromium 测试覆盖了新增 700 个链接、href 更改、弹出窗口控件、重启/停止/拆除，以及零提供方请求。</li>
+<li>[x] 增加可配置的查看器目标，以及 <strong>在浏览器查看器中打开</strong>/ <strong>不使用助手适配链接</strong>操作。对公共/内联内容默认使用公共 HTTPS 解析器；私有/本地内容保留助手途径。严格验证 URI 和查看器位置，保留现有的链接关系，并让无效的链接/资源保持不变。Chromium 测试覆盖了弹出窗口的打开、链接导航、适配期间没有提供方请求以及经过验证的字节。</li>
+<li>[x] 增加 <strong>持续适配本页链接</strong>和 <strong>停止适配新链接</strong>。监视顶层文档中新增/更改的 HTML 锚点，按有界批次扫描，合并大量突发的变动，忽略已移除的元素，并保留页面的普通编辑。重新注入会替换之前的观察器；停止或离开页面会清除其排队的工作。Chromium 测试覆盖了新增 700 个链接、href 更改、弹出窗口控件、重启/停止/拆除，以及零提供方请求。</li>
 <li>[ ] <strong>下一步：把可选的持续适配扩展到资源。</strong> 在获取期间保留页面编辑，在拆除时释放资源，并避免重复加载媒体。只有在获得显式的站点权限并提供停用控件时，才增加可选的按站点持久化；当前的链接监视仅限于本文档。</li>
 <li>[ ] 定义对框架和开放式 shadow root 的覆盖范围；报告无法访问的框架、受保护的浏览器页面、限制性的 CSP 以及本地网络权限失败。仅链接的适配已经可以在不授予本地提供方访问权限的情况下工作。</li>
 <li>[ ] 验证 Firefox 的安装/签名、Edge/Brave/Opera 的兼容性以及构建好的 Safari 扩展。对于 Safari，保留手动连接选项，并规划与容器应用之间的消息传递；不要假定 Python 原生宿主注册或 omnibox API 在那里可用。</li>
@@ -312,9 +309,9 @@ const worker = await client.worker('t256:WORKER_CID.js');
 <li>Firefox：在开发时临时加载 <code>firefox/manifest.json</code>。持久安装需要 Mozilla 签名或适当的托管部署。</li>
 <li>Safari：用 <code>xcrun safari-web-extension-converter</code> 转换 <code>safari</code> 目录，然后在 Xcode 中构建/签名容器应用。此扩展包使用复制过来的网站连接 URL，而不是 Python 原生消息。页面加载器/网关在没有 Safari 扩展的情况下也能工作。</li>
 </ul>
-<p>扩展使用 <code>activeTab</code>；它不会自动读取每一个网站。<strong>Open in browser viewer</strong>（在浏览器查看器中打开）会把经过验证的 URI 发送到所选的查看器（默认是公共 HTTPS 解析器），而不会调用原生宿主。<strong>Adapt links without helper</strong>（不使用助手适配链接）只会把当前的 <code>t256:</code> 锚点改写为指向该查看器。它不会获取内容、不会改写页面资源，也不需要助手连接或提供方授权。无效的 URI 保持不变并报告错误；现有的链接关系会被保留。只接受不含凭据、查询参数或片段的 HTTPS 或环回 HTTP 查看器 URL。URI 放在查看器的片段中传递，查看器会等待解析操作。导航之后，所选的查看器可以读取标识符和内联字节。这些操作包含在 Safari 转换源码中；已签名的 Safari 安装仍是一项发布检查。</p>
-<p><strong>Keep adapting links on this page</strong>（持续适配本页链接）还会在弹出窗口关闭后处理新的 HTML 锚点和更改过的 <code>href</code> 值。它分批扫描，不获取任何内容。重新打开弹出窗口即可查看其状态，或选择 <strong>Stop adapting new links</strong>（停止适配新链接）。停止后，已经适配的链接会保留，排队的工作会被取消，之后的页面编辑不会受到影响。离开页面会停止监视，包括通过浏览器往返缓存（back/forward cache）进行的导航；返回后需要再次启用。再次启动会替换之前的监视器。更改后的查看器会作用于之后处理的 <code>t256:</code> 链接；已经改写过的查看器链接保留其现有的目标。此选项覆盖顶层文档的 HTML 锚点。框架、shadow root 以及动态的图像/脚本/媒体仍是单独的计划项。</p>
-<p>“Adapt images, media, and links”（适配图像、媒体和链接）会在显式点击之后处理当前的图像（包括 <code>srcset</code> 和 picture 源）、音频/视频源、海报帧、字幕轨道、样式表和导航引用。源发生变化时，受影响的媒体元素会重新加载一次，以便重新选择资源。相同的 URI 在一次适配中共享一个元数据请求。在获取期间被页面更改的属性会保持不变，不可用的内容会报告助手的提供方诊断信息。它会刻意保留现有的 script 标签不变；如需执行顺序和模块支持，请使用页面加载器或网关。</p>
+<p>扩展使用 <code>activeTab</code>；它不会自动读取每一个网站。<strong>在浏览器查看器中打开</strong>会把经过验证的 URI 发送到所选的查看器（默认是公共 HTTPS 解析器），而不会调用原生宿主。<strong>不使用助手适配链接</strong>只会把当前的 <code>t256:</code> 锚点改写为指向该查看器。它不会获取内容、不会改写页面资源，也不需要助手连接或提供方授权。无效的 URI 保持不变并报告错误；现有的链接关系会被保留。只接受不含凭据、查询参数或片段的 HTTPS 或环回 HTTP 查看器 URL。URI 放在查看器的片段中传递，查看器会等待解析操作。导航之后，所选的查看器可以读取标识符和内联字节。这些操作包含在 Safari 转换源码中；已签名的 Safari 安装仍是一项发布检查。</p>
+<p><strong>持续适配本页链接</strong>还会在弹出窗口关闭后处理新的 HTML 锚点和更改过的 <code>href</code> 值。它分批扫描，不获取任何内容。重新打开弹出窗口即可查看其状态，或选择 <strong>停止适配新链接</strong>。停止后，已经适配的链接会保留，排队的工作会被取消，之后的页面编辑不会受到影响。离开页面会停止监视，包括通过浏览器往返缓存（back/forward cache）进行的导航；返回后需要再次启用。再次启动会替换之前的监视器。更改后的查看器会作用于之后处理的 <code>t256:</code> 链接；已经改写过的查看器链接保留其现有的目标。此选项覆盖顶层文档的 HTML 锚点。框架、shadow root 以及动态的图像/脚本/媒体仍是单独的计划项。</p>
+<p>“适配本页的图像、媒体和链接”会在显式点击之后处理当前的图像（包括 <code>srcset</code> 和 picture 源）、音频/视频源、海报帧、字幕轨道、样式表和导航引用。源发生变化时，受影响的媒体元素会重新加载一次，以便重新选择资源。相同的 URI 在一次适配中共享一个元数据请求。在获取期间被页面更改的属性会保持不变，不可用的内容会报告助手的提供方诊断信息。它会刻意保留现有的 script 标签不变；如需执行顺序和模块支持，请使用页面加载器或网关。</p>
 <p>Chrome/Firefox 的原生启动集成使用以下按用户的注册：</p>
 <pre><code class="language-sh">python3 browser-support/run.py install --browser chrome --extension-id YOUR_32_CHARACTER_EXTENSION_ID
 python3 browser-support/run.py install --browser firefox --extension-id t256@256t.org

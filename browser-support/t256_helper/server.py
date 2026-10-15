@@ -14,6 +14,7 @@ import threading
 from urllib.parse import parse_qs, quote, urlsplit
 import webbrowser
 
+from .i18n import LANGUAGES, negotiate, translate_html
 from .resolver import ResolutionError, save_json
 from .transform import css_urls, transform_page
 from .uri import media_type, parse_uri
@@ -147,12 +148,17 @@ class Handler(BaseHTTPRequestHandler):
         parts = urlsplit(self.path)
         if parts.path == "/health":
             return self.json(200, {"service": "t256-helper", "version": 1})
-        assets = {"/": "settings.html", "/settings.mjs": "settings.mjs", "/loader.mjs": "loader.mjs", "/loader.js": "loader.js", "/demo.html": "demo.html", "/demo.js": "demo.js"}
+        assets = {"/": "settings.html", "/settings.mjs": "settings.mjs", "/loader.mjs": "loader.mjs", "/loader.js": "loader.js", "/demo.html": "demo.html", "/demo.js": "demo.js", "/i18n.mjs": "i18n.mjs"}
+        locales = {"/locales/" + language + ".json" for language in LANGUAGES}
         cid_assets = {"/implementations/ecmascript/cid.js", "/implementations/ecmascript/uri.mjs"}
-        public_assets = {"/resolve.html", "/browser-support/web/resolver.mjs", "/browser-support/web/web-client.mjs", "/browser-support/web/loader.mjs", "/browser-support/web/protocol-handler.mjs", "/browser-support/web/connection-preference.mjs"}
+        public_assets = {"/resolve.html", "/browser-support/web/resolver.mjs", "/browser-support/web/web-client.mjs", "/browser-support/web/loader.mjs", "/browser-support/web/protocol-handler.mjs", "/browser-support/web/connection-preference.mjs", "/browser-support/web/i18n.mjs"}
+        public_assets |= {"/browser-support/web" + path for path in locales}
         if parts.path in public_assets:
             path = ASSETS.parents[1] / parts.path.lstrip("/")
-            return self.response(200, path.read_bytes(), "text/html; charset=utf-8" if path.suffix == ".html" else "text/javascript; charset=utf-8")
+            mime = {".html": "text/html; charset=utf-8", ".json": "application/json; charset=utf-8"}.get(path.suffix, "text/javascript; charset=utf-8")
+            return self.response(200, path.read_bytes(), mime)
+        if parts.path in locales:
+            return self.response(200, (ASSETS / parts.path.lstrip("/")).read_bytes(), "application/json; charset=utf-8")
         if parts.path in cid_assets:
             path = ASSETS.parents[1] / parts.path.lstrip("/")
             return self.response(200, path.read_bytes(), "text/javascript; charset=utf-8")
@@ -164,7 +170,12 @@ class Handler(BaseHTTPRequestHandler):
             headers = {"Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"}
             if parts.path == "/demo.html":
                 headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' blob: 'unsafe-inline'; img-src 'self' blob:; worker-src blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"
-            return self.response(200, path.read_bytes(), mime, headers)
+            content = path.read_bytes()
+            if path.suffix == ".html":
+                language = negotiate(self.headers.get("Accept-Language"))
+                content = translate_html(content.decode("utf-8"), language).encode("utf-8")
+                headers.update({"Content-Language": language, "Vary": "Accept-Language"})
+            return self.response(200, content, mime, headers)
         if parts.path == "/api/config":
             return self.json(200, self.server.resolver.config) if self.admin() else self.json(403, {"error": "Management access required"})
         if parts.path == "/api/cache":

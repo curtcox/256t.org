@@ -1,0 +1,123 @@
+{
+  "languageTag": {
+    "message": "zh-Hans",
+    "description": "BCP 47 tag of this translation; selects the helper message catalog."
+  },
+  "extensionName": {
+    "message": "t256 内容解析器"
+  },
+  "extensionDescription": {
+    "message": "使用你所选的本地和远程提供方打开经过验证的 t256 内容。"
+  },
+  "popupTitle": {
+    "message": "t256 解析器"
+  },
+  "popupTagline": {
+    "message": "来自你的提供方、经过验证的内容。"
+  },
+  "uriLabel": {
+    "message": "URI"
+  },
+  "openWithHelper": {
+    "message": "使用助手打开"
+  },
+  "providerSettings": {
+    "message": "提供方设置"
+  },
+  "viewerLabel": {
+    "message": "浏览器查看器 URL"
+  },
+  "openInViewer": {
+    "message": "在浏览器查看器中打开"
+  },
+  "adaptLinks": {
+    "message": "不使用助手适配链接"
+  },
+  "watchLinks": {
+    "message": "持续适配本页链接"
+  },
+  "stopLinks": {
+    "message": "停止适配新链接"
+  },
+  "viewerHint": {
+    "message": "适用于公共或内联内容。点击链接时会前往此查看器；它可以读取链接中的标识符和内联字节。链接适配不会获取内容，也不会授予此网站访问你的提供方的权限。持续适配会一直进行，直到你停止或离开页面。停止后，已适配的链接保持不变。"
+  },
+  "connectionLabel": {
+    "message": "此网站的连接 URL"
+  },
+  "connectionPlaceholder": {
+    "message": "从助手设置中复制"
+  },
+  "adaptResources": {
+    "message": "适配本页的图像、媒体和链接"
+  },
+  "resourcesHint": {
+    "message": "页面资源需要提供方访问授权。脚本和模块需通过页面加载器或网关使用。"
+  },
+  "working": {
+    "message": "处理中…"
+  },
+  "ready": {
+    "message": "就绪。"
+  },
+  "installHint": {
+    "message": "请安装原生宿主，或从正在运行的助手复制网站连接 URL。"
+  },
+  "adaptedLinks": {
+    "message": "已适配 $COUNT$ 个链接。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "adaptedLinksNoAccess": {
+    "message": "已适配 $COUNT$ 个链接。无需提供方访问权限。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchingSummary": {
+    "message": "正在适配本页的新链接。已适配 $COUNT$ 个链接。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchStarted": {
+    "message": "正在适配本页新增和更改的链接。无需提供方访问权限。"
+  },
+  "watchStopped": {
+    "message": "已停止适配新链接。已适配的链接保持不变。"
+  },
+  "adaptedResources": {
+    "message": "已适配 $COUNT$ 个资源引用。",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "safariHint": {
+    "message": "公共/内联内容请使用浏览器查看器；本地/私有内容请复制网站连接 URL。在 Safari 中，原生启动需要与容器应用集成。"
+  },
+  "contextMenuOpen": {
+    "message": "使用 t256 打开"
+  },
+  "omniboxStart": {
+    "message": "输入 CID 或完整的 t256 URI，以打开经过验证的内容"
+  },
+  "omniboxValid": {
+    "message": "使用桌面助手打开经过验证的内容"
+  },
+  "omniboxInvalid": {
+    "message": "请输入有效的 CID 或 t256 URI，后面可以跟文件后缀"
+  }
+}

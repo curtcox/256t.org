@@ -1,0 +1,123 @@
+{
+  "languageTag": {
+    "message": "pt-BR",
+    "description": "BCP 47 tag of this translation; selects the helper message catalog."
+  },
+  "extensionName": {
+    "message": "Resolvedor de conteúdo t256"
+  },
+  "extensionDescription": {
+    "message": "Abra conteúdo t256 verificado usando os provedores locais e remotos que você escolheu."
+  },
+  "popupTitle": {
+    "message": "Resolvedor t256"
+  },
+  "popupTagline": {
+    "message": "Conteúdo verificado dos seus provedores."
+  },
+  "uriLabel": {
+    "message": "URI"
+  },
+  "openWithHelper": {
+    "message": "Abrir com o auxiliar"
+  },
+  "providerSettings": {
+    "message": "Configurações de provedores"
+  },
+  "viewerLabel": {
+    "message": "URL do visualizador do navegador"
+  },
+  "openInViewer": {
+    "message": "Abrir no visualizador do navegador"
+  },
+  "adaptLinks": {
+    "message": "Adaptar links sem o auxiliar"
+  },
+  "watchLinks": {
+    "message": "Continuar adaptando links nesta página"
+  },
+  "stopLinks": {
+    "message": "Parar de adaptar novos links"
+  },
+  "viewerHint": {
+    "message": "Para conteúdo público ou embutido. Ao serem clicados, os links vão para este visualizador, que pode ler seus identificadores e bytes embutidos. A adaptação de links não obtém conteúdo nem dá a este site acesso aos seus provedores. A adaptação contínua dura até ser interrompida ou até você sair da página. Os links já adaptados permanecem quando ela é interrompida."
+  },
+  "connectionLabel": {
+    "message": "URL de conexão para este site"
+  },
+  "connectionPlaceholder": {
+    "message": "Copie das configurações do auxiliar"
+  },
+  "adaptResources": {
+    "message": "Adaptar imagens, mídia e links nesta página"
+  },
+  "resourcesHint": {
+    "message": "Recursos da página precisam de uma autorização de acesso aos provedores. Scripts e módulos funcionam pelo carregador de páginas ou pelo gateway."
+  },
+  "working": {
+    "message": "Processando…"
+  },
+  "ready": {
+    "message": "Pronto."
+  },
+  "installHint": {
+    "message": "Instale o host nativo ou copie uma URL de conexão de site do auxiliar em execução."
+  },
+  "adaptedLinks": {
+    "message": "$COUNT$ links adaptados.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "adaptedLinksNoAccess": {
+    "message": "$COUNT$ links adaptados. Não é preciso acesso aos provedores.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchingSummary": {
+    "message": "Adaptando novos links nesta página. $COUNT$ links adaptados.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchStarted": {
+    "message": "Adaptando links novos e alterados nesta página. Não é preciso acesso aos provedores."
+  },
+  "watchStopped": {
+    "message": "A adaptação de novos links foi interrompida. Os links já adaptados permanecem."
+  },
+  "adaptedResources": {
+    "message": "$COUNT$ referências a recursos adaptadas.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "safariHint": {
+    "message": "Use o visualizador do navegador para conteúdo público/embutido ou copie uma URL de conexão de site para conteúdo local/privado. No Safari, a inicialização nativa exige integração com o app contêiner."
+  },
+  "contextMenuOpen": {
+    "message": "Abrir com t256"
+  },
+  "omniboxStart": {
+    "message": "Digite um CID ou uma URI t256 completa para abrir conteúdo verificado"
+  },
+  "omniboxValid": {
+    "message": "Abrir conteúdo verificado com o seu auxiliar de desktop"
+  },
+  "omniboxInvalid": {
+    "message": "Digite um CID ou uma URI t256 válidos, opcionalmente seguidos de um sufixo de arquivo"
+  }
+}

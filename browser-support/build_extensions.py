@@ -15,6 +15,9 @@ def build(destination):
         target = Path(destination) / browser
         shutil.copytree(source, target, dirs_exist_ok=True)
         (target / "uri.js").write_text(uri_bundle(source.parents[2]))
+        # The popup translates helper messages with the helper pages' catalogs.
+        shutil.copy2(source.parents[1] / "web/i18n.mjs", target / "i18n.mjs")
+        shutil.copytree(source.parents[1] / "web/locales", target / "locales", dirs_exist_ok=True)
         manifest = json.loads((source / "manifest.json").read_text())
         if browser == "firefox":
             manifest["background"] = {"scripts": ["uri.js", "background.js"]}
@@ -26,7 +29,8 @@ def build(destination):
             # not automatically part of its signed containing-app sandbox.
         (target / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         with zipfile.ZipFile(Path(destination) / (browser + ".zip"), "w", zipfile.ZIP_DEFLATED) as archive:
-            for path in sorted(target.iterdir()): archive.write(path, path.name)
+            for path in sorted(target.rglob("*")):
+                if path.is_file(): archive.write(path, path.relative_to(target).as_posix())
 
 
 if __name__ == "__main__":

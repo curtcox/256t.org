@@ -1,0 +1,123 @@
+{
+  "languageTag": {
+    "message": "en",
+    "description": "BCP 47 tag of this translation; selects the helper message catalog."
+  },
+  "extensionName": {
+    "message": "t256 content resolver"
+  },
+  "extensionDescription": {
+    "message": "Open verified t256 content using your selected local and remote providers."
+  },
+  "popupTitle": {
+    "message": "t256 resolver"
+  },
+  "popupTagline": {
+    "message": "Verified content from your providers."
+  },
+  "uriLabel": {
+    "message": "URI"
+  },
+  "openWithHelper": {
+    "message": "Open using helper"
+  },
+  "providerSettings": {
+    "message": "Provider settings"
+  },
+  "viewerLabel": {
+    "message": "Browser viewer URL"
+  },
+  "openInViewer": {
+    "message": "Open in browser viewer"
+  },
+  "adaptLinks": {
+    "message": "Adapt links without helper"
+  },
+  "watchLinks": {
+    "message": "Keep adapting links on this page"
+  },
+  "stopLinks": {
+    "message": "Stop adapting new links"
+  },
+  "viewerHint": {
+    "message": "For public or inline content. Links go to this viewer when clicked; it can read their identifiers and inline bytes. Link adaptation does not retrieve content or grant this website access to your providers. Continued adaptation lasts until stopped or you leave the page. Existing adapted links stay in place when stopped."
+  },
+  "connectionLabel": {
+    "message": "Connection URL for this website"
+  },
+  "connectionPlaceholder": {
+    "message": "Copy from helper settings"
+  },
+  "adaptResources": {
+    "message": "Adapt images, media, and links on this page"
+  },
+  "resourcesHint": {
+    "message": "Page resources need a provider access grant. Scripts and modules work through the page loader or gateway."
+  },
+  "working": {
+    "message": "Working…"
+  },
+  "ready": {
+    "message": "Ready."
+  },
+  "installHint": {
+    "message": "Install the native host or copy a website connection URL from the running helper."
+  },
+  "adaptedLinks": {
+    "message": "Adapted $COUNT$ links.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "adaptedLinksNoAccess": {
+    "message": "Adapted $COUNT$ links. No provider access needed.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchingSummary": {
+    "message": "Adapting new links on this page. Adapted $COUNT$ links.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "watchStarted": {
+    "message": "Adapting new and changed links on this page. No provider access needed."
+  },
+  "watchStopped": {
+    "message": "Stopped adapting new links. Existing adapted links stay in place."
+  },
+  "adaptedResources": {
+    "message": "Adapted $COUNT$ resource references.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "safariHint": {
+    "message": "Use the browser viewer for public/inline content, or copy a website connection URL for local/private content. Native launch requires containing app integration in Safari."
+  },
+  "contextMenuOpen": {
+    "message": "Open with t256"
+  },
+  "omniboxStart": {
+    "message": "Enter a CID or a full t256 URI to open verified content"
+  },
+  "omniboxValid": {
+    "message": "Open verified content with your desktop helper"
+  },
+  "omniboxInvalid": {
+    "message": "Enter a valid CID or t256 URI, optionally followed by a file suffix"
+  }
+}

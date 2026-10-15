@@ -3,6 +3,10 @@ import { T256WebClient } from './web-client.mjs';
 import { mediaType } from '../../implementations/ecmascript/uri.mjs';
 import { browserScheme, handlerTemplate, parseBrowserUri, parseHandlerFragment } from './protocol-handler.mjs';
 import { loadConnection, saveConnection, forgetConnection } from './connection-preference.mjs';
+import { translator } from './i18n.mjs';
+
+// Translates messages relayed from the desktop helper on translated pages.
+const t = await translator(document.documentElement.lang);
 
 const element = id => document.getElementById(id);
 const objectUrls = new Set();
@@ -14,7 +18,7 @@ function applyFragment() {
     const initial = parseHandlerFragment(location.hash);
     if (initial) element('uri').value = initial.uri;
     element('status').textContent = 'Ready. Choose providers and resolve the content.';
-  } catch (error) { element('status').textContent = error.message; }
+  } catch (error) { element('status').textContent = t.message(error.message); }
 }
 applyFragment();
 window.addEventListener('hashchange', applyFragment);
@@ -104,7 +108,7 @@ element('resolve-form').addEventListener('submit', async event => {
       client = new T256WebClient(element('providers').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean));
       ({ bytes, provider, type, failures } = await client.read(uri.uri, options));
     }
-    element('status').textContent = `Verified ${bytes.length} bytes · ${provider}` + failures.map(failure => `\n${failure.provider}: ${failure.reason}`).join('');
+    element('status').textContent = `Verified ${bytes.length} bytes · ${provider}` + failures.map(failure => `\n${failure.provider}: ${t.message(failure.reason)}`).join('');
     const objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
     objectUrls.add(objectUrl);
     if (type.startsWith('image/') && type !== 'image/svg+xml') {
@@ -117,7 +121,7 @@ element('resolve-form').addEventListener('submit', async event => {
     const share = new URL(location.pathname, location.origin); share.hash = `uri=${encodeURIComponent(uri.uri)}`;
     element('share').href = share.href; element('share').hidden = false;
   } catch (error) {
-    element('status').textContent = controller.signal.aborted ? 'Retrieval cancelled.' : error.message + (error.failures ?? []).map(failure => `\n${failure.provider}: ${failure.reason}`).join('');
+    element('status').textContent = controller.signal.aborted ? 'Retrieval cancelled.' : t.message(error.message + (error.failures ?? []).map(failure => `\n${failure.provider}: ${failure.reason}`).join(''));
   }
   finally {
     client?.dispose?.(); active = undefined;
