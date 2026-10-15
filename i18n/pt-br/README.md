@@ -1,3 +1,4 @@
+<!-- i18n:source sha256:6826a083676fcaea -->
 # [256t.org](https://curtcox.github.io/256t.org/)
 
 <p align="center">
@@ -102,8 +103,8 @@ Essas coisas estão fora do escopo deste texto.
 - [Verificação de CID de arquivo](check.html) — arraste e solte arquivos para analisar seu conteúdo e calcular seu CID.
 - [Download por CID](download.html) — baixe e verifique conteúdo de um servidor compatível com o 256t.org usando um CID.
 - [Resolvedor de URI t256](resolve.html) — abra links t256 ou compatíveis com navegadores usando conteúdo embutido, provedores públicos ou seu auxiliar de desktop; opcionalmente, ative o tratamento de links no navegador.
-- [Suporte para desktop e navegadores](browser-support/README.md) (em inglês) — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.
-- [Plano ativo de suporte a navegadores](browser-support/README.md#active-implementation-plan) (em inglês) — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.
+- [Suporte para desktop e navegadores](browser-support/README.md) — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.
+- [Plano ativo de suporte a navegadores](browser-support/README.md#active-implementation-plan) — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.
 
 ## Arquivos de exemplo
 
@@ -123,7 +124,7 @@ Esses arquivos podem ser usados com a ferramenta [Exemplos de CID](examples.html
 
 ## Esquema de URI
 
-Um rascunho de RFC (em inglês) que propõe o esquema de URI `t256:` — uma URL que contém apenas um CID, sem host nem caminho — está disponível em [rfc/draft-cox-t256-uri-scheme-00.md](rfc/draft-cox-t256-uri-scheme-00.md). (A grafia `256t:` não é um esquema de URI válido porque a RFC 3986 exige que os esquemas comecem com uma letra.)
+Um rascunho de RFC que propõe o esquema de URI `t256:` — uma URL que contém apenas um CID, sem host nem caminho — está disponível em [rfc/draft-cox-t256-uri-scheme-00.md](rfc/draft-cox-t256-uri-scheme-00.md). (A grafia `256t:` não é um esquema de URI válido porque a RFC 3986 exige que os esquemas comecem com uma letra.)
 
 ## Publicação
 

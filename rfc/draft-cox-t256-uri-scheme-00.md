@@ -1,5 +1,11 @@
 # The 't256' URI Scheme for 256t Content Identifiers
 
+<!-- i18n:languages -->
+
+**English** · [简体中文](../zh-hans/rfc/draft-cox-t256-uri-scheme-00.html) · [Português (Brasil)](../pt-br/rfc/draft-cox-t256-uri-scheme-00.html)
+
+<!-- /i18n:languages -->
+
 ```
 Internet-Draft                                                    C. Cox
 Intended status: Informational                                  256t.org

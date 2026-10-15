@@ -69,15 +69,15 @@
   <img src="../examples/256t.png" alt="Conceito de armazenamento endereçável por conteúdo do 256t.org" width="800">
 </p>
 
-<h2 id="o-que">O quê?</h2>
+<h2 id="what">O quê?</h2>
 <p>O 256t.org é um domínio dedicado a ser uma especificação pública para um tipo específico de armazenamento endereçável por conteúdo.
 Nesse esquema, o último elemento de até 94 caracteres no caminho de uma URL define o conteúdo daquela URL.
 Em algum momento no futuro, ele poderá evoluir para ser também um serviço público para publicar conteúdo usando o esquema.
 No entanto, isso está atualmente fora do escopo deste site.</p>
-<h2 id="por-que">Por quê?</h2>
+<h2 id="why">Por quê?</h2>
 <p>Por que o <a href="https://256t.org">256t.org</a>?
 Um padrão simples para um armazenamento genérico endereçável por conteúdo me parece útil de modo geral.</p>
-<h2 id="como">Como?</h2>
+<h2 id="how">Como?</h2>
 <p>Todo caminho de 94 caracteres pode ser usado para obter o conteúdo que corresponde ao tamanho e ao hash especificados.
 Se nenhum conteúdo estiver disponível, um 404 é retornado.</p>
 <p>Um hash SHA-512 tem 512 bits, ou 64 bytes.
@@ -150,12 +150,12 @@ Nesses casos, o próprio conteúdo deve ser codificado em base64 e usado com o m
 <p>Mais especificamente, <a href="https://pt.wikipedia.org/wiki/Base64">Base64</a> <a href="https://datatracker.ietf.org/doc/html/rfc4648#section-5">segura para nomes de arquivo e URLs</a>, também conhecida como base64url.</p>
 <h2 id="cid">CID</h2>
 <p>Essa string base64 de 94 caracteres ou menos, que identifica um conteúdo, será chamada de identificador de conteúdo, ou CID (do inglês <em>content identifier</em>).</p>
-<h2 id="quando">Quando</h2>
-<h2 id="onde">Onde</h2>
+<h2 id="when">Quando</h2>
+<h2 id="where">Onde</h2>
 <p>Qualquer servidor pode expor uma URL base com conteúdos que sigam esta especificação.
 Infelizmente, quais servidores hospedam quais conteúdos e como encontrá-los está fora do escopo deste texto.
 Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</p>
-<h2 id="fora-do-escopo-deste-texto">Fora do escopo deste texto</h2>
+<h2 id="beyond-the-scope-of-this-text">Fora do escopo deste texto</h2>
 <ul>
 <li>Encontrar</li>
 <li>Como encontro algum lugar que publique CIDs?</li>
@@ -170,7 +170,7 @@ Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</
 <li>Como essas coisas são decididas?</li>
 </ul>
 <p>Essas coisas estão fora do escopo deste texto.</p>
-<h2 id="ferramentas">Ferramentas</h2>
+<h2 id="tools">Ferramentas</h2>
 <ul>
 <li><a href="hash.html">Calculadora de hash</a> — digite um texto e veja instantaneamente seu hash SHA-512 codificado em Base64URL.</li>
 <li><a href="examples.html">Exemplos de CID</a> — selecione arquivos de exemplo e verifique seus CIDs usando a implementação em ECMAScript.</li>
@@ -178,10 +178,10 @@ Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</
 <li><a href="check.html">Verificação de CID de arquivo</a> — arraste e solte arquivos para analisar seu conteúdo e calcular seu CID.</li>
 <li><a href="download.html">Download por CID</a> — baixe e verifique conteúdo de um servidor compatível com o 256t.org usando um CID.</li>
 <li><a href="resolve.html">Resolvedor de URI t256</a> — abra links t256 ou compatíveis com navegadores usando conteúdo embutido, provedores públicos ou seu auxiliar de desktop; opcionalmente, ative o tratamento de links no navegador.</li>
-<li><a href="../browser-support/README.md">Suporte para desktop e navegadores</a> (em inglês) — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.</li>
-<li><a href="../browser-support/README.md#active-implementation-plan">Plano ativo de suporte a navegadores</a> (em inglês) — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.</li>
+<li><a href="browser-support/README.html">Suporte para desktop e navegadores</a> — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.</li>
+<li><a href="browser-support/README.html#active-implementation-plan">Plano ativo de suporte a navegadores</a> — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.</li>
 </ul>
-<h2 id="arquivos-de-exemplo">Arquivos de exemplo</h2>
+<h2 id="example-files">Arquivos de exemplo</h2>
 <p>O diretório <a href="../examples/">examples/</a> contém arquivos de exemplo para testar a geração e a verificação de CIDs. Entre eles há recursos com a marca 256t que demonstram a especificação com vários tipos de mídia:</p>
 <table>
 <thead>
@@ -222,13 +222,13 @@ Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</
 </tbody>
 </table>
 <p>Esses arquivos podem ser usados com a ferramenta <a href="examples.html">Exemplos de CID</a> ou com a ferramenta <a href="check.html">Verificação de CID de arquivo</a> para verificar seus identificadores de conteúdo.</p>
-<h2 id="esquema-de-uri">Esquema de URI</h2>
-<p>Um rascunho de RFC (em inglês) que propõe o esquema de URI <code>t256:</code> — uma URL que contém apenas um CID, sem host nem caminho — está disponível em <a href="../rfc/draft-cox-t256-uri-scheme-00.md">rfc/draft-cox-t256-uri-scheme-00.md</a>. (A grafia <code>256t:</code> não é um esquema de URI válido porque a RFC 3986 exige que os esquemas comecem com uma letra.)</p>
-<h2 id="publicacao">Publicação</h2>
+<h2 id="uri-scheme">Esquema de URI</h2>
+<p>Um rascunho de RFC que propõe o esquema de URI <code>t256:</code> — uma URL que contém apenas um CID, sem host nem caminho — está disponível em <a href="rfc/draft-cox-t256-uri-scheme-00.html">rfc/draft-cox-t256-uri-scheme-00.md</a>. (A grafia <code>256t:</code> não é um esquema de URI válido porque a RFC 3986 exige que os esquemas comecem com uma letra.)</p>
+<h2 id="publishing">Publicação</h2>
 <p>Para informações sobre como implantar e publicar armazenamento endereçável por conteúdo usando CIDs, consulte <a href="publishing.html">Publicação e armazenamento</a>.</p>
-<h2 id="perguntas-frequentes">Perguntas frequentes</h2>
+<h2 id="faq">Perguntas frequentes</h2>
 <p>Tem dúvidas sobre o 256t.org? Confira a página de <a href="faq.html">Perguntas frequentes</a> para ver respostas a perguntas comuns sobre CIDs, implementação, segurança e mais.</p>
-<h2 id="e-as-colisoes">E as colisões?</h2>
+<h2 id="what-about-collisions">E as colisões?</h2>
 <p>Há alguns tipos diferentes de colisão que é importante distinguir:
 - acidental — puramente por acaso
 - adversarial — alguém tentou provocá-la
@@ -238,7 +238,7 @@ Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</
 - Sempre verifique o conteúdo do CID. Há muitas implementações para fazer isso. É mais fácil simplesmente mentir do que engendrar uma colisão.
 - Reduza os adversários. Se ninguém estiver colocando conteúdo problemático onde você possa aceitá-lo, sobram apenas os acidentes.</p>
 <p>Para mim, tudo bem simplesmente ignorar colisões problemáticas acidentais.</p>
-<h2 id="implementacoes">Implementações</h2>
+<h2 id="implementations">Implementações</h2>
 <p>A especificação do 256t.org foi implementada em várias linguagens de programação. Cada implementação fornece utilitários para gerar e verificar identificadores de conteúdo (CIDs).</p>
 <table>
 <thead>

@@ -156,7 +156,6 @@
   "resolve.html": {
     "<title>t256 URI Resolver · 256t.org</title>": "<title>Resolvedor de URI t256 · 256t.org</title>",
     ">CID Download</a>": ">Download por CID</a>",
-    ">Desktop setup</a>": ">Configuração do desktop (em inglês)</a>",
     "<h1>Open content by its identity.</h1>": "<h1>Abra conteúdo pela sua identidade.</h1>",
     "<p>Paste a t256 URI to extract inline content or retrieve and verify it from your providers.</p>": "<p>Cole uma URI t256 para extrair o conteúdo embutido ou obtê-lo e verificá-lo a partir dos seus provedores.</p>",
     ">Download the desktop helper</a>": ">Baixar o auxiliar de desktop</a>",
@@ -182,7 +181,8 @@
     ">Remove browser link handler</button>": ">Remover o manipulador de links do navegador</button>",
     ">Checking browser support…</output>": ">Verificando o suporte do navegador…</output>",
     ">Try a compatible “hello” link</a>": ">Experimente um link “hello” compatível</a>",
-    "<p>HTML, JavaScript, and SVG appear as text here. Downloads contain the original verified bytes. The helper gateway can open active documents with isolated execution; HTML t256 resource references are translated.</p>": "<p>HTML, JavaScript e SVG aparecem aqui como texto. Os downloads contêm os bytes originais verificados. O gateway do auxiliar pode abrir documentos ativos com execução isolada; referências a recursos t256 em HTML são traduzidas.</p>"
+    "<p>HTML, JavaScript, and SVG appear as text here. Downloads contain the original verified bytes. The helper gateway can open active documents with isolated execution; HTML t256 resource references are translated.</p>": "<p>HTML, JavaScript e SVG aparecem aqui como texto. Os downloads contêm os bytes originais verificados. O gateway do auxiliar pode abrir documentos ativos com execução isolada; referências a recursos t256 em HTML são traduzidas.</p>",
+    "<a href=\"https://github.com/curtcox/256t.org/tree/main/browser-support\">Desktop setup</a>": "<a href=\"browser-support/README.md\">Configuração do desktop</a>"
   },
   "browser-support/web/resolver.mjs": {
     "'Ready. Choose providers and resolve the content.'": "'Pronto. Escolha os provedores e resolva o conteúdo.'",
@@ -200,6 +200,44 @@
     "'Remove this handler in browser settings. Manual resolution is still available.'": "'Remova este manipulador nas configurações do navegador. A resolução manual continua disponível.'",
     "'Retrieving and verifying…'": "'Obtendo e verificando…'",
     "`Verified ${bytes.length} bytes · ${provider}`": "`${bytes.length} bytes verificados · ${provider}`",
-    "'Retrieval cancelled.'": "'Obtenção cancelada.'"
+    "'Retrieval cancelled.'": "'Obtenção cancelada.'",
+    "new DOMException('Retrieval cancelled', 'AbortError')": "new DOMException('Obtenção cancelada', 'AbortError')"
+  },
+  "browser-support/web/loader.mjs": {
+    "'Use the loopback connection URL supplied by the desktop helper'": "'Use a URL de conexão de loopback fornecida pelo auxiliar de desktop'",
+    "'t256 retrieval timed out'": "'A obtenção t256 excedeu o tempo limite'",
+    "`t256 resolver returned HTTP ${response.status}`": "`O resolvedor t256 retornou HTTP ${response.status}`",
+    "'t256 resource loading timed out'": "'O carregamento do recurso t256 excedeu o tempo limite'",
+    "'Content exceeds the page size limit'": "'O conteúdo excede o limite de tamanho da página'",
+    "'Resolver returned a different identifier'": "'O resolvedor retornou um identificador diferente'",
+    "'An image URI needs a recognized image suffix'": "'Uma URI de imagem precisa de um sufixo de imagem reconhecido'",
+    "'Image could not be decoded'": "'Não foi possível decodificar a imagem'",
+    "'A script URI needs a .js or .mjs suffix'": "'Uma URI de script precisa de um sufixo .js ou .mjs'",
+    "'Script failed to load; check page CSP and module mappings'": "'Falha ao carregar o script; verifique a CSP da página e os mapeamentos de módulos'",
+    "'A worker URI needs a JavaScript suffix'": "'Uma URI de worker precisa de um sufixo JavaScript'",
+    "'Only stylesheet links are supported'": "'Somente links de folha de estilo são suportados'",
+    "'Stylesheet failed to load; check page CSP'": "'Falha ao carregar a folha de estilo; verifique a CSP da página'",
+    "'t256 client was disposed'": "'O cliente t256 foi descartado'"
+  },
+  "browser-support/web/web-client.mjs": {
+    "'Use HTTP(S) base URLs without credentials, queries, or fragments'": "'Use URLs base HTTP(S) sem credenciais, consultas ou fragmentos'",
+    "'Content exceeds the page size limit'": "'O conteúdo excede o limite de tamanho da página'",
+    "new Error('Aborted')": "new Error('Cancelado')",
+    "'Provider timed out'": "'O provedor excedeu o tempo limite'",
+    "'No provider returned matching content. Check availability and CORS. '": "'Nenhum provedor retornou conteúdo correspondente. Verifique a disponibilidade e o CORS. '"
+  },
+  "browser-support/web/protocol-handler.mjs": {
+    "'Expected a t256 URI or browser-compatible link'": "'Esperava-se uma URI t256 ou um link compatível com navegadores'",
+    "'Expected one URI in the resolver link'": "'Esperava-se uma única URI no link do resolvedor'",
+    "'Browser links need HTTPS or a local desktop helper page'": "'Links do navegador exigem HTTPS ou uma página local do auxiliar de desktop'"
+  },
+  "browser-support/web/connection-preference.mjs": {},
+  "implementations/ecmascript/uri.mjs": {
+    "'Expected t256:<CID>[.suffix], without //, escapes, query, or fragment'": "'Esperava-se t256:<CID>[.sufixo], sem //, escapes, consulta ou fragmento'",
+    "'Noncanonical base64url encoding'": "'Codificação base64url não canônica'",
+    "'Invalid CID payload length'": "'Tamanho de carga do CID inválido'",
+    "'Content does not match its CID'": "'O conteúdo não corresponde ao seu CID'",
+    "'Content exceeds CID length'": "'O conteúdo excede o tamanho indicado no CID'",
+    "'Content is shorter than its CID length'": "'O conteúdo é menor que o tamanho indicado no CID'"
   }
 }

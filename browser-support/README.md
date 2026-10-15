@@ -1,5 +1,11 @@
 # t256 desktop and browser support
 
+<!-- i18n:languages -->
+
+**English** · [简体中文](../zh-hans/browser-support/README.html) · [Português (Brasil)](../pt-br/browser-support/README.html)
+
+<!-- /i18n:languages -->
+
 The helper resolves `t256:<CID>[.suffix]` using user-selected content providers.
 It verifies original bytes before serving them, and keeps settings separate from
 content access. Python 3.9 or later is required; the helper has no third-party

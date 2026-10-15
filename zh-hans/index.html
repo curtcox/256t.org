@@ -69,15 +69,15 @@
   <img src="../examples/256t.png" alt="256t.org 内容寻址存储概念图" width="800">
 </p>
 
-<h2 id="_1">是什么？</h2>
+<h2 id="what">是什么？</h2>
 <p>256t.org 是一个专门用于发布某种特定类型内容寻址存储公开规范的域名。
 在这一方案中，URL 路径中最后一个最多 94 个字符的元素决定了该 URL 处的内容。
 将来，它也许还会发展成为一个使用该方案发布内容的公共设施。
 不过，这目前超出了本站的范围。</p>
-<h2 id="_2">为什么？</h2>
+<h2 id="why">为什么？</h2>
 <p>为什么要有 <a href="https://256t.org">256t.org</a>？
 在我看来，一个用于通用内容寻址存储的简单标准总体上是有用的。</p>
-<h2 id="_3">怎么做？</h2>
+<h2 id="how">怎么做？</h2>
 <p>每一个 94 字符的路径都可以用来获取与其指定的长度和哈希相匹配的内容。
 如果没有可用的内容，则返回 404。</p>
 <p>SHA-512 哈希的长度为 512 位，即 64 字节。
@@ -150,12 +150,12 @@
 <p>更具体地说，是<a href="https://datatracker.ietf.org/doc/html/rfc4648#section-5">文件名和 URL 安全</a>的 <a href="https://zh.wikipedia.org/wiki/Base64">Base64</a>，又称 base64url。</p>
 <h2 id="cid">CID</h2>
 <p>这种用于标识内容、不超过 94 个字符的 base64 字符串，被称为内容标识符（content identifier），简称 CID。</p>
-<h2 id="_4">何时</h2>
-<h2 id="_5">何处</h2>
+<h2 id="when">何时</h2>
+<h2 id="where">何处</h2>
 <p>任何服务器都可以公开一个基础 URL，其内容遵循本规范。
 可惜的是，哪些服务器托管哪些内容、以及如何找到它们，超出了本文的范围。
 本服务器在<a href="../cids/">这里</a>托管了一小部分 CID。</p>
-<h2 id="_6">超出本文范围的内容</h2>
+<h2 id="beyond-the-scope-of-this-text">超出本文范围的内容</h2>
 <ul>
 <li>查找</li>
 <li>我如何找到发布 CID 的地方？</li>
@@ -170,7 +170,7 @@
 <li>这些事情该如何决定？</li>
 </ul>
 <p>这些事情都超出了本文的范围。</p>
-<h2 id="_7">工具</h2>
+<h2 id="tools">工具</h2>
 <ul>
 <li><a href="hash.html">哈希计算器</a> —— 输入文本，即可立即看到其以 Base64URL 编码的 SHA-512 哈希。</li>
 <li><a href="examples.html">CID 示例</a> —— 选择示例文件，并使用 ECMAScript 实现验证它们的 CID。</li>
@@ -178,10 +178,10 @@
 <li><a href="check.html">文件 CID 检查</a> —— 拖放文件以分析其内容并计算其 CID。</li>
 <li><a href="download.html">CID 下载</a> —— 使用 CID 从兼容 256t.org 的服务器下载并验证内容。</li>
 <li><a href="resolve.html">t256 URI 解析器</a> —— 使用内联内容、公共提供方或你的桌面助手打开 t256 链接或浏览器兼容链接；还可以选择启用浏览器链接处理。</li>
-<li><a href="../browser-support/README.md">桌面与浏览器支持</a>（英文）—— 可选的文件夹、网络驱动器、需认证的 GitHub 仓库、经过验证的页面加载器、网关以及可选的浏览器扩展。</li>
-<li><a href="../browser-support/README.md#active-implementation-plan">当前浏览器支持计划</a>（英文）—— 扩展的链接改写与关键字、Web 处理程序兼容别名，以及在各桌面浏览器上的原生操作系统协议注册。</li>
+<li><a href="browser-support/README.html">桌面与浏览器支持</a>—— 可选的文件夹、网络驱动器、需认证的 GitHub 仓库、经过验证的页面加载器、网关以及可选的浏览器扩展。</li>
+<li><a href="browser-support/README.html#active-implementation-plan">当前浏览器支持计划</a>—— 扩展的链接改写与关键字、Web 处理程序兼容别名，以及在各桌面浏览器上的原生操作系统协议注册。</li>
 </ul>
-<h2 id="_8">示例文件</h2>
+<h2 id="example-files">示例文件</h2>
 <p><a href="../examples/">examples/</a> 目录包含用于测试 CID 生成和验证的示例文件。其中包括一些 256t 品牌资源，以多种媒体类型演示本规范：</p>
 <table>
 <thead>
@@ -222,13 +222,13 @@
 </tbody>
 </table>
 <p>这些文件可以配合 <a href="examples.html">CID 示例</a>工具或<a href="check.html">文件 CID 检查</a>工具使用，以验证它们的内容标识符。</p>
-<h2 id="uri">URI 协议</h2>
-<p>一份提议 <code>t256:</code> URI 协议的 RFC 草案（英文）可在 <a href="../rfc/draft-cox-t256-uri-scheme-00.md">rfc/draft-cox-t256-uri-scheme-00.md</a> 查看。<code>t256:</code> URL 只包含一个 CID，没有主机或路径。（<code>256t:</code> 这种写法不是有效的 URI 协议名，因为 RFC 3986 要求协议名以字母开头。）</p>
-<h2 id="_9">发布</h2>
+<h2 id="uri-scheme">URI 协议</h2>
+<p>一份提议 <code>t256:</code> URI 协议的 RFC 草案可在 <a href="rfc/draft-cox-t256-uri-scheme-00.html">rfc/draft-cox-t256-uri-scheme-00.md</a> 查看。<code>t256:</code> URL 只包含一个 CID，没有主机或路径。（<code>256t:</code> 这种写法不是有效的 URI 协议名，因为 RFC 3986 要求协议名以字母开头。）</p>
+<h2 id="publishing">发布</h2>
 <p>关于部署和发布使用 CID 的内容寻址存储的信息，请参阅<a href="publishing.html">发布与存储</a>。</p>
-<h2 id="_10">常见问题</h2>
+<h2 id="faq">常见问题</h2>
 <p>对 256t.org 有疑问？请查看<a href="faq.html">常见问题</a>页面，那里解答了关于 CID、实现、安全性等方面的常见问题。</p>
-<h2 id="_11">碰撞怎么办？</h2>
+<h2 id="what-about-collisions">碰撞怎么办？</h2>
 <p>有几种不同类型的碰撞需要加以区分：
 - 意外碰撞 —— 纯属偶然
 - 对抗性碰撞 —— 有人蓄意制造
@@ -238,7 +238,7 @@
 - 始终验证 CID 内容。已有许多实现可以做到这一点。直接撒谎要比设计出一次碰撞容易得多。
 - 减少对手。如果没有人把有问题的内容放到你可能接受的地方，剩下的就只有意外了。</p>
 <p>对于意外造成的问题碰撞，我可以坦然忽略。</p>
-<h2 id="_12">实现</h2>
+<h2 id="implementations">实现</h2>
 <p>256t.org 规范已经用多种编程语言实现。每个实现都提供生成和验证内容标识符（CID）的工具。</p>
 <table>
 <thead>

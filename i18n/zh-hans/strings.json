@@ -164,7 +164,6 @@
   "resolve.html": {
     "<title>t256 URI Resolver · 256t.org</title>": "<title>t256 URI 解析器 · 256t.org</title>",
     ">CID Download</a>": ">CID 下载</a>",
-    ">Desktop setup</a>": ">桌面端设置（英文）</a>",
     "<h1>Open content by its identity.</h1>": "<h1>按内容的身份打开内容。</h1>",
     "<p>Paste a t256 URI to extract inline content or retrieve and verify it from your providers.</p>": "<p>粘贴一个 t256 URI，即可提取内联内容，或从你的内容提供方获取并验证内容。</p>",
     ">Download the desktop helper</a>": ">下载桌面助手</a>",
@@ -190,7 +189,8 @@
     ">Remove browser link handler</button>": ">移除浏览器链接处理程序</button>",
     ">Checking browser support…</output>": ">正在检查浏览器支持…</output>",
     ">Try a compatible “hello” link</a>": ">试试一个兼容的“hello”链接</a>",
-    "<p>HTML, JavaScript, and SVG appear as text here. Downloads contain the original verified bytes. The helper gateway can open active documents with isolated execution; HTML t256 resource references are translated.</p>": "<p>HTML、JavaScript 和 SVG 在这里以文本形式显示。下载内容为经过验证的原始字节。助手网关可以在隔离执行环境中打开活动文档；HTML 中的 t256 资源引用会被转换。</p>"
+    "<p>HTML, JavaScript, and SVG appear as text here. Downloads contain the original verified bytes. The helper gateway can open active documents with isolated execution; HTML t256 resource references are translated.</p>": "<p>HTML、JavaScript 和 SVG 在这里以文本形式显示。下载内容为经过验证的原始字节。助手网关可以在隔离执行环境中打开活动文档；HTML 中的 t256 资源引用会被转换。</p>",
+    "<a href=\"https://github.com/curtcox/256t.org/tree/main/browser-support\">Desktop setup</a>": "<a href=\"browser-support/README.md\">桌面端设置</a>"
   },
   "browser-support/web/resolver.mjs": {
     "'Ready. Choose providers and resolve the content.'": "'就绪。请选择提供方并解析内容。'",
@@ -208,6 +208,44 @@
     "'Remove this handler in browser settings. Manual resolution is still available.'": "'请在浏览器设置中移除此处理程序。手动解析仍然可用。'",
     "'Retrieving and verifying…'": "'正在获取并验证…'",
     "`Verified ${bytes.length} bytes · ${provider}`": "`已验证 ${bytes.length} 字节 · ${provider}`",
-    "'Retrieval cancelled.'": "'已取消获取。'"
+    "'Retrieval cancelled.'": "'已取消获取。'",
+    "new DOMException('Retrieval cancelled', 'AbortError')": "new DOMException('已取消获取', 'AbortError')"
+  },
+  "browser-support/web/loader.mjs": {
+    "'Use the loopback connection URL supplied by the desktop helper'": "'请使用桌面助手提供的环回连接 URL'",
+    "'t256 retrieval timed out'": "'t256 获取超时'",
+    "`t256 resolver returned HTTP ${response.status}`": "`t256 解析器返回了 HTTP ${response.status}`",
+    "'t256 resource loading timed out'": "'t256 资源加载超时'",
+    "'Content exceeds the page size limit'": "'内容超出了页面大小限制'",
+    "'Resolver returned a different identifier'": "'解析器返回了不同的标识符'",
+    "'An image URI needs a recognized image suffix'": "'图像 URI 需要可识别的图像后缀'",
+    "'Image could not be decoded'": "'无法解码图像'",
+    "'A script URI needs a .js or .mjs suffix'": "'脚本 URI 需要 .js 或 .mjs 后缀'",
+    "'Script failed to load; check page CSP and module mappings'": "'脚本加载失败；请检查页面 CSP 和模块映射'",
+    "'A worker URI needs a JavaScript suffix'": "'Worker URI 需要 JavaScript 后缀'",
+    "'Only stylesheet links are supported'": "'仅支持样式表链接'",
+    "'Stylesheet failed to load; check page CSP'": "'样式表加载失败；请检查页面 CSP'",
+    "'t256 client was disposed'": "'t256 客户端已被释放'"
+  },
+  "browser-support/web/web-client.mjs": {
+    "'Use HTTP(S) base URLs without credentials, queries, or fragments'": "'请使用不含凭据、查询参数或片段的 HTTP(S) 基础 URL'",
+    "'Content exceeds the page size limit'": "'内容超出了页面大小限制'",
+    "new Error('Aborted')": "new Error('已中止')",
+    "'Provider timed out'": "'提供方超时'",
+    "'No provider returned matching content. Check availability and CORS. '": "'没有提供方返回匹配的内容。请检查可用性和 CORS。'"
+  },
+  "browser-support/web/protocol-handler.mjs": {
+    "'Expected a t256 URI or browser-compatible link'": "'需要 t256 URI 或浏览器兼容链接'",
+    "'Expected one URI in the resolver link'": "'解析器链接中应只包含一个 URI'",
+    "'Browser links need HTTPS or a local desktop helper page'": "'浏览器链接需要 HTTPS 或本地桌面助手页面'"
+  },
+  "browser-support/web/connection-preference.mjs": {},
+  "implementations/ecmascript/uri.mjs": {
+    "'Expected t256:<CID>[.suffix], without //, escapes, query, or fragment'": "'应为 t256:<CID>[.后缀]，不能包含 //、转义序列、查询参数或片段'",
+    "'Noncanonical base64url encoding'": "'base64url 编码不规范'",
+    "'Invalid CID payload length'": "'CID 载荷长度无效'",
+    "'Content does not match its CID'": "'内容与其 CID 不匹配'",
+    "'Content exceeds CID length'": "'内容超出了 CID 指定的长度'",
+    "'Content is shorter than its CID length'": "'内容短于其 CID 指定的长度'"
   }
 }

@@ -1,3 +1,4 @@
+<!-- i18n:source sha256:6826a083676fcaea -->
 # [256t.org](https://curtcox.github.io/256t.org/)
 
 <p align="center">
@@ -102,8 +103,8 @@ SHA-512 哈希的长度为 512 位，即 64 字节。
 - [文件 CID 检查](check.html) —— 拖放文件以分析其内容并计算其 CID。
 - [CID 下载](download.html) —— 使用 CID 从兼容 256t.org 的服务器下载并验证内容。
 - [t256 URI 解析器](resolve.html) —— 使用内联内容、公共提供方或你的桌面助手打开 t256 链接或浏览器兼容链接；还可以选择启用浏览器链接处理。
-- [桌面与浏览器支持](browser-support/README.md)（英文）—— 可选的文件夹、网络驱动器、需认证的 GitHub 仓库、经过验证的页面加载器、网关以及可选的浏览器扩展。
-- [当前浏览器支持计划](browser-support/README.md#active-implementation-plan)（英文）—— 扩展的链接改写与关键字、Web 处理程序兼容别名，以及在各桌面浏览器上的原生操作系统协议注册。
+- [桌面与浏览器支持](browser-support/README.md)—— 可选的文件夹、网络驱动器、需认证的 GitHub 仓库、经过验证的页面加载器、网关以及可选的浏览器扩展。
+- [当前浏览器支持计划](browser-support/README.md#active-implementation-plan)—— 扩展的链接改写与关键字、Web 处理程序兼容别名，以及在各桌面浏览器上的原生操作系统协议注册。
 
 ## 示例文件
 
@@ -123,7 +124,7 @@ SHA-512 哈希的长度为 512 位，即 64 字节。
 
 ## URI 协议
 
-一份提议 `t256:` URI 协议的 RFC 草案（英文）可在 [rfc/draft-cox-t256-uri-scheme-00.md](rfc/draft-cox-t256-uri-scheme-00.md) 查看。`t256:` URL 只包含一个 CID，没有主机或路径。（`256t:` 这种写法不是有效的 URI 协议名，因为 RFC 3986 要求协议名以字母开头。）
+一份提议 `t256:` URI 协议的 RFC 草案可在 [rfc/draft-cox-t256-uri-scheme-00.md](rfc/draft-cox-t256-uri-scheme-00.md) 查看。`t256:` URL 只包含一个 CID，没有主机或路径。（`256t:` 这种写法不是有效的 URI 协议名，因为 RFC 3986 要求协议名以字母开头。）
 
 ## 发布
 

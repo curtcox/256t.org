@@ -58,29 +58,29 @@
 <nav class="i18n-languages" aria-label="语言" style="display: block; font-size: 0.9rem;"><a href="../faq.html" hreflang="en" lang="en">English</a> · <strong lang="zh-Hans">简体中文</strong> · <a href="../pt-br/faq.html" hreflang="pt-BR" lang="pt-BR">Português (Brasil)</a></nav>
 <p class="i18n-notice" style="font-size: 0.9rem; opacity: 0.8; margin: 0.25rem 0 0;">本页面由机器翻译，仅供参考。如有出入，请以<a href="../faq.html" hreflang="en">英文原文</a>为准。</p>
 <!-- /i18n:languages -->
-<h1 id="_1">常见问题</h1>
-<h2 id="_2">一般问题</h2>
-<h3 id="256torg">256t.org 是什么？</h3>
+<h1 id="frequently-asked-questions">常见问题</h1>
+<h2 id="general-questions">一般问题</h2>
+<h3 id="what-is-256torg">256t.org 是什么？</h3>
 <p>256t.org 是一个使用 94 字符内容标识符（CID）的内容寻址存储公开规范。它定义了一种简单、标准化的方式，根据内容的加密哈希和长度来标识和获取内容。</p>
-<h3 id="256torg_1">为什么要用 256t.org，而不是其他内容寻址存储系统？</h3>
+<h3 id="why-use-256torg-instead-of-other-content-addressable-storage-systems">为什么要用 256t.org，而不是其他内容寻址存储系统？</h3>
 <p>256t.org 提供简单、可预测的格式，标识符长度固定（不超过 94 个字符），便于在 URL、文件名和数据库中使用。该规范刻意保持精简和专注，因此可以很容易地用任何编程语言实现。</p>
-<h3 id="256torg-ipfs">256t.org 与 IPFS 或其他内容寻址系统有什么不同？</h3>
+<h3 id="how-is-256torg-different-from-ipfs-or-other-content-addressable-systems">256t.org 与 IPFS 或其他内容寻址系统有什么不同？</h3>
 <p>IPFS 等系统是完整的分布式存储网络，而 256t.org 只是一个关于内容标识符的规范。它定义了如何计算和验证 CID，而把存储、获取和发现机制留作实现细节。这使它在不同用例中更简单、更灵活。</p>
-<h2 id="cid">CID 格式</h2>
-<h3 id="cid_1">什么是 CID？</h3>
+<h2 id="cid-format">CID 格式</h2>
+<h3 id="what-is-a-cid">什么是 CID？</h3>
 <p>CID（内容标识符）是一个不超过 94 个字符、以 base64url 编码的字符串，用于唯一标识内容。它由以下部分组成：
 - 8 个字符：内容长度（base64url 编码）
 - 最多 86 个字符：SHA-512 哈希（内容大于 64 字节时），或内容本身（内容不超过 64 字节时）</p>
-<h3 id="94">为什么是 94 个字符？</h3>
+<h3 id="why-94-characters">为什么是 94 个字符？</h3>
 <p>选择这个长度是为了能轻松放进 URL 路径段和常见的数据库字段：
 - 8 个字符表示长度（最多可表示 256 TB）
 - 86 个字符用于 SHA-512 哈希或内联内容
 - 合计：94 个字符</p>
-<h3 id="base64url">什么是 base64url 编码？</h3>
+<h3 id="what-is-base64url-encoding">什么是 base64url 编码？</h3>
 <p>Base64url 是 Base64 编码的一种变体，使用对 URL 和文件名安全的字符（定义于 <a href="https://datatracker.ietf.org/doc/html/rfc4648#section-5">RFC 4648 第 5 节</a>）。它用 <code>-</code> 代替 <code>+</code>，用 <code>_</code> 代替 <code>/</code>，并省略填充字符（<code>=</code>）。</p>
-<h3 id="_3">为什么小内容直接内联存储而不做哈希？</h3>
+<h3 id="why-is-small-content-stored-inline-instead-of-hashed">为什么小内容直接内联存储而不做哈希？</h3>
 <p>对于 64 字节或更小的内容，其 base64url 编码本身不会比 SHA-512 哈希更长。内联存储更高效，也免去了不必要的哈希计算。</p>
-<h3 id="cid_2">如何计算 CID？</h3>
+<h3 id="how-do-i-compute-a-cid">如何计算 CID？</h3>
 <ol>
 <li>确定内容长度</li>
 <li>如果长度 ≤ 64 字节：
@@ -92,10 +92,10 @@
    - 在前面加上 base64url 编码的长度（8 个字符）</li>
 </ol>
 <p>40 多种语言的代码示例见 <a href="https://github.com/curtcox/256t.org/tree/main/implementations">implementations</a> 目录。</p>
-<h2 id="_4">使用</h2>
-<h3 id="256torg_2">我可以在自己的项目中使用 256t.org 吗？</h3>
+<h2 id="usage">使用</h2>
+<h3 id="can-i-use-256torg-for-my-project">我可以在自己的项目中使用 256t.org 吗？</h3>
 <p>可以！该规范是开放且免费使用的。你可以在自己的应用中实现 CID 的生成和验证，或者使用现有的实现。</p>
-<h3 id="cid_3">CID 可以存储在哪里？</h3>
+<h3 id="where-can-i-store-cids">CID 可以存储在哪里？</h3>
 <p>CID 可以存储在任何地方：
 - 传统数据库中
 - 文件系统中（作为文件名，或放在专门的目录里）
@@ -103,64 +103,64 @@
 - CDN 上
 - 分布式系统中</p>
 <p>本规范并不规定存储机制。</p>
-<h3 id="cid_4">如何根据 CID 获取内容？</h3>
+<h3 id="how-do-i-retrieve-content-from-a-cid">如何根据 CID 获取内容？</h3>
 <p>这取决于你的存储实现。本规范定义了 CID 格式，但没有定义获取机制。常见做法包括：
 - 基于 CID 路由的 HTTP 服务器
 - 直接访问文件系统
 - 云存储 API
 - 自定义协议</p>
-<h3 id="cid_5">有托管 CID 的公共服务器吗？</h3>
+<h3 id="are-there-public-servers-hosting-cids">有托管 CID 的公共服务器吗？</h3>
 <p>256t.org 主域名托管了一小组用于演示的 CID，但它并不打算作为通用的公共存储服务。重点在于规范本身。</p>
-<h2 id="_5">安全与完整性</h2>
-<h3 id="cid_6">CID 会发生碰撞吗？</h3>
+<h2 id="security-and-integrity">安全与完整性</h2>
+<h3 id="can-cids-collide">CID 会发生碰撞吗？</h3>
 <p>以目前的技术，制造 SHA-512 碰撞在密码学上是不可行的。对于大于 64 字节的内容，CID 的抗碰撞性与 SHA-512 本身相同。对于不超过 64 字节的内容，CID 本身就包含实际内容，因此按定义就是唯一的。</p>
-<h3 id="_6">如果有人制造了哈希碰撞怎么办？</h3>
+<h3 id="what-if-someone-creates-a-hash-collision">如果有人制造了哈希碰撞怎么办？</h3>
 <p>尽管理论上可能，但人为制造 SHA-512 碰撞远远超出了当前的计算能力。对攻击者来说，直接对内容撒谎要比制造碰撞容易得多。如果安全性至关重要，请始终验证 CID 内容。</p>
-<h3 id="cid_7">如何验证内容与 CID 是否匹配？</h3>
+<h3 id="how-do-i-verify-content-matches-a-cid">如何验证内容与 CID 是否匹配？</h3>
 <p>使用任意一个<a href="https://github.com/curtcox/256t.org/tree/main/implementations">实现</a>计算你的内容的 CID，并与预期的 CID 进行比较。所有实现都提供了验证功能。</p>
-<h3 id="cid_8">CID 是不可变的吗？</h3>
+<h3 id="are-cids-immutable">CID 是不可变的吗？</h3>
 <p>在实践中是的。由于 CID 由内容本身推导而来，同一个 CID 始终代表同一份内容。如果内容发生变化，它的 CID 也会随之改变。</p>
-<h3 id="cid_9">CID 可以无限期缓存吗？</h3>
+<h3 id="can-cids-be-cached-indefinitely">CID 可以无限期缓存吗？</h3>
 <p>可以。由于 CID 基于内容寻址且不可变，可以使用 <code>Cache-Control: public, max-age=31536000, immutable</code> 响应头永久缓存。</p>
-<h2 id="_7">实现</h2>
-<h3 id="_8">我应该使用哪个实现？</h3>
+<h2 id="implementation">实现</h2>
+<h3 id="which-implementation-should-i-use">我应该使用哪个实现？</h3>
 <p>选择与你项目主要语言相匹配的实现即可。所有实现都遵循同一规范，对相同内容会生成完全相同的 CID。</p>
-<h3 id="_9">如何添加新的实现？</h3>
+<h3 id="how-do-i-add-a-new-implementation">如何添加新的实现？</h3>
 <p>每个实现都应包括：
 - 一个用于计算 CID 的核心库（<code>cid.*</code>）
 - 一个为示例文件生成 CID 的脚本（<code>generate.*</code>）
 - 一个验证 CID 与其内容是否匹配的脚本（<code>check.*</code>）</p>
 <p>示例请参见 <a href="https://github.com/curtcox/256t.org/tree/main/implementations">implementations</a> 目录中的现有实现。</p>
-<h3 id="_10">这些实现经过测试吗？</h3>
+<h3 id="are-the-implementations-tested">这些实现经过测试吗？</h3>
 <p>是的。仓库在 <code>examples/</code> 目录中提供了示例文件，并在 <code>cids.json</code> 中提供了预期的 CID。测试方法是为这些文件生成 CID，并验证它们与预期值一致。</p>
-<h2 id="_11">技术细节</h2>
-<h3 id="sha-512-sha-256">为什么用 SHA-512 而不是 SHA-256？</h3>
+<h2 id="technical-details">技术细节</h2>
+<h3 id="why-sha-512-instead-of-sha-256">为什么用 SHA-512 而不是 SHA-256？</h3>
 <p>SHA-512 提供更高的抗碰撞性；而得益于小内容的内联存储，多出来的长度（64 字节对 32 字节）并不会明显增加 CID 的总长度。</p>
-<h3 id="64">正好 64 字节的内容会怎样？</h3>
+<h3 id="what-happens-with-content-exactly-64-bytes-long">正好 64 字节的内容会怎样？</h3>
 <p>它总是内联存储。64 字节经 base64url 编码后正好是 86 个字符，与 SHA-512 哈希的长度相同，因此内容恰好能放进哈希所占的空间。规则是：64 字节及以下，内联；超过 64 字节，哈希。因此每份内容都有且只有一个 CID。一个 64 字节内容的 CID 如果包含的是哈希而不是内容本身，就是无效的。</p>
-<h3 id="8">为什么长度前缀是 8 个字符？</h3>
+<h3 id="why-is-the-length-prefix-8-characters">为什么长度前缀是 8 个字符？</h3>
 <p>8 个 base64url 字符可提供 48 位的长度信息，支持最大 256 TB 的内容。这足以满足几乎所有用例，同时保持前缀紧凑。</p>
-<h3 id="cid_10">小内容可以使用更短的 CID 吗？</h3>
+<h3 id="can-i-use-shorter-cids-for-small-content">小内容可以使用更短的 CID 吗？</h3>
 <p>可以！对于不超过 64 字节的内容，CID 更短，因为它只包含长度前缀加上 base64url 编码的内容本身（不超过 86 个字符）。</p>
-<h2 id="_12">发布与存储</h2>
-<h3 id="cid_11">如何发布 CID？</h3>
+<h2 id="publishing-and-storage">发布与存储</h2>
+<h3 id="how-do-i-publish-cids">如何发布 CID？</h3>
 <p>关于部署使用 CID 的内容寻址存储的详细信息（包括上传到 Cloudflare R2 的示例），请参阅<a href="publishing.html">发布与存储</a>。</p>
-<h3 id="cid_12">CID 内容应附带哪些元数据？</h3>
+<h3 id="what-metadata-should-accompany-cid-content">CID 内容应附带哪些元数据？</h3>
 <p>本规范关注的是内容标识符，而不是元数据。不过，最佳实践包括：
 - 使用 <code>Cache-Control: public, max-age=31536000, immutable</code> 以最大化缓存
 - 使用与内容相符的 <code>Content-Type</code> 响应头
 - 可选：在响应头或元数据中存储 CID 以便验证</p>
-<h3 id="github-pages-cid">可以在 GitHub Pages 上托管 CID 吗？</h3>
+<h3 id="can-i-host-cids-on-github-pages">可以在 GitHub Pages 上托管 CID 吗？</h3>
 <p>可以，但 GitHub Pages 有文件大小限制，也没有针对内容寻址存储进行优化。用于生产环境时，请考虑 S3、R2 等专门的存储服务。</p>
-<h2 id="_13">参与贡献</h2>
-<h3 id="256torg_3">我如何为 256t.org 做贡献？</h3>
+<h2 id="contributing">参与贡献</h2>
+<h3 id="how-can-i-contribute-to-256torg">我如何为 256t.org 做贡献？</h3>
 <p>欢迎贡献！你可以：
 - 用新的编程语言添加实现
 - 改进现有的实现
 - 报告问题或对规范提出改进建议
 - 改进文档</p>
 <p>请访问 <a href="https://github.com/curtcox/256t.org">GitHub 仓库</a>开始参与。</p>
-<h3 id="_14">我可以在哪里提问？</h3>
+<h3 id="where-can-i-ask-questions">我可以在哪里提问？</h3>
 <p>请在 <a href="https://github.com/curtcox/256t.org/issues">GitHub 仓库</a>中提交 issue，或在 GitHub Discussions 版块发起讨论。</p>
 <hr />
 <p><a href="index.html">← 返回首页</a></p>

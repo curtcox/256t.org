@@ -24,6 +24,7 @@ deploy workflows use for the English Markdown pages.
 """
 
 import argparse
+import hashlib
 import html
 import json
 import posixpath
@@ -41,14 +42,22 @@ START = '<!-- i18n:languages -->'
 END = '<!-- /i18n:languages -->'
 BLOCK = re.compile(re.escape(START) + r'.*?' + re.escape(END), re.S)
 
+# First line of a translated document: which English version it translates.
+SOURCE_STAMP = re.compile(r'\A<!-- i18n:source sha256:([0-9a-f]+) -->\n+')
+
 MARKDOWN_EXTENSIONS = ['fenced_code', 'tables', 'toc', 'sane_lists']
 
 # A quoted relative path such as "hash.html", './loader.mjs', `cids/${cid}`
 # or "browser-support/README.md#plan". Used for HTML attributes and script
 # string literals alike, so translated pages keep pointing at shared assets.
 REFERENCE = re.compile(
-    r"""(?<=["'`])((?:\.{1,2}/)*[A-Za-z0-9_][A-Za-z0-9_.\-]*(?:/[A-Za-z0-9_.\-]+)*/?)(?=["'`#?$])"""
+    r"""(?<=["'`])((?:\.{1,2}/)*\.?[A-Za-z0-9_][A-Za-z0-9_.\-]*(?:/[A-Za-z0-9_.\-]+)*/?)(?=["'`#?$])"""
 )
+
+# Code samples in documents are shown verbatim, never rewritten.
+CODE = re.compile(r'<pre\b.*?</pre>|<code\b.*?</code>', re.S)
+
+HEADING_ID = re.compile(r'(<h[1-6] id=")([^"]*)(")')
 
 
 def load_json(path):
@@ -61,9 +70,27 @@ ENGLISH = LANGUAGES[0]
 TRANSLATIONS = LANGUAGES[1:]
 
 
+def document(source):
+    entry = PAGES['documents'].get(source)
+    if entry is None:
+        return None
+    return {'output': entry} if isinstance(entry, str) else entry
+
+
 def output_name(source):
-    """Site path an English source is served at (README.md -> index.html)."""
-    return PAGES['documents'].get(source, source)
+    """Path of a translated copy inside a language folder (README.md -> index.html)."""
+    entry = document(source)
+    return entry['output'] if entry else source
+
+
+def english_path(source):
+    """Where the English original is served: a site path or an absolute URL."""
+    entry = document(source)
+    return entry.get('english', entry['output']) if entry else source
+
+
+def is_url(path):
+    return re.match(r'^[a-z][a-z0-9+.\-]*:', path, re.I) is not None
 
 
 def all_sources():
@@ -75,7 +102,13 @@ def localized(language, site_path):
 
 
 def relative(target, from_file):
+    if is_url(target):
+        return target
     return posixpath.relpath(target, posixpath.dirname(from_file) or '.')
+
+
+def sha256(text):
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
 
 
 class Problems(list):
@@ -85,21 +118,32 @@ class Problems(list):
 
 
 problems = Problems()
+warnings = []
+
+
+def warn(message):
+    warnings.append(message)
+    print(f'  ~ {message}', file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
 # Language links
 
+def page_path(source, language):
+    if language is ENGLISH:
+        return english_path(source)
+    return localized(language, output_name(source))
+
+
 def language_block(source, current, markdown_style=False):
     """The language switcher (and, off English, the translation notice)."""
-    page = output_name(source)
-    here = localized(current, page)
+    here = page_path(source, current)
     links = []
     for language in LANGUAGES:
         if language is current:
             links.append((language, None))
         else:
-            links.append((language, relative(localized(language, page), here)))
+            links.append((language, relative(page_path(source, language), here)))
 
     if markdown_style:
         parts = [f'**{language["name"]}**' if href is None else f'[{language["name"]}]({href})'
@@ -117,13 +161,16 @@ def language_block(source, current, markdown_style=False):
            f'style="display: block; font-size: 0.9rem;">{" · ".join(parts)}</nav>')
     notice = ''
     if current is not ENGLISH:
-        original = relative(page, here)
+        original = relative(english_path(source), here)
         notice = ('\n<p class="i18n-notice" style="font-size: 0.9rem; opacity: 0.8; margin: 0.25rem 0 0;">'
                   + current['notice'].replace('{original}', original) + '</p>')
     return f'{START}\n{nav}{notice}\n{END}'
 
 
 def update_english(source, write):
+    entry = document(source)
+    if entry and entry.get('markers') is False:
+        return
     path = ROOT / source
     text = path.read_text(encoding='utf-8')
     if not BLOCK.search(text):
@@ -137,6 +184,8 @@ def update_english(source, write):
 # Relative references
 
 def exists_for_site(site_path, is_directory):
+    if site_path.startswith('.github/'):
+        return False  # not deployed
     for generated in PAGES['deploy_generated']:
         if site_path == generated.rstrip('/') or site_path.startswith(generated):
             return True
@@ -148,11 +197,23 @@ def exists_for_site(site_path, is_directory):
     return target.is_file() and ('/' in site_path or '.' in site_path)
 
 
-def rewrite_references(text, source, language):
+def translated_paths(language):
+    """English source paths and site paths -> path of the translated copy."""
+    paths = {}
+    for source in all_sources():
+        translated = localized(language, output_name(source))
+        paths[source] = translated
+        paths[output_name(source)] = translated
+        if not is_url(english_path(source)):
+            paths[english_path(source)] = translated
+    return paths
+
+
+def rewrite_references(text, source, language, skip_code=False):
     """Point relative paths at the translated page when there is one,
     otherwise back at the shared English asset."""
     out = localized(language, output_name(source))
-    translated = {output_name(s): localized(language, output_name(s)) for s in all_sources()}
+    translated = translated_paths(language)
 
     def replace(match):
         reference = match.group(1)
@@ -171,7 +232,15 @@ def rewrite_references(text, source, language):
             result = './' + result
         return result
 
-    return REFERENCE.sub(replace, text)
+    if not skip_code:
+        return REFERENCE.sub(replace, text)
+    pieces, last = [], 0
+    for code in CODE.finditer(text):
+        pieces.append(REFERENCE.sub(replace, text[last:code.start()]))
+        pieces.append(code.group(0))
+        last = code.end()
+    pieces.append(REFERENCE.sub(replace, text[last:]))
+    return ''.join(pieces)
 
 
 class LinkCollector(HTMLParser):
@@ -188,15 +257,16 @@ class LinkCollector(HTMLParser):
 def check_links(text, out):
     collector = LinkCollector()
     collector.feed(text)
+    translated_outputs = {localized(language, output_name(s))
+                          for language in TRANSLATIONS for s in all_sources()}
+    translated_outputs |= {english_path(s) for s in all_sources()}
     for link in collector.links:
-        if re.match(r'^[a-z][a-z0-9+.\-]*:|^#|^//|\$\{', link, re.I):
+        if is_url(link) or re.match(r'^#|^//|\$\{', link):
             continue
         path = link.split('#')[0].split('?')[0]
         if not path:
             continue
         site_path = posixpath.normpath(posixpath.join(posixpath.dirname(out), path))
-        translated_outputs = {localized(language, output_name(s))
-                              for language in LANGUAGES for s in all_sources()}
         if site_path in translated_outputs or exists_for_site(site_path, path.endswith('/')):
             continue
         problems.add(f'{out}: link to missing {link}')
@@ -278,7 +348,12 @@ def direction(language):
 def document_title(source_markdown):
     match = re.search(r'^#\s+(.+)$', source_markdown, re.M)
     heading = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', match.group(1)).strip() if match else '256t.org'
+    heading = heading.replace('`', '')
     return heading if heading == '256t.org' else f'{heading} - 256t.org'
+
+
+def english_markdown(source):
+    return BLOCK.sub('', (ROOT / source).read_text(encoding='utf-8'))
 
 
 def build_document(source, language):
@@ -287,9 +362,30 @@ def build_document(source, language):
         problems.add(f'{translation.relative_to(ROOT)}: missing translation')
         return None
     text = translation.read_text(encoding='utf-8')
+    english = english_markdown(source)
+
+    stamp = SOURCE_STAMP.match(text)
+    current = sha256(english)
+    if not stamp:
+        problems.add(f'{translation.relative_to(ROOT)}: first line must be <!-- i18n:source sha256:{current} -->')
+    elif stamp.group(1) != current:
+        warn(f'{translation.relative_to(ROOT)}: {source} changed since it was translated; '
+             f'update the translation, then its stamp to sha256:{current}')
+    text = SOURCE_STAMP.sub('', text, count=1)
+
     body = markdown.markdown(text, extensions=MARKDOWN_EXTENSIONS)
+    # Keep the English anchors so links like README.md#plan work in every language.
+    english_ids = HEADING_ID.findall(markdown.markdown(english, extensions=MARKDOWN_EXTENSIONS))
+    translated_ids = HEADING_ID.findall(body)
+    if len(english_ids) == len(translated_ids):
+        ids = iter(match[1] for match in english_ids)
+        body = HEADING_ID.sub(lambda m: m.group(1) + next(ids) + m.group(3), body)
+    else:
+        problems.add(f'{translation.relative_to(ROOT)}: {len(translated_ids)} headings, '
+                     f'English {source} has {len(english_ids)}')
+
     page = page_template(language, document_title(text), body)
-    return rewrite_references(page, source, language)
+    return rewrite_references(page, source, language, skip_code=True)
 
 
 def apply_strings(text, source, table):
@@ -370,6 +466,8 @@ def main():
     verb = 'stale' if args.check else 'updated'
     for path in stale:
         print(f'  {verb}: {path}')
+    if warnings:
+        print(f'{len(warnings)} translation(s) may be out of date', file=sys.stderr)
     if problems:
         print(f'{len(problems)} problem(s) found', file=sys.stderr)
     if problems or (args.check and stale):

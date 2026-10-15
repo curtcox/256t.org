@@ -1,3 +1,4 @@
+<!-- i18n:source sha256:ff17ec7ca39b8134 -->
 # Perguntas frequentes
 
 ## Perguntas gerais

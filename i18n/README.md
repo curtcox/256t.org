@@ -17,19 +17,39 @@ i18n/
   languages.json            languages: code, folder, native name, notice text
   pages.json                which English files are translated
   build.py                  generator
-  <folder>/README.md        whole-document translations of README.md,
-  <folder>/FAQ.md             FAQ.md and PUBLISHING.md
-  <folder>/PUBLISHING.md
+  <folder>/<path>.md        whole-document translations, at the English file's
+                            path (README.md, browser-support/README.md, ...)
   <folder>/strings.json     string tables for the HTML tools and their scripts
 ```
 
 ### Documents
 
-`README.md`, `FAQ.md` and `PUBLISHING.md` are translated as whole Markdown files
-and rendered with the same template the deploy workflow uses. Keep links exactly
-as they are in the English file (`hash.html`, `examples/256t.png`, `cids/`):
-the build points them at the translated page when one exists, and at the shared
-English asset otherwise.
+The Markdown pages listed under `documents` in `pages.json` (the home page, FAQ,
+Publishing, the browser-support guide, the RFC draft and the R2 scripts guide)
+are translated as whole files and rendered with the same template the deploy
+workflow uses. Keep links exactly as they are in the English file (`hash.html`,
+`examples/256t.png`, `../resolve.html`): the build points them at the translated
+page when one exists, and at the shared English asset otherwise. Code samples
+are left untouched. Headings get the English anchor ids, so links such as
+`browser-support/README.md#active-implementation-plan` work in every language;
+keep the same headings, in the same order, as the English file.
+
+The first line of each translation records which English version it translates:
+
+```
+<!-- i18n:source sha256:8fa34a8ffffd587a -->
+```
+
+When the English file changes, the build prints a warning naming the stale
+translation and the new stamp. Update the translation, then the stamp.
+
+A `documents` entry is either the translated page's path (`"FAQ.md": "faq.html"`)
+or an object with `output`, plus `english` when the English original is served
+somewhere else (a raw `.md` path or a URL) and `"markers": false` when the
+English file is not on the site and gets no language links.
+
+Avoid hard line breaks inside Chinese (and other CJK) paragraphs: browsers
+render them as stray spaces.
 
 ### Tool pages
 
@@ -49,6 +69,11 @@ English snippets to their translation, per page:
 Snippets include enough surrounding markup or code to be unambiguous. Strings in
 scripts are translated the same way, keeping their quotes and `${…}`
 placeholders. An English string with no entry simply stays English.
+
+Modules listed under `scripts` get translated copies too (the resolver page and
+the library modules whose error messages it shows). A translated module imports
+the translated copies of other listed modules and the shared English files for
+everything else.
 
 If an English page changes so that a snippet no longer appears, the build fails
 and names it — update the key (and translation) in every `strings.json`.

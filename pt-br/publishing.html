@@ -58,9 +58,9 @@
 <nav class="i18n-languages" aria-label="Idiomas" style="display: block; font-size: 0.9rem;"><a href="../publishing.html" hreflang="en" lang="en">English</a> · <a href="../zh-hans/publishing.html" hreflang="zh-Hans" lang="zh-Hans">简体中文</a> · <strong lang="pt-BR">Português (Brasil)</strong></nav>
 <p class="i18n-notice" style="font-size: 0.9rem; opacity: 0.8; margin: 0.25rem 0 0;">Esta página foi traduzida automaticamente. Em caso de divergência, prevalece o <a href="../publishing.html" hreflang="en">original em inglês</a>.</p>
 <!-- /i18n:languages -->
-<h1 id="publicacao-e-armazenamento">Publicação e armazenamento</h1>
+<h1 id="publishing-and-storage">Publicação e armazenamento</h1>
 <p>Para implantar armazenamento endereçável por conteúdo usando CIDs, este repositório inclui ferramentas para enviar arquivos ao Cloudflare R2 (armazenamento compatível com S3).</p>
-<h2 id="script-de-envio-para-o-r2">Script de envio para o R2</h2>
+<h2 id="r2-upload-script">Script de envio para o R2</h2>
 <p>O script <a href="https://github.com/curtcox/256t.org/blob/main/.github/scripts/r2_upload.py"><code>.github/scripts/r2_upload.py</code></a> envia arquivos para o R2 com verificação de CID baseada em metadados:</p>
 <ul>
 <li>Armazena o CID nos metadados do objeto (<code>Metadata={'cid': cid}</code>)</li>
@@ -68,7 +68,7 @@
 <li>Se os metadados estiverem ausentes, recorre a baixar o objeto e calcular o CID</li>
 <li>Não depende do ETag (que não pode ser definido e não é confiável em envios multipartes)</li>
 </ul>
-<p>Consulte <a href="https://github.com/curtcox/256t.org/blob/main/.github/scripts/R2.md"><code>.github/scripts/R2.md</code></a> (em inglês) para uso detalhado, exemplos e um trecho de Cloudflare Worker que mostra como substituir o cabeçalho ETag para os clientes.</p>
+<p>Consulte <a href="r2-scripts.html"><code>.github/scripts/R2.md</code></a> para uso detalhado, exemplos e um trecho de Cloudflare Worker que mostra como substituir o cabeçalho ETag para os clientes.</p>
 <hr />
 <p><a href="index.html">← Voltar ao início</a></p>
 </body>

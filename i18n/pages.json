@@ -2,7 +2,20 @@
   "documents": {
     "README.md": "index.html",
     "FAQ.md": "faq.html",
-    "PUBLISHING.md": "publishing.html"
+    "PUBLISHING.md": "publishing.html",
+    "browser-support/README.md": {
+      "output": "browser-support/README.html",
+      "english": "browser-support/README.md"
+    },
+    "rfc/draft-cox-t256-uri-scheme-00.md": {
+      "output": "rfc/draft-cox-t256-uri-scheme-00.html",
+      "english": "rfc/draft-cox-t256-uri-scheme-00.md"
+    },
+    ".github/scripts/R2.md": {
+      "output": "r2-scripts.html",
+      "english": "https://github.com/curtcox/256t.org/blob/main/.github/scripts/R2.md",
+      "markers": false
+    }
   },
   "pages": [
     "hash.html",
@@ -13,7 +26,12 @@
     "resolve.html"
   ],
   "scripts": [
-    "browser-support/web/resolver.mjs"
+    "browser-support/web/resolver.mjs",
+    "browser-support/web/loader.mjs",
+    "browser-support/web/web-client.mjs",
+    "browser-support/web/protocol-handler.mjs",
+    "browser-support/web/connection-preference.mjs",
+    "implementations/ecmascript/uri.mjs"
   ],
   "deploy_generated": [
     "index.html",
