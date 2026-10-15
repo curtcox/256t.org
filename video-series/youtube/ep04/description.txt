@@ -1,0 +1,31 @@
+Imagine every person alive making a billion files a second since the Big Bang. The chance that any two of them ever share a SHA-512 hash by accident is about 1 in 2^271, worse odds than picking one particular atom out of the whole observable universe.
+
+First we split "collision" the way the 256t spec does: accidental or adversarial, and merely existing or an actual problem. Small content stored inline can't collide at all, and files of different lengths can't either, so the battlefield shrinks to one length at a time.
+
+Then we derive the birthday paradox from scratch (23 people, 253 pairs, about a 50% chance of a shared birthday), generalize it to roughly n^2/2N, and climb an exponent ladder from a trillion files to a generous civilization. We compare the result to failures that really happen, like bugs and cosmic-ray bit flips, and arrive at the spec's position as a conclusion rather than a shrug: accidental problem collisions can be ignored.
+
+Chapters
+0:00 Four kinds of collision
+0:52 Where collisions can't happen
+1:35 The birthday paradox
+3:01 Scaling up to SHA-512
+4:01 A generous civilization
+5:23 What actually goes wrong
+6:02 Existing is not the same as problem
+6:31 The verdict
+
+Episode 4 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 3, What a Hash Promises: SHA-512 and Collisions
+Next: Ep. 5, Adversarial Collisions: It's Easier to Lie
+
+Sources
+- The 256t specification, "What about Collisions?": https://256t.org
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep04-accidental-collisions.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#Probability #Cryptography #BirthdayParadox

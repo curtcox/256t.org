@@ -1,0 +1,30 @@
+Change "Hello" to "hello" and 239 of the 512 bits in its SHA-512 hash flip. Collisions must exist, by simple counting, so what exactly is a "collision-resistant" hash promising?
+
+A hash function turns any amount of data into a fixed-size fingerprint, the same way on every computer. But there are 2^520 files of 65 bytes and only 2^512 possible SHA-512 outputs, so by the pigeonhole principle collisions are everywhere. The promise isn't that they don't exist. It's that nobody knows how to find one.
+
+We separate the three security games, preimage, second preimage and collision, and see why the last one costs about 2^256 instead of 2^512. Then a peek inside SHA-512's rounds shows one flipped bit avalanching across the state, and the ideal coin-flipping ledger that real hashes are measured against. Finally: which of the three games 256t actually relies on, and why a CID is a name, not a lock.
+
+Chapters
+0:00 One letter, two worlds
+0:44 What a hash function is
+1:21 Collisions must exist
+2:29 Three different games
+4:00 Inside the blender: SHA-512's rounds
+5:23 The ideal hash, and how real ones fall short
+6:12 What 256t actually needs
+
+Episode 3 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 2, Anatomy of a CID: Every Number Explained
+Next: Ep. 4, Accidental Collisions: The Birthday Bound and SHA-512
+
+Sources
+- FIPS 180-4, Secure Hash Standard (SHA-512): https://csrc.nist.gov/pubs/fips/180-4/upd1/final
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep03-what-a-hash-promises.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#Cryptography #SHA512 #Hashing

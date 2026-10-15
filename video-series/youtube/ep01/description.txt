@@ -1,0 +1,32 @@
+About 38% of web pages from 2013 were gone a decade later, and half the links in U.S. Supreme Court opinions no longer lead to what the Justices cited. Every one of those links named a place. What if a name described the content instead?
+
+This episode builds content addressing from scratch. A web address is a set of directions: go to this computer, this folder, ask for this name. That's why it breaks when the house moves (link rot) and lies when a new house goes up on the same spot (content drift). Compute the name from the bytes themselves and a surprising list of properties comes for free: any copy is as good as the original, you can check what you were handed, caches never go stale, and nothing can change underneath its name.
+
+Then we design the recipe, try a few that fail, and meet 256t: a name of at most 94 URL-safe characters, made of the content's length plus either its SHA-512 fingerprint or, for 64 bytes or less, the content itself. We end on the honest asterisk the spec itself admits to: some different files must share a name.
+
+Chapters
+0:00 The dead link
+1:12 What a URL actually says
+1:55 Naming the thing, not the place
+2:51 What you get for free
+4:16 Designing the recipe
+5:59 Meet 256t
+7:05 The honest asterisk
+7:53 Where the series goes
+
+Episode 1 of 7 in the series "256t: Naming Content by What It Is".
+Next: Ep. 2, Anatomy of a CID: Every Number Explained
+
+Sources
+- Pew Research Center, "When Online Content Disappears" (2024): https://www.pewresearch.org/data-labs/2024/05/17/when-online-content-disappears/
+- Zittrain, Albert and Lessig, "Perma: Scoping and Addressing the Problem of Link and Reference Rot in Legal Citations" (2014): https://hls.harvard.edu/bibliography/perma-scoping-and-addressing-the-problem-of-link-and-reference-rot-in-legal-citations
+- PNG specification: file signature: https://www.w3.org/TR/png/
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep01-where-vs-what.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#ContentAddressing #LinkRot #ComputerScience

@@ -37,7 +37,10 @@ video-series/
     ep01.py … ep07.py       one Scene class per script scene (S01…, S02…, …)
     sha512_rounds.py        readable SHA-512 exposing its rounds (drives Episode 3's diffusion)
     render.py               renders an episode scene by scene and stitches it
+    thumbnails.py           one still Scene per episode for the YouTube thumbnails
     output/, media/         render output (git-ignored)
+  youtube/                  YouTube upload kit: titles, descriptions with chapters, tags,
+                            thumbnails, playlist text (see youtube/README.md)
 ```
 
 **The scripts are the source of truth.** If you edit narration, edit the `> ` blockquote under

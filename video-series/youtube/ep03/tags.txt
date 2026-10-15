@@ -1,0 +1,1 @@
+256t, content addressing, content identifier, CID, SHA-512, hash function, cryptography, computer science, explainer, hash collision, pigeonhole principle, preimage, avalanche effect, SHA-2

@@ -1,0 +1,32 @@
+Three content identifiers that look like noise, and by the end you can read them by hand. Every number in the 256t format, 8, 64, 86, 94 and even the "256" in the name, falls out of a little base64 arithmetic.
+
+We start with bits and bytes, and the URL-safe base64 alphabet of 64 characters at 6 bits each. Three bytes turn into exactly four characters, so the single byte "A" becomes "QQ". The first 8 characters of every CID are the content's length: 48 bits, exactly six bytes, read like an odometer with base-64 wheels. That's why so many CIDs start with a run of A's, and why the limit is 2^48 bytes, or 256 terabytes.
+
+Next comes the fingerprint: 512 bits of SHA-512 need 86 characters, and 8 + 86 = 94. Plot the cost of writing small content out directly against the flat cost of a hash, and they meet at exactly 64 bytes. At or below that, the CID simply contains the content. We decode all three mystery names, and see that the whole recipe fits on one slide.
+
+Chapters
+0:00 Three names
+0:23 Bits, bytes and six-bit characters
+2:14 The length prefix
+4:04 The fingerprint
+4:53 Small things carry themselves
+6:40 Reading any CID
+7:13 The whole recipe on one slide
+7:47 Recap
+
+Episode 2 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 1, Where vs. What: Names That Can't Break
+Next: Ep. 3, What a Hash Promises: SHA-512 and Collisions
+
+Sources
+- RFC 4648, section 5: base64url: https://datatracker.ietf.org/doc/html/rfc4648#section-5
+- Example file used on screen: the Gettysburg Address: https://github.com/curtcox/256t.org/blob/main/examples/gettysburg_address.txt
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep02-anatomy-of-a-cid.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#Base64 #ContentAddressing #ComputerScience

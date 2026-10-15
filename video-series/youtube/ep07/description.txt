@@ -1,0 +1,36 @@
+256t is defined as much by what it leaves out as by what it does. Each omission is a trade-off, and seeing them side by side with Git, IPFS, BitTorrent and friends is the clearest way to understand the design.
+
+We walk through what the spec deliberately puts beyond its scope: finding and publishing (including the draft t256: URI scheme, which names content without naming a server), metadata, permissions, chunked Merkle-tree hashing, and algorithm agility. Each one buys something, like one name per sequence of bytes and an implementation that fits on a slide.
+
+Then we place 256t among its neighbors: data: URIs, Subresource Integrity, Git's length-plus-hash blobs, RFC 6920 ni: URIs, BitTorrent magnet links, and IPFS. We finish by putting the whole series back together, and an invitation: pick a file you care about, and compute its name.
+
+Chapters
+0:00 Defined by its edges
+0:29 Finding and publishing
+1:24 No metadata, on purpose
+2:39 Permissions
+3:04 One hash for the whole file
+4:21 No algorithm agility
+5:03 The neighbors
+7:07 The whole picture
+
+Episode 7 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 6, Verify, Cache, Trust: Content Addressing in Practice
+
+Sources
+- Draft RFC: the t256 URI scheme: https://github.com/curtcox/256t.org/blob/main/rfc/draft-cox-t256-uri-scheme-00.md
+- RFC 2397: the data URL scheme: https://www.rfc-editor.org/rfc/rfc2397
+- W3C Subresource Integrity: https://www.w3.org/TR/SRI/
+- Git hash function transition: https://git-scm.com/docs/hash-function-transition
+- RFC 6920: Naming Things with Hashes: https://www.rfc-editor.org/rfc/rfc6920
+- BEP 52: BitTorrent protocol v2: https://www.bittorrent.org/beps/bep_0052.html
+- IPFS: content addressing and CIDs: https://docs.ipfs.tech/concepts/content-addressing/
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep07-limits-and-neighbors.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#IPFS #Git #ContentAddressing

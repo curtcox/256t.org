@@ -1,0 +1,32 @@
+Bytes are arriving from a server you've never heard of. Here's exactly what your code should do, why the length in the name lets you hang up on a lying server early, and why verified content can be cached forever.
+
+The verification loop is short: request a CID, receive bytes, compute their CID, compare the strings. Nothing the server says about itself crosses into the trusted side. The 8-character length prefix earns its keep here: a server that sends too many bytes is wrong the moment it passes the length, so it can never make you download an endless stream. Small content needs no server at all.
+
+Then the subtle trap: decoding a CID is not verifying it. A lenient decoder turns "QR" into the same byte as "QQ", so always recompute the CID from the bytes. We cover caching forever (Cache-Control: public, max-age=31536000, immutable), why "not found" and content types are only hints, and how verification turns "true enough despite being false" into rules you enforce.
+
+Chapters
+0:00 Bytes from a stranger
+0:27 The verification loop
+1:01 The length prefix earns its keep
+2:12 Inline CIDs: nothing to fetch
+2:29 Decode is not verify
+3:57 Caching forever
+5:51 True enough, revisited
+6:54 Trust moves to the math
+
+Episode 6 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 5, Adversarial Collisions: It's Easier to Lie
+Next: Ep. 7, Limits and Neighbors: 256t vs. Git, IPFS and BitTorrent
+
+Sources
+- 256t FAQ: caching headers: https://256t.org/faq.html
+- Draft RFC: the t256 URI scheme: https://github.com/curtcox/256t.org/blob/main/rfc/draft-cox-t256-uri-scheme-00.md
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep06-verify-cache-trust.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#WebDevelopment #Caching #Security

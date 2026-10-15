@@ -1,0 +1,37 @@
+"It is easier to just lie than engineer a collision." An attacker can hand you the wrong bytes, or try to forge different bytes that genuinely have the right name. One hash computation defeats the first completely. The second has never been done against SHA-512.
+
+We meet two adversaries. The liar serves the wrong content, and verification catches them every time, whatever their budget. The forger needs a real collision, and which game they play depends on who made the original: a second preimage at about 2^512 tries, or, if they authored both "twins", a collision at about 2^256. Even the whole Bitcoin network, around a zettahash per second as of late 2025, would need around 3 × 10^48 years.
+
+Real hash functions do die, though, never by brute force. We trace how MD5 fell (Wang et al. in 2004, a rogue certificate authority in 2008, the Flame malware's forged Microsoft certificate in 2012) and SHA-1 (SHAttered in 2017, a chosen-prefix collision in 2020), where SHA-512 stands today, and the spec's two defenses: always verify, and reduce adversaries.
+
+Chapters
+0:00 The cheapest attack
+0:37 The liar, and the one-line defense
+1:27 Two jobs for the forger
+2:53 How big is 2^256, really?
+4:05 How hash functions actually die
+5:44 SHA-512 today
+6:32 What 256t's structure buys
+7:00 The two defenses
+
+Episode 5 of 7 in the series "256t: Naming Content by What It Is".
+Previous: Ep. 4, Accidental Collisions: The Birthday Bound and SHA-512
+Next: Ep. 6, Verify, Cache, Trust: Content Addressing in Practice
+
+Sources
+- Matthew Green, "Flame, certificates, collisions. Oh my." (2012): https://blog.cryptographyengineering.com/2012/06/05/flame-certificates-collisions-oh-my/
+- CWI: chosen-prefix MD5 collision in Flame: https://projects.cwi.nl/crypto/risc.php?s=20130320
+- EFF: cryptographers demonstrate a SHA-1 collision (SHAttered, 2017): https://www.eff.org/deeplinks/2017/02/cryptographers-demonstrate-collision-popular-sha-1-algorithm
+- Leurent and Peyrin, "SHA-1 is a Shambles", USENIX Security 2020: https://www.usenix.org/conference/usenixsecurity20/presentation/leurent
+- Dobraunig, Eichlseder and Mendel, analysis of SHA-512/224 and SHA-512/256, ASIACRYPT 2015: https://www.iacr.org/archive/asiacrypt2015/94520180/94520180.pdf
+- Brassard, Hoyer and Tapp, quantum cryptanalysis of hash and claw-free functions (1997): https://arxiv.org/abs/quant-ph/9705002
+- Bitcoin network hashrate (late 2025): https://www.spark.money/glossary/hashrate
+
+Links
+- The 256t specification: https://256t.org
+- Spec, 40+ implementations, scripts and animation code: https://github.com/curtcox/256t.org
+- This episode's script: https://github.com/curtcox/256t.org/blob/main/video-series/ep05-adversarial-collisions.md
+
+Written by Curt Cox. Animated with Manim Community Edition.
+
+#Cryptography #Security #SHA512

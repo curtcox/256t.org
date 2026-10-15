@@ -1,0 +1,143 @@
+{
+  "series": {
+    "playlist_title": "256t: Naming Content by What It Is",
+    "playlist_description": "A seven-part explainer on 256t, a tiny public spec for naming content by what it is instead of where it lives. Starting from broken links, the series builds content addressing from scratch, decodes a 256t content identifier (CID) by hand, works out what SHA-512 actually promises, puts honest numbers on accidental and adversarial collisions, shows how to verify and cache safely, and ends by comparing 256t with Git, IPFS, BitTorrent, Subresource Integrity, data: URIs and ni: URIs. No background in cryptography needed; comfort with exponents helps. Spec and code: https://256t.org",
+    "playlist_url": "",
+    "credits": "Written by Curt Cox. Animated with Manim Community Edition.",
+    "links": [
+      ["The 256t specification", "https://256t.org"],
+      ["Spec, 40+ implementations, scripts and animation code", "https://github.com/curtcox/256t.org"]
+    ],
+    "tags": ["256t", "content addressing", "content identifier", "CID", "SHA-512", "hash function", "cryptography", "computer science", "explainer"]
+  },
+  "episodes": [
+    {
+      "number": 1,
+      "script": "ep01-where-vs-what.md",
+      "title": "Where vs. What: Names That Can't Break | 256t Ep. 1",
+      "hook": "About 38% of web pages from 2013 were gone a decade later, and half the links in U.S. Supreme Court opinions no longer lead to what the Justices cited. Every one of those links named a place. What if a name described the content instead?",
+      "summary": [
+        "This episode builds content addressing from scratch. A web address is a set of directions: go to this computer, this folder, ask for this name. That's why it breaks when the house moves (link rot) and lies when a new house goes up on the same spot (content drift). Compute the name from the bytes themselves and a surprising list of properties comes for free: any copy is as good as the original, you can check what you were handed, caches never go stale, and nothing can change underneath its name.",
+        "Then we design the recipe, try a few that fail, and meet 256t: a name of at most 94 URL-safe characters, made of the content's length plus either its SHA-512 fingerprint or, for 64 bytes or less, the content itself. We end on the honest asterisk the spec itself admits to: some different files must share a name."
+      ],
+      "chapters": ["The dead link", "What a URL actually says", "Naming the thing, not the place", "What you get for free", "Designing the recipe", "Meet 256t", "The honest asterisk", "Where the series goes"],
+      "sources": [
+        ["Pew Research Center, \"When Online Content Disappears\" (2024)", "https://www.pewresearch.org/data-labs/2024/05/17/when-online-content-disappears/"],
+        ["Zittrain, Albert and Lessig, \"Perma: Scoping and Addressing the Problem of Link and Reference Rot in Legal Citations\" (2014)", "https://hls.harvard.edu/bibliography/perma-scoping-and-addressing-the-problem-of-link-and-reference-rot-in-legal-citations"],
+        ["PNG specification: file signature", "https://www.w3.org/TR/png/"]
+      ],
+      "tags": ["link rot", "content drift", "URL", "web archiving", "hashing"],
+      "hashtags": ["ContentAddressing", "LinkRot", "ComputerScience"]
+    },
+    {
+      "number": 2,
+      "script": "ep02-anatomy-of-a-cid.md",
+      "title": "Anatomy of a CID: Every Number Explained | 256t Ep. 2",
+      "hook": "Three content identifiers that look like noise, and by the end you can read them by hand. Every number in the 256t format, 8, 64, 86, 94 and even the \"256\" in the name, falls out of a little base64 arithmetic.",
+      "summary": [
+        "We start with bits and bytes, and the URL-safe base64 alphabet of 64 characters at 6 bits each. Three bytes turn into exactly four characters, so the single byte \"A\" becomes \"QQ\". The first 8 characters of every CID are the content's length: 48 bits, exactly six bytes, read like an odometer with base-64 wheels. That's why so many CIDs start with a run of A's, and why the limit is 2^48 bytes, or 256 terabytes.",
+        "Next comes the fingerprint: 512 bits of SHA-512 need 86 characters, and 8 + 86 = 94. Plot the cost of writing small content out directly against the flat cost of a hash, and they meet at exactly 64 bytes. At or below that, the CID simply contains the content. We decode all three mystery names, and see that the whole recipe fits on one slide."
+      ],
+      "chapters": ["Three names", "Bits, bytes and six-bit characters", "The length prefix", "The fingerprint", "Small things carry themselves", "Reading any CID", "The whole recipe on one slide", "Recap"],
+      "sources": [
+        ["RFC 4648, section 5: base64url", "https://datatracker.ietf.org/doc/html/rfc4648#section-5"],
+        ["Example file used on screen: the Gettysburg Address", "https://github.com/curtcox/256t.org/blob/main/examples/gettysburg_address.txt"]
+      ],
+      "tags": ["base64", "base64url", "binary", "bits and bytes", "encoding"],
+      "hashtags": ["Base64", "ContentAddressing", "ComputerScience"]
+    },
+    {
+      "number": 3,
+      "script": "ep03-what-a-hash-promises.md",
+      "title": "What a Hash Promises: SHA-512 and Collisions | 256t Ep. 3",
+      "hook": "Change \"Hello\" to \"hello\" and 239 of the 512 bits in its SHA-512 hash flip. Collisions must exist, by simple counting, so what exactly is a \"collision-resistant\" hash promising?",
+      "summary": [
+        "A hash function turns any amount of data into a fixed-size fingerprint, the same way on every computer. But there are 2^520 files of 65 bytes and only 2^512 possible SHA-512 outputs, so by the pigeonhole principle collisions are everywhere. The promise isn't that they don't exist. It's that nobody knows how to find one.",
+        "We separate the three security games, preimage, second preimage and collision, and see why the last one costs about 2^256 instead of 2^512. Then a peek inside SHA-512's rounds shows one flipped bit avalanching across the state, and the ideal coin-flipping ledger that real hashes are measured against. Finally: which of the three games 256t actually relies on, and why a CID is a name, not a lock."
+      ],
+      "chapters": ["One letter, two worlds", "What a hash function is", "Collisions must exist", "Three different games", "Inside the blender: SHA-512's rounds", "The ideal hash, and how real ones fall short", "What 256t actually needs"],
+      "sources": [
+        ["FIPS 180-4, Secure Hash Standard (SHA-512)", "https://csrc.nist.gov/pubs/fips/180-4/upd1/final"]
+      ],
+      "tags": ["hash collision", "pigeonhole principle", "preimage", "avalanche effect", "SHA-2"],
+      "hashtags": ["Cryptography", "SHA512", "Hashing"]
+    },
+    {
+      "number": 4,
+      "script": "ep04-accidental-collisions.md",
+      "title": "Accidental Collisions: The Birthday Bound and SHA-512 | 256t Ep. 4",
+      "hook": "Imagine every person alive making a billion files a second since the Big Bang. The chance that any two of them ever share a SHA-512 hash by accident is about 1 in 2^271, worse odds than picking one particular atom out of the whole observable universe.",
+      "summary": [
+        "First we split \"collision\" the way the 256t spec does: accidental or adversarial, and merely existing or an actual problem. Small content stored inline can't collide at all, and files of different lengths can't either, so the battlefield shrinks to one length at a time.",
+        "Then we derive the birthday paradox from scratch (23 people, 253 pairs, about a 50% chance of a shared birthday), generalize it to roughly n^2/2N, and climb an exponent ladder from a trillion files to a generous civilization. We compare the result to failures that really happen, like bugs and cosmic-ray bit flips, and arrive at the spec's position as a conclusion rather than a shrug: accidental problem collisions can be ignored."
+      ],
+      "chapters": ["Four kinds of collision", "Where collisions can't happen", "The birthday paradox", "Scaling up to SHA-512", "A generous civilization", "What actually goes wrong", "Existing is not the same as problem", "The verdict"],
+      "sources": [
+        ["The 256t specification, \"What about Collisions?\"", "https://256t.org"]
+      ],
+      "tags": ["birthday paradox", "birthday problem", "probability", "hash collision", "big numbers"],
+      "hashtags": ["Probability", "Cryptography", "BirthdayParadox"]
+    },
+    {
+      "number": 5,
+      "script": "ep05-adversarial-collisions.md",
+      "title": "Adversarial Collisions: It's Easier to Lie | 256t Ep. 5",
+      "hook": "\"It is easier to just lie than engineer a collision.\" An attacker can hand you the wrong bytes, or try to forge different bytes that genuinely have the right name. One hash computation defeats the first completely. The second has never been done against SHA-512.",
+      "summary": [
+        "We meet two adversaries. The liar serves the wrong content, and verification catches them every time, whatever their budget. The forger needs a real collision, and which game they play depends on who made the original: a second preimage at about 2^512 tries, or, if they authored both \"twins\", a collision at about 2^256. Even the whole Bitcoin network, around a zettahash per second as of late 2025, would need around 3 × 10^48 years.",
+        "Real hash functions do die, though, never by brute force. We trace how MD5 fell (Wang et al. in 2004, a rogue certificate authority in 2008, the Flame malware's forged Microsoft certificate in 2012) and SHA-1 (SHAttered in 2017, a chosen-prefix collision in 2020), where SHA-512 stands today, and the spec's two defenses: always verify, and reduce adversaries."
+      ],
+      "chapters": ["The cheapest attack", "The liar, and the one-line defense", "Two jobs for the forger", "How big is 2^256, really?", "How hash functions actually die", "SHA-512 today", "What 256t's structure buys", "The two defenses"],
+      "sources": [
+        ["Matthew Green, \"Flame, certificates, collisions. Oh my.\" (2012)", "https://blog.cryptographyengineering.com/2012/06/05/flame-certificates-collisions-oh-my/"],
+        ["CWI: chosen-prefix MD5 collision in Flame", "https://projects.cwi.nl/crypto/risc.php?s=20130320"],
+        ["EFF: cryptographers demonstrate a SHA-1 collision (SHAttered, 2017)", "https://www.eff.org/deeplinks/2017/02/cryptographers-demonstrate-collision-popular-sha-1-algorithm"],
+        ["Leurent and Peyrin, \"SHA-1 is a Shambles\", USENIX Security 2020", "https://www.usenix.org/conference/usenixsecurity20/presentation/leurent"],
+        ["Dobraunig, Eichlseder and Mendel, analysis of SHA-512/224 and SHA-512/256, ASIACRYPT 2015", "https://www.iacr.org/archive/asiacrypt2015/94520180/94520180.pdf"],
+        ["Brassard, Hoyer and Tapp, quantum cryptanalysis of hash and claw-free functions (1997)", "https://arxiv.org/abs/quant-ph/9705002"],
+        ["Bitcoin network hashrate (late 2025)", "https://www.spark.money/glossary/hashrate"]
+      ],
+      "tags": ["MD5", "SHA-1", "SHAttered", "collision attack", "verification"],
+      "hashtags": ["Cryptography", "Security", "SHA512"]
+    },
+    {
+      "number": 6,
+      "script": "ep06-verify-cache-trust.md",
+      "title": "Verify, Cache, Trust: Content Addressing in Practice | 256t Ep. 6",
+      "hook": "Bytes are arriving from a server you've never heard of. Here's exactly what your code should do, why the length in the name lets you hang up on a lying server early, and why verified content can be cached forever.",
+      "summary": [
+        "The verification loop is short: request a CID, receive bytes, compute their CID, compare the strings. Nothing the server says about itself crosses into the trusted side. The 8-character length prefix earns its keep here: a server that sends too many bytes is wrong the moment it passes the length, so it can never make you download an endless stream. Small content needs no server at all.",
+        "Then the subtle trap: decoding a CID is not verifying it. A lenient decoder turns \"QR\" into the same byte as \"QQ\", so always recompute the CID from the bytes. We cover caching forever (Cache-Control: public, max-age=31536000, immutable), why \"not found\" and content types are only hints, and how verification turns \"true enough despite being false\" into rules you enforce."
+      ],
+      "chapters": ["Bytes from a stranger", "The verification loop", "The length prefix earns its keep", "Inline CIDs: nothing to fetch", "Decode is not verify", "Caching forever", "True enough, revisited", "Trust moves to the math"],
+      "sources": [
+        ["256t FAQ: caching headers", "https://256t.org/faq.html"],
+        ["Draft RFC: the t256 URI scheme", "https://github.com/curtcox/256t.org/blob/main/rfc/draft-cox-t256-uri-scheme-00.md"]
+      ],
+      "tags": ["caching", "HTTP caching", "Cache-Control", "data integrity", "verification"],
+      "hashtags": ["WebDevelopment", "Caching", "Security"]
+    },
+    {
+      "number": 7,
+      "script": "ep07-limits-and-neighbors.md",
+      "title": "Limits and Neighbors: 256t vs. Git, IPFS and BitTorrent | 256t Ep. 7",
+      "hook": "256t is defined as much by what it leaves out as by what it does. Each omission is a trade-off, and seeing them side by side with Git, IPFS, BitTorrent and friends is the clearest way to understand the design.",
+      "summary": [
+        "We walk through what the spec deliberately puts beyond its scope: finding and publishing (including the draft t256: URI scheme, which names content without naming a server), metadata, permissions, chunked Merkle-tree hashing, and algorithm agility. Each one buys something, like one name per sequence of bytes and an implementation that fits on a slide.",
+        "Then we place 256t among its neighbors: data: URIs, Subresource Integrity, Git's length-plus-hash blobs, RFC 6920 ni: URIs, BitTorrent magnet links, and IPFS. We finish by putting the whole series back together, and an invitation: pick a file you care about, and compute its name."
+      ],
+      "chapters": ["Defined by its edges", "Finding and publishing", "No metadata, on purpose", "Permissions", "One hash for the whole file", "No algorithm agility", "The neighbors", "The whole picture"],
+      "sources": [
+        ["Draft RFC: the t256 URI scheme", "https://github.com/curtcox/256t.org/blob/main/rfc/draft-cox-t256-uri-scheme-00.md"],
+        ["RFC 2397: the data URL scheme", "https://www.rfc-editor.org/rfc/rfc2397"],
+        ["W3C Subresource Integrity", "https://www.w3.org/TR/SRI/"],
+        ["Git hash function transition", "https://git-scm.com/docs/hash-function-transition"],
+        ["RFC 6920: Naming Things with Hashes", "https://www.rfc-editor.org/rfc/rfc6920"],
+        ["BEP 52: BitTorrent protocol v2", "https://www.bittorrent.org/beps/bep_0052.html"],
+        ["IPFS: content addressing and CIDs", "https://docs.ipfs.tech/concepts/content-addressing/"]
+      ],
+      "tags": ["IPFS", "Git", "BitTorrent", "Merkle tree", "Subresource Integrity"],
+      "hashtags": ["IPFS", "Git", "ContentAddressing"]
+    }
+  ]
+}

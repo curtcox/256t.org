@@ -1,0 +1,3 @@
+256t: Naming Content by What It Is
+
+A seven-part explainer on 256t, a tiny public spec for naming content by what it is instead of where it lives. Starting from broken links, the series builds content addressing from scratch, decodes a 256t content identifier (CID) by hand, works out what SHA-512 actually promises, puts honest numbers on accidental and adversarial collisions, shows how to verify and cache safely, and ends by comparing 256t with Git, IPFS, BitTorrent, Subresource Integrity, data: URIs and ni: URIs. No background in cryptography needed; comfort with exponents helps. Spec and code: https://256t.org

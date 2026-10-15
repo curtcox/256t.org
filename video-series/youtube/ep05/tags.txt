@@ -1,0 +1,1 @@
+256t, content addressing, content identifier, CID, SHA-512, hash function, cryptography, computer science, explainer, MD5, SHA-1, SHAttered, collision attack, verification
