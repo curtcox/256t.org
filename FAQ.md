@@ -81,6 +81,8 @@ That depends on your storage implementation. The specification defines the CID f
 - Cloud storage APIs
 - Custom protocols
 
+The [t256 command line tool](https://github.com/curtcox/256t.org/tree/main/tools/t256) handles this for scripts: `t256 load <CID>` tries each source you've configured in order (local folders, network drives, 256t.org, hashbin.org, other servers) and returns the first copy that matches the CID.
+
 ### Are there public servers hosting CIDs?
 
 The main 256t.org domain hosts a small demonstration set of CIDs, but it's not intended as a general-purpose public storage service. The focus is on the specification itself.
@@ -149,6 +151,10 @@ Yes! For content ≤ 64 bytes, the CID is shorter because it only includes the l
 ### How do I publish CIDs?
 
 See [Publishing and Storage](publishing.html) for detailed information about deploying content-addressed storage using CIDs, including examples of uploading to Cloudflare R2.
+
+### How do I save content from the command line?
+
+Use the [t256 command line tool](https://github.com/curtcox/256t.org/tree/main/tools/t256): `t256 save FILE` stores the file at your configured destination (a local folder by default, or a network drive, hashbin.org, or an HTTP server that accepts `PUT`) and prints its CID or `t256:` URI.
 
 ### What metadata should accompany CID content?
 

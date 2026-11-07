@@ -1,4 +1,4 @@
-<!-- i18n:source sha256:ff17ec7ca39b8134 -->
+<!-- i18n:source sha256:f51bef3d17deb3c3 -->
 # 常见问题
 
 ## 一般问题
@@ -76,6 +76,8 @@ CID 可以存储在任何地方：
 - 云存储 API
 - 自定义协议
 
+在脚本中可以使用 [t256 命令行工具](https://github.com/curtcox/256t.org/tree/main/tools/t256)：`t256 load <CID>` 会按顺序尝试你配置的每个来源（本地文件夹、网络驱动器、256t.org、hashbin.org 及其他服务器），并返回第一个与 CID 匹配的副本。
+
 ### 有托管 CID 的公共服务器吗？
 
 256t.org 主域名托管了一小组用于演示的 CID，但它并不打算作为通用的公共存储服务。重点在于规范本身。
@@ -144,6 +146,10 @@ SHA-512 提供更高的抗碰撞性；而得益于小内容的内联存储，多
 ### 如何发布 CID？
 
 关于部署使用 CID 的内容寻址存储的详细信息（包括上传到 Cloudflare R2 的示例），请参阅[发布与存储](publishing.html)。
+
+### 如何从命令行保存内容？
+
+使用 [t256 命令行工具](https://github.com/curtcox/256t.org/tree/main/tools/t256)：`t256 save 文件` 会把文件存储到你配置的目标位置（默认是本地文件夹，也可以是网络驱动器、hashbin.org 或接受 `PUT` 的 HTTP 服务器），并输出它的 CID 或 `t256:` URI。
 
 ### CID 内容应附带哪些元数据？
 

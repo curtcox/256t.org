@@ -180,7 +180,11 @@ Este servidor hospeda um pequeno conjunto de CIDs <a href="../cids/">aqui</a>.</
 <li><a href="resolve.html">Resolvedor de URI t256</a> — abra links t256 ou compatíveis com navegadores usando conteúdo embutido, provedores públicos ou seu auxiliar de desktop; opcionalmente, ative o tratamento de links no navegador.</li>
 <li><a href="browser-support/README.html">Suporte para desktop e navegadores</a> — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.</li>
 <li><a href="browser-support/README.html#active-implementation-plan">Plano ativo de suporte a navegadores</a> — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.</li>
+<li><a href="https://github.com/curtcox/256t.org/tree/main/tools/t256">Ferramenta de linha de comando t256</a> — carregue e salve conteúdo 256t em scripts no macOS, Linux e Windows, usando pastas locais, unidades de rede, 256t.org, hashbin.org ou qualquer servidor compatível.</li>
 </ul>
+<pre><code class="language-bash">t256 save report.pdf -f t256 --ext auto   # store it; prints t256:&lt;CID&gt;.pdf
+t256 load t256:&lt;CID&gt;.pdf -o report.pdf    # fetch it from your sources and verify it
+</code></pre>
 <h2 id="example-files">Arquivos de exemplo</h2>
 <p>O diretório <a href="../examples/">examples/</a> contém arquivos de exemplo para testar a geração e a verificação de CIDs. Entre eles há recursos com a marca 256t que demonstram a especificação com vários tipos de mídia:</p>
 <table>

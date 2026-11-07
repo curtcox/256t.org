@@ -1,4 +1,4 @@
-<!-- i18n:source sha256:ff17ec7ca39b8134 -->
+<!-- i18n:source sha256:f51bef3d17deb3c3 -->
 # Perguntas frequentes
 
 ## Perguntas gerais
@@ -76,6 +76,8 @@ Isso depende da sua implementação de armazenamento. A especificação define o
 - APIs de armazenamento em nuvem
 - Protocolos personalizados
 
+A [ferramenta de linha de comando t256](https://github.com/curtcox/256t.org/tree/main/tools/t256) faz isso em scripts: `t256 load <CID>` tenta, em ordem, cada fonte que você configurou (pastas locais, unidades de rede, 256t.org, hashbin.org, outros servidores) e devolve a primeira cópia que corresponde ao CID.
+
 ### Existem servidores públicos que hospedam CIDs?
 
 O domínio principal 256t.org hospeda um pequeno conjunto de CIDs de demonstração, mas não pretende ser um serviço público de armazenamento de uso geral. O foco é a própria especificação.
@@ -144,6 +146,10 @@ Sim! Para conteúdo ≤ 64 bytes, o CID é mais curto porque inclui apenas o pre
 ### Como publico CIDs?
 
 Consulte [Publicação e armazenamento](publishing.html) para informações detalhadas sobre como implantar armazenamento endereçável por conteúdo usando CIDs, incluindo exemplos de envio para o Cloudflare R2.
+
+### Como salvo conteúdo pela linha de comando?
+
+Use a [ferramenta de linha de comando t256](https://github.com/curtcox/256t.org/tree/main/tools/t256): `t256 save ARQUIVO` armazena o arquivo no destino configurado (uma pasta local por padrão, ou uma unidade de rede, hashbin.org ou um servidor HTTP que aceite `PUT`) e imprime o CID ou a URI `t256:` dele.
 
 ### Quais metadados devem acompanhar o conteúdo de um CID?
 

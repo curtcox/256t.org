@@ -110,6 +110,12 @@ These things are beyond the scope of this text.
 - [t256 URI Resolver](resolve.html) — open t256/browser-compatible links using inline content, public providers, or your desktop helper; optionally enable browser link handling.
 - [Desktop and browser support](browser-support/README.md) — selectable folders, network drives, authenticated GitHub repositories, a verified page loader, gateway, and optional extensions.
 - [Active browser support plan](browser-support/README.md#active-implementation-plan) — extension link rewriting and keywords, web-handler compatibility aliases, and native OS scheme registration across desktop browsers.
+- [t256 command line tool](https://github.com/curtcox/256t.org/tree/main/tools/t256) — load and save 256t content from scripts on macOS, Linux and Windows, using local folders, network drives, 256t.org, hashbin.org or any compatible server.
+
+```bash
+t256 save report.pdf -f t256 --ext auto   # store it; prints t256:<CID>.pdf
+t256 load t256:<CID>.pdf -o report.pdf    # fetch it from your sources and verify it
+```
 
 ## Example Files
 

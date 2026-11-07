@@ -1,4 +1,4 @@
-<!-- i18n:source sha256:6826a083676fcaea -->
+<!-- i18n:source sha256:4fc0b51fa9623d9b -->
 # [256t.org](https://curtcox.github.io/256t.org/)
 
 <p align="center">
@@ -105,6 +105,12 @@ Essas coisas estão fora do escopo deste texto.
 - [Resolvedor de URI t256](resolve.html) — abra links t256 ou compatíveis com navegadores usando conteúdo embutido, provedores públicos ou seu auxiliar de desktop; opcionalmente, ative o tratamento de links no navegador.
 - [Suporte para desktop e navegadores](browser-support/README.md) — pastas selecionáveis, unidades de rede, repositórios autenticados do GitHub, um carregador de páginas verificado, gateway e extensões opcionais.
 - [Plano ativo de suporte a navegadores](browser-support/README.md#active-implementation-plan) — reescrita de links e palavras-chave na extensão, aliases de compatibilidade com manipuladores web e registro nativo de esquemas no sistema operacional em navegadores de desktop.
+- [Ferramenta de linha de comando t256](https://github.com/curtcox/256t.org/tree/main/tools/t256) — carregue e salve conteúdo 256t em scripts no macOS, Linux e Windows, usando pastas locais, unidades de rede, 256t.org, hashbin.org ou qualquer servidor compatível.
+
+```bash
+t256 save report.pdf -f t256 --ext auto   # store it; prints t256:<CID>.pdf
+t256 load t256:<CID>.pdf -o report.pdf    # fetch it from your sources and verify it
+```
 
 ## Arquivos de exemplo
 

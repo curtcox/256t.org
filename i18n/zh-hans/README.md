@@ -1,4 +1,4 @@
-<!-- i18n:source sha256:6826a083676fcaea -->
+<!-- i18n:source sha256:4fc0b51fa9623d9b -->
 # [256t.org](https://curtcox.github.io/256t.org/)
 
 <p align="center">
@@ -105,6 +105,12 @@ SHA-512 哈希的长度为 512 位，即 64 字节。
 - [t256 URI 解析器](resolve.html) —— 使用内联内容、公共提供方或你的桌面助手打开 t256 链接或浏览器兼容链接；还可以选择启用浏览器链接处理。
 - [桌面与浏览器支持](browser-support/README.md)—— 可选的文件夹、网络驱动器、需认证的 GitHub 仓库、经过验证的页面加载器、网关以及可选的浏览器扩展。
 - [当前浏览器支持计划](browser-support/README.md#active-implementation-plan)—— 扩展的链接改写与关键字、Web 处理程序兼容别名，以及在各桌面浏览器上的原生操作系统协议注册。
+- [t256 命令行工具](https://github.com/curtcox/256t.org/tree/main/tools/t256)—— 在 macOS、Linux 和 Windows 上的脚本中加载和保存 256t 内容，可使用本地文件夹、网络驱动器、256t.org、hashbin.org 或任何兼容的服务器。
+
+```bash
+t256 save report.pdf -f t256 --ext auto   # store it; prints t256:<CID>.pdf
+t256 load t256:<CID>.pdf -o report.pdf    # fetch it from your sources and verify it
+```
 
 ## 示例文件
 

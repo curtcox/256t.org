@@ -52,3 +52,10 @@ video-series/media/
 node_modules/
 .playwright-mcp/
 browser-support/dist/
+
+# t256 CLI build outputs
+tools/t256/t256
+tools/t256/t256.exe
+tools/t256/t256-smoke*
+tools/t256/mock-release/
+/release/

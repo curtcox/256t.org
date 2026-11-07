@@ -109,6 +109,7 @@
 - Acesso direto ao sistema de arquivos
 - APIs de armazenamento em nuvem
 - Protocolos personalizados</p>
+<p>A <a href="https://github.com/curtcox/256t.org/tree/main/tools/t256">ferramenta de linha de comando t256</a> faz isso em scripts: <code>t256 load &lt;CID&gt;</code> tenta, em ordem, cada fonte que você configurou (pastas locais, unidades de rede, 256t.org, hashbin.org, outros servidores) e devolve a primeira cópia que corresponde ao CID.</p>
 <h3 id="are-there-public-servers-hosting-cids">Existem servidores públicos que hospedam CIDs?</h3>
 <p>O domínio principal 256t.org hospeda um pequeno conjunto de CIDs de demonstração, mas não pretende ser um serviço público de armazenamento de uso geral. O foco é a própria especificação.</p>
 <h2 id="security-and-integrity">Segurança e integridade</h2>
@@ -145,6 +146,8 @@
 <h2 id="publishing-and-storage">Publicação e armazenamento</h2>
 <h3 id="how-do-i-publish-cids">Como publico CIDs?</h3>
 <p>Consulte <a href="publishing.html">Publicação e armazenamento</a> para informações detalhadas sobre como implantar armazenamento endereçável por conteúdo usando CIDs, incluindo exemplos de envio para o Cloudflare R2.</p>
+<h3 id="how-do-i-save-content-from-the-command-line">Como salvo conteúdo pela linha de comando?</h3>
+<p>Use a <a href="https://github.com/curtcox/256t.org/tree/main/tools/t256">ferramenta de linha de comando t256</a>: <code>t256 save ARQUIVO</code> armazena o arquivo no destino configurado (uma pasta local por padrão, ou uma unidade de rede, hashbin.org ou um servidor HTTP que aceite <code>PUT</code>) e imprime o CID ou a URI <code>t256:</code> dele.</p>
 <h3 id="what-metadata-should-accompany-cid-content">Quais metadados devem acompanhar o conteúdo de um CID?</h3>
 <p>A especificação foca em identificadores de conteúdo, não em metadados. No entanto, as boas práticas incluem:
 - <code>Cache-Control: public, max-age=31536000, immutable</code> para o máximo de cache

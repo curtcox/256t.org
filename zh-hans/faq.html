@@ -109,6 +109,7 @@
 - 直接访问文件系统
 - 云存储 API
 - 自定义协议</p>
+<p>在脚本中可以使用 <a href="https://github.com/curtcox/256t.org/tree/main/tools/t256">t256 命令行工具</a>：<code>t256 load &lt;CID&gt;</code> 会按顺序尝试你配置的每个来源（本地文件夹、网络驱动器、256t.org、hashbin.org 及其他服务器），并返回第一个与 CID 匹配的副本。</p>
 <h3 id="are-there-public-servers-hosting-cids">有托管 CID 的公共服务器吗？</h3>
 <p>256t.org 主域名托管了一小组用于演示的 CID，但它并不打算作为通用的公共存储服务。重点在于规范本身。</p>
 <h2 id="security-and-integrity">安全与完整性</h2>
@@ -145,6 +146,8 @@
 <h2 id="publishing-and-storage">发布与存储</h2>
 <h3 id="how-do-i-publish-cids">如何发布 CID？</h3>
 <p>关于部署使用 CID 的内容寻址存储的详细信息（包括上传到 Cloudflare R2 的示例），请参阅<a href="publishing.html">发布与存储</a>。</p>
+<h3 id="how-do-i-save-content-from-the-command-line">如何从命令行保存内容？</h3>
+<p>使用 <a href="https://github.com/curtcox/256t.org/tree/main/tools/t256">t256 命令行工具</a>：<code>t256 save 文件</code> 会把文件存储到你配置的目标位置（默认是本地文件夹，也可以是网络驱动器、hashbin.org 或接受 <code>PUT</code> 的 HTTP 服务器），并输出它的 CID 或 <code>t256:</code> URI。</p>
 <h3 id="what-metadata-should-accompany-cid-content">CID 内容应附带哪些元数据？</h3>
 <p>本规范关注的是内容标识符，而不是元数据。不过，最佳实践包括：
 - 使用 <code>Cache-Control: public, max-age=31536000, immutable</code> 以最大化缓存

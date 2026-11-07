@@ -1,0 +1,105 @@
+name: t256 CLI
+
+on:
+  push:
+    branches: [main]
+    tags: ['t256-v*']
+    paths: ['tools/t256/**', '.github/workflows/t256-cli.yml', 'cids/**']
+  pull_request:
+    paths: ['tools/t256/**', '.github/workflows/t256-cli.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: tools/t256
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/t256/go.mod
+          cache-dependency-path: tools/t256/go.mod
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Smoke test the binary
+        shell: bash
+        run: |
+          bin="./t256-smoke$(go env GOEXE)"
+          go build -o "$bin" .
+          test "$(printf 'Hello, World!' | "$bin" cid -f t256)" = "t256:AAAAAAANSGVsbG8sIFdvcmxkIQ"
+          test "$("$bin" load t256:AAAAAAANSGVsbG8sIFdvcmxkIQ)" = "Hello, World!"
+          printf 'some content that is longer than sixty-four bytes, so it is hashed' > in.txt
+          mkdir store
+          ref="$("$bin" save --to ./store in.txt)"
+          "$bin" load --from ./store "$ref" | "$bin" verify -q "$ref"
+      - name: Prepare a mock release for the installers
+        shell: bash
+        run: |
+          os="$(go env GOOS)"; arch="$(go env GOARCH)"
+          mkdir -p mock-release
+          go build -ldflags "-X main.version=ci" -o "mock-release/t256-${os}-${arch}$(go env GOEXE)" .
+          cd mock-release
+          if command -v sha256sum >/dev/null; then sha256sum t256-* > SHA256SUMS; else shasum -a 256 t256-* > SHA256SUMS; fi
+      - name: Test install.sh
+        if: runner.os != 'Windows'
+        run: |
+          (cd mock-release && python3 -m http.server 8799 >/dev/null 2>&1 &)
+          sleep 2
+          T256_BASE_URL=http://127.0.0.1:8799 T256_INSTALL_DIR="$RUNNER_TEMP/t256bin" sh install.sh
+          test "$("$RUNNER_TEMP/t256bin/t256" version)" = "t256 ci"
+      - name: Test install.ps1
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Start-Process python -ArgumentList '-m','http.server','8799' -WorkingDirectory mock-release -WindowStyle Hidden
+          Start-Sleep -Seconds 3
+          ./install.ps1 -BaseUrl http://127.0.0.1:8799 -InstallDir "$env:RUNNER_TEMP\t256bin" -NoPath
+          $v = & "$env:RUNNER_TEMP\t256bin\t256.exe" version
+          if ($v -ne 't256 ci') { throw "unexpected version: $v" }
+
+  release:
+    name: Build release binaries
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/t256-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/t256/go.mod
+          cache-dependency-path: tools/t256/go.mod
+      - name: Build
+        run: |
+          version="${GITHUB_REF_NAME#t256-}"
+          mkdir -p ../../release
+          for target in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64 windows/arm64; do
+            os="${target%/*}"; arch="${target#*/}"
+            name="t256-${os}-${arch}"
+            [ "$os" = windows ] && name="${name}.exe"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+              go build -trimpath -ldflags "-s -w -X main.version=${version}" -o "../../release/${name}" .
+          done
+          cp install.sh install.ps1 ../../release/
+          cd ../../release && sha256sum t256-* > SHA256SUMS && cat SHA256SUMS
+      - name: Publish GitHub release
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --title "t256 ${GITHUB_REF_NAME#t256-}" \
+            --notes "Command line tool for loading and saving 256t content. See tools/t256/README.md." \
+            ./*
