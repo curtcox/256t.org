@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tools/t256/go.mod
+          go-version: stable
           cache-dependency-path: tools/t256/go.mod
       - run: go vet ./...
       - run: go test ./...
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tools/t256/go.mod
+          go-version: stable
           cache-dependency-path: tools/t256/go.mod
       - name: Run tests as 32-bit Linux binaries
         env:
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: tools/t256/go.mod
+          go-version: stable
           cache-dependency-path: tools/t256/go.mod
       - name: Build
         run: |
