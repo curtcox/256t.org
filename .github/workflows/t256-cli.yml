@@ -57,8 +57,15 @@ jobs:
       - name: Test install.sh
         if: runner.os != 'Windows'
         run: |
-          (cd mock-release && python3 -m http.server 8799 >/dev/null 2>&1 &)
-          sleep 2
+          python3 -m http.server 8799 --bind 127.0.0.1 --directory mock-release >server.log 2>&1 &
+          t256_server_pid=$!
+          trap 'kill "$t256_server_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 1 http://127.0.0.1:8799/SHA256SUMS >/dev/null; then ready=true; break; fi
+            sleep 0.5
+          done
+          if [ "$ready" != true ]; then cat server.log; exit 1; fi
           T256_BASE_URL=http://127.0.0.1:8799 T256_INSTALL_DIR="$RUNNER_TEMP/t256bin" sh install.sh
           test "$("$RUNNER_TEMP/t256bin/t256" version)" = "t256 ci"
       - name: Test install.ps1
